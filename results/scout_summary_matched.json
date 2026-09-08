@@ -1,0 +1,10 @@
+{
+  "method": "matched robust permutation null (DEV-003), within-region decile-matched labels; PARALLEL RERUN per DEV-005 (per-perm seeds 20260905+100003+p, pre-flight determinism check)",
+  "B": 1000,
+  "n_workers": 4,
+  "alignment": "labels/regions polygon-index space; verified by assertion",
+  "obs_crosscheck": "all 75 rows within 1e-6 of scout_bounds.csv",
+  "preflight": "perm 0 bitwise identical across parent + 2 workers",
+  "n_pairs": 25,
+  "n_regions": 3
+}

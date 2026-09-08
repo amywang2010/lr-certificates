@@ -1,0 +1,15 @@
+{
+  "prereg": "B03_PHASE5_PREREG.md v1.0 + ADDENDUM v1.0 (A2 crop)",
+  "n_proseg_cells": 47286,
+  "n_vendor_cells": 54,
+  "cells_with_marker_signal": 30693,
+  "noise_gene_slot": null,
+  "primary": {
+    "n_inside": 6,
+    "n_certified_evaluable": 7,
+    "fraction": 0.8571428571428571,
+    "gate": "PARTIAL"
+  },
+  "certified_rows": 7,
+  "sign_agreement_on_certified": "7/7"
+}

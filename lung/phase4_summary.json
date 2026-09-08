@@ -1,0 +1,38 @@
+{
+  "prereg": "B03_PHASE4_PREREG.md v1.0 (frozen before compute)",
+  "smoke": false,
+  "n_certified": 46,
+  "kernel_immune": 0,
+  "c_star_median": 20.402315950886255,
+  "c_star_min": 1.0340430602639095,
+  "frac_ge": {
+    "1.25": 0.8571428571428571,
+    "1.5": 0.8571428571428571,
+    "2.0": 0.8571428571428571,
+    "3.0": 0.8571428571428571
+  },
+  "control_median_c_star": NaN,
+  "disputed_median_c_star": 20.402315950886255,
+  "secondary_certify_at_half": 35,
+  "secondary_gained_pairs": [
+    "CD163->CCR7",
+    "CD163->CXCR4",
+    "CD274->CD8A",
+    "CD274->CTLA4",
+    "CD274->PDCD1",
+    "CD68->CD274",
+    "CDH1->EGFR",
+    "CDH1->ERBB2",
+    "CXCL12->CCR7",
+    "ERBB2->EGFR",
+    "ERBB2->PDCD1",
+    "MS4A1->CD274",
+    "PECAM1->PDCD1"
+  ],
+  "assertions": {
+    "A_selfvalidation": "PASSED (max |dT| = 4.44e-16)",
+    "B_signs": "PASSED",
+    "C_monotonicity": "PASSED (all rows)",
+    "D_bisection": "PASSED (|T(c*)| <= 1e-10)"
+  }
+}

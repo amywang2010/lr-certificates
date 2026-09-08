@@ -1,0 +1,10 @@
+{
+  "pair": "CD274->PDCD1",
+  "region": 1,
+  "enum_min": 112,
+  "enum_max": 880,
+  "greedy_min": 112,
+  "greedy_max": 880,
+  "ok": true,
+  "note": "enumerated subcube extremes within greedy bounds; greedy bound attained by construction (Thm 2)"
+}

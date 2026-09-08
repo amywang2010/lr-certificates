@@ -1,0 +1,9 @@
+{
+ "pair": "CD274->PDCD1",
+ "region": 2,
+ "enum_min": 5,
+ "enum_max": 17,
+ "greedy_min": 5,
+ "greedy_max": 83,
+ "ok": true
+}

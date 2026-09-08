@@ -1,0 +1,16 @@
+,Adipocytes,B cells,Breast cancer,Breast glandular cells,Breast myoepithelial cells,Custom,Dendritic cells,Endothelial cells,Epithelial cells,Fibroblasts,Macrophages,Mast cells,NK cells,Smooth muscle cells,T cells
+Adipocytes,293,1,8,0,3,7,1,349,5,46,6,0,3,8,6
+B cells,7,3675,34,18,8,46,280,12,19,87,168,5,7,16,476
+Breast cancer,1078,238,38664,7782,2831,142,124,1318,124,2813,1783,194,58,1780,1530
+Breast glandular cells,469,184,6627,17266,2422,167,81,1463,171,1075,919,34,44,450,771
+Breast myoepithelial cells,6,2,15,7,2057,11,5,12,6,13,25,1,4,114,20
+Custom,7,2,7,4,5,92,3,18,11,5,4,3,2,6,7
+Dendritic cells,0,1,0,1,0,0,53,2,1,2,9,0,0,0,4
+Endothelial cells,48,1,0,0,1,0,3,2379,2,2,7,0,5,5,7
+Epithelial cells,1,0,7,6,1,0,0,0,136,1,0,0,0,0,0
+Fibroblasts,388,638,22,27,119,11,24,262,4,27486,1466,137,65,172,1394
+Macrophages,26,74,13,10,23,13,120,21,3,83,9431,8,11,22,258
+Mast cells,0,0,0,0,0,0,0,0,0,0,0,123,0,0,0
+NK cells,0,0,0,0,0,1,0,0,2,0,7,0,152,0,0
+Smooth muscle cells,2,3,1,0,1,4,0,4,1,7,11,0,0,145,1
+T cells,6,314,30,8,37,19,200,59,13,185,491,8,289,16,18331

@@ -1,0 +1,11 @@
+{
+ "cap_gain_ok": false,
+ "cap_loss_ok": true,
+ "max_donors": 80,
+ "min_gain_cap": 0,
+ "max_occupants": 43,
+ "min_loss_cap": 0,
+ "cells_violating_gain_cap": 197,
+ "zero_count_cells": 41,
+ "amendment": "DEV-016: capacity-capped dmax tightening applied; intervals are certified supersets (sound upper bounds)"
+}

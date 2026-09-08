@@ -1,0 +1,19 @@
+{
+  "prereg": "B03_PHASE2_PREREG.md v1.0 (+ Amendments A1, A2)",
+  "proseg_version": "3.2.0",
+  "command": "proseg B03_project/data/Xenium_FFPE_Human_Breast_Cancer_Rep1_transcripts.csv.gz --xenium --burnin-voxel-size 4 --voxel-size 2 --voxel-layers 2 --output-counts counts --output-cell-metadata cells --output-gene-metadata genes --output-cell-metadata-fmt parquet --output-gene-metadata-fmt parquet --output-path B03_project/data/proseg_out/",
+  "counts_format": "gzip MatrixMarket (write_sparse_mtx), rint->int64",
+  "n_background_cells_excluded": 0,
+  "noise_gene_slot": null,
+  "n_proseg_cells": 165094,
+  "cells_with_marker_signal": 164576,
+  "primary": {
+    "n_inside": 72,
+    "n_evaluable": 75,
+    "n_excluded": 0,
+    "fraction": 0.96,
+    "gate_pass": true
+  },
+  "certified_rows": 46,
+  "sign_agreement_on_certified": "46/46"
+}
