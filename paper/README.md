@@ -43,7 +43,7 @@ B03_PREREGISTRATION.md         frozen pre-registration (breast)
 B03_PHASE2..10_PREREG*.md      frozen pre-registrations (cross-segmentation, null,
                                margins, lung replication, B=10,000 rerun, neighbor
                                effect, third segmentation leg) + addenda
-B03_PHASE*_REPORT.md           per-phase reports with receipts
+(per-phase reports with receipts are deposited with the journal submission)
 B03_DATA_AUDIT.md              dataset design audit
 B03_SCOUT_MANIFEST.sha256      SHA-256 manifest, breast scout artifacts
 results/PHASE2_MANIFEST.sha256 SHA-256 manifest, phase-2 artifacts
