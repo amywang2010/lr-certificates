@@ -44,7 +44,7 @@ assert int(fin.certified_neg_matched.sum()) == 9
 fin["verdict"] = np.where(fin.certified_pos_matched, "pos",
                   np.where(fin.certified_neg_matched, "neg", "non"))
 # order: controls block first, then disputed; within block by median T_lo descending
-pair_meta = (fin.assign(ctrl=~fin.control)
+pair_meta = (fin.assign(ctrl=fin.control)
                 .groupby("pair")
                 .agg(ctrl=("ctrl", "first"), med=("T_lo", "median")))
 pair_meta = pair_meta.sort_values(["ctrl", "med"], ascending=[False, True])
@@ -111,14 +111,14 @@ plt.close(fig)
 # ---------------------------------------------------------------- Fig 3
 f3 = pd.read_csv(f"{RES}/paper_fig3_data.csv")
 assert len(f3) == 18
-sel = f3[f3.pair != "PECAM1->KDR"].copy()
+sel = f3.copy()
 # layout: rows = pair, columns = regions 0..2, two tissue blocks
 blocks = [("Breast", sel[sel.tissue == "breast"]), ("Lung", sel[sel.tissue == "lung"])]
-fig, ax = plt.subplots(figsize=(3.35, 3.1))
+fig, ax = plt.subplots(figsize=(3.35, 3.9))
 ylabels, yvals, ycols, ypoints, ycert = [], [], [], [], []
 y = 0
 for bname, bdf in blocks:
-    for pair in ["CDH1->ERBB2", "CDH1->EGFR", "ESR1->PGR"]:
+    for pair in ["PECAM1->KDR", "CDH1->ERBB2", "CDH1->EGFR", "ESR1->PGR"]:
         sub = bdf[bdf.pair == pair].sort_values("region")
         if sub.empty:
             continue

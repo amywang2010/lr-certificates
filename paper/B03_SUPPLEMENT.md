@@ -9,8 +9,8 @@ The final `PHASE5_MANIFEST.sha256` (117 entries) supersedes the earlier manifest
 every file it covers (verified entry-by-entry at release time); the earlier manifests
 are retained as the frozen per-phase state. `RELEASE_MANIFEST.sha256` covers the
 paper, supplement, figures, audit, and released source exactly as shipped.
-The manuscript cites the deviation ledger (`B03_DEVIATIONS.md`, DEV-001–018) at every
-design change.
+The manuscript cites the deviation ledger (`B03_DEVIATIONS.md`, DEV-001 through
+DEV-031d) at every design change.
 
 ---
 
@@ -23,7 +23,7 @@ design change.
 | Raw transcripts | 42,638,083 | 177.5 M (full section) |
 | QV≥20 transcripts | 34,493,510 | 149.4 M full section; 21,341,704 in crop |
 | Vendor cells | 167,780 | 278,328 full section; 47,754 in crop |
-| Section area |, (full section) | 71.09 mm² (full); 12.25 mm² (crop) |
+| Section area | 41.1 mm² (full section; transcript extent 7.52 × 5.47 mm) | 71.09 mm² (full, vendor region area); 12.25 mm² (crop) |
 | PIP assignment rate | 31,294,184 / 34,493,510 (90.7%) | 16,112,356 / 21,341,704 (75.5%) |
 | Band fraction (3 µm) | 22,477,605 (65.2%) | 17,358,580 (81.3%) |
 | Band+tested transcripts (movable) | 3,136,405 | 128,428 |

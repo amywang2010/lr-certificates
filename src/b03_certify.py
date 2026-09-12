@@ -91,6 +91,11 @@ def interval_bounds_region(tx, dm, labels, region_of_cell, region_id, pair,
                            capacity_loss=0.6):
     """Exact [N_min, N_max] for gene counts in region under reassignment flows.
 
+    NOTE (DEV-031): superseded by the scout's inline per-gene-slot construction and by
+    the lung b03_lung_certify.py implementation, both of which consume donor_sets
+    positionally over band_tested_indices. This id-keyed variant expects a donor map
+    keyed by transcript id and is retained only as a reference implementation.
+
     For gene G (L or R): aggregate count = sum over cells of region with type t_G.
     Moving one transcript of G:
       - from a cell in the counted set to a cell outside it (or extracellular): count -1

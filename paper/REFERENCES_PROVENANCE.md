@@ -70,8 +70,9 @@ checked against the source. No reference is cited from memory.
     Cited for: same convention, independent origin.
 
 13. Ahuja RK, Magnanti TL, Orlin JB. Network Flows: Theory, Algorithms, and Applications
-    (Prentice-Hall, 1993). VERIFIED. Cited for: max-flow/min-cut integrality used by
-    Theorem 2 (interval attainability) and the dual-certificate check.
+    (Prentice-Hall, 1993). VERIFIED. Cited for: max-flow/min-cut integrality underlying
+    Theorem 2 (interval attainability); where capacities bind, the shipped construction
+    reports certified supersets (DEV-031).
 
 14. Ben-Tal A, El Ghaoui L, Nemirovski A. Robust Optimization (Princeton University
     Press, 2009). VERIFIED. Cited for: the worst-case-over-uncertainty-set paradigm the
