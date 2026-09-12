@@ -82,7 +82,7 @@ Per-region verdict counts (breast): r0 14 pos / 3 neg / 8 non-id; r1 12 pos / 3 
 
 ## S4. Full lung results table (54 rows)
 
-Shipped as `lung/scout_final_lung.csv` (release path; working path `xenium_lung/crop/data/scout_final_lung.csv`) (same schema). Summary counts:
+Shipped as `xenium_lung/crop/data/scout_final_lung.csv` (same schema). Summary counts:
 
 | Verdict | Count |
 |---|---|
@@ -189,12 +189,12 @@ decision (DEV-008/009).
 - Figure 1: `results/scout_final_matched.csv` (75 rows; 37/9/29 verdicts asserted
   at plot time).
 - Figure 2: `results/phase4_kernel_margins.csv` (46 rows) and
-  `lung/phase4_kernel_margins.csv` (7 rows).
+  `xenium_lung/crop/data/phase4_kernel_margins.csv` (7 rows).
 - Figure 3: `results/paper_fig3_data.csv`, compiled from the two final CSVs and the two
   coverage CSVs; 18 rows asserted.
 - Figure 4: `results/phase2_proseg_summary.json`, `results/phase3_summary.json`,
-  `lung/phase5_e2_summary.json`,
-  `lung/phase3_summary.json`.
+  `xenium_lung/crop/data/phase5_e2_summary.json`,
+  `xenium_lung/crop/data/phase3_summary.json`.
 - Generation code: `src/b03_paper_figures.py` (assertions at plot time; deterministic
   jitter seed 20260907).
 
@@ -205,3 +205,32 @@ See `paper/REFERENCES_PROVENANCE.md`: every reference verified by direct retriev
 (cellAdmix author order per the LOCK). Two method families named in the internal dossier
 (CONCISE, CellNEST) are deliberately not cited: citation-grade verification was not
 completed within the session, and the verified reviews cover the space adequately.
+
+## S8.1 Independent re-derivation of the certified intervals (DEV-031)
+
+An independent re-implementation of the per-gene interval construction (per-transcript
+own-donor-slot aggregation, the DEV-016 capacity formula applied identically on lung)
+recomputed all 129 certified intervals from the raw artifacts (breast 75 rows, lung crop
+54 rows). Aggregate counts (nL, nR, nl_cells, nr_cells) reproduce the sealed values
+bit-exactly on every row; the loss ends (interval minima) are identical by construction.
+Results:
+
+| Quantity | Breast | Lung crop |
+|---|---|---|
+| Certified verdicts under corrected bounds | identical to sealed (0 flips of 75) | identical to sealed (0 flips of 54) |
+| Median interval width | 2.768 -> 2.513 (9.2% tighter) | 1.650 -> 1.417 (14.2% tighter) |
+| Max upper-end movement on certified-negative rows | -0.065 (lower = more negative) | -0.020 (lower) |
+| Rows newly interval-certified | 2 (MS4A1->CD274 r0, r1) | 1 (CDH1->EGFR r1) |
+
+The corrected construction aggregates only each transcript's own donor slots; the sealed
+vectorized construction's segmentation absorbed interleaved other-gene donor slots,
+widening upper ends while leaving loss ends exact. Both constructions are valid upper
+bounds; the sealed one is uniformly the more conservative. Because the permutation null
+recomputes the same worst-case objects under the same rule as the observed intervals
+(verified bitwise at every null startup), every p-value in the paper is unchanged by this
+correction. The three newly interval-certified rows are reported as interval-certified
+under the corrected rule; matched-null re-derivation under the corrected rule is
+pre-registered (B03_PHASE10_PREREG.md) and will be deposited with the revision. Hashed
+artifacts: results/sensitivity/breast_tight_bounds_sensitivity.csv.sha256
+(a2a8a2b452cdfd69...), results/sensitivity/lung_tight_bounds_sensitivity.csv.sha256
+(9cafefcb36662189...).
