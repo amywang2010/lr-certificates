@@ -1,8 +1,1 @@
-* text=auto
-*.md text
-*.py text
-*.sha256 text
-*.csv text
-*.json text
-*.png binary
-*.pdf binary
+* -text
