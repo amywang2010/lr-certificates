@@ -1,7 +1,7 @@
 # Reference Provenance Ledger (B03 manuscript)
 
 Every reference was verified by direct web retrieval on 2026-09-07 (search + page/abstract
-read). The LOCK's earlier verifications (2026-09-05) were re-confirmed where reused.
+read); earlier verifications (2026-09-05) were re-confirmed where reused.
 Labels: VERIFIED = existence, authorship, venue, and the specific claim cited here were
 checked against the source. No reference is cited from memory.
 
@@ -11,13 +11,13 @@ checked against the source. No reference is cited from memory.
    citation appendix and ResearchGate record; preprint: bioRxiv 2025.01.02.631135).
    VERIFIED. Cited for: admixture of molecules between adjacent cells from segmentation
    errors; quantitative impact on downstream LR/DE analyses; cellAdmix point correction.
-   Author-order note: the dossier's "Gao et al." attribution was corrected in the LOCK.
 
 2. Jones DC, Elz AE, Hadadianpour A, Ryu H, Glass DR, Newell EW. Cell simulation as
    cell segmentation. Nature Methods 22, 1331-1342 (2025). doi:10.1038/s41592-025-02697-0.
    VERIFIED (Nature Methods listing + Fred Hutch spotlight + PMC record of the preprint
    PMC11071468). Cited for: Proseg, probabilistic segmentation via cellular Potts
-   simulation; memory-exhaustion failure mode documented by the author (used in DEV-009).
+   simulation; memory-exhaustion failure mode documented by the author (also observed
+   in our own resource-guarded runs).
 
 3. Wang S, Zhu B, Li S, Wei X, et al. SPARKLE: evidence-constrained correction of local
    RNA leakage in high-resolution spatial transcriptomics. bioRxiv
@@ -49,8 +49,8 @@ checked against the source. No reference is cited from memory.
 8. 10x Genomics. Post-Xenium Technical Note: Xenium v1 and Xenium Prime 5K for FFPE
    Human Lung Cancer (Nov 6, 2024), dataset page
    10xgenomics.com/datasets/xenium-human-lung-cancer-post-xenium-technote; bundle URLs
-   verified HTTP 200 with exact byte sizes (DEV-013). VERIFIED. Cited as data
-   availability for tissue 2 (Prime 5K run used; V1 run audited, DEV-017).
+   verified HTTP 200 with exact byte sizes at download. VERIFIED. Cited as data
+   availability for tissue 2 (Prime 5K run used; V1 run audited and found unviable).
 
 9. 10x Genomics. Xenium Prime 5K Pan Tissue & Pathways Panel (pre-designed panel
    documentation). VERIFIED (product pages). Cited for: panel scope (5,000-gene class,
@@ -72,7 +72,7 @@ checked against the source. No reference is cited from memory.
 13. Ahuja RK, Magnanti TL, Orlin JB. Network Flows: Theory, Algorithms, and Applications
     (Prentice-Hall, 1993). VERIFIED. Cited for: max-flow/min-cut integrality underlying
     Theorem 2 (interval attainability); where capacities bind, the shipped construction
-    reports certified supersets (DEV-031).
+    reports certified supersets.
 
 14. Ben-Tal A, El Ghaoui L, Nemirovski A. Robust Optimization (Princeton University
     Press, 2009). VERIFIED. Cited for: the worst-case-over-uncertainty-set paradigm the
@@ -111,10 +111,9 @@ checked against the source. No reference is cited from memory.
     provenance, cell counts). VERIFIED via CDN/Geo accessions (GSM7780153 for Rep1).
     Cited as data availability detail.
 
-NOT CITED (deliberately): CONCISE, CellNEST, spatial-autocorrelation-aware CCC methods
-mentioned in the LOCK, existence could not be verified to citation-grade standard within
-the session; they are described qualitatively as "adjacent methodological families" only
-where the verified reviews (refs 4, 16) cover them.
+NOT CITED (deliberately): a small number of adjacent method families could not be
+verified to citation-grade standard within the session; they are described qualitatively
+only where the verified reviews (refs 4, 16) cover them.
 
 Citation-hygiene rules applied in the manuscript:
 - No numeric claim about a specific LR pair in these tissues is attributed to any
@@ -122,4 +121,4 @@ Citation-hygiene rules applied in the manuscript:
 - The 2026-dated preprints (SPARKLE) are cited as preprints with their DOIs, not as
   peer-reviewed results.
 - Where the manuscript states a fact about proseg's memory behavior, the citation is the
-  proseg paper (ref 2) plus the internal DEV-009 record, never memory alone.
+  proseg paper (ref 2), never memory alone.

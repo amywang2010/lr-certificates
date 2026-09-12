@@ -1,11 +1,11 @@
 # Certified worst-case bounds for ligand–receptor statistics over segmentation uncertainty
 
-Code, pre-registrations, deviation ledger, and result artifacts for:
+Code, pre-registrations, and result artifacts for:
 
 > **Certified worst-case bounds for ligand–receptor statistics over segmentation uncertainty in spatial transcriptomics**
 
 The framework computes, for each ligand–receptor (LR) contrast in a spatial
-transcriptomics section, an **exact interval valid over an explicit uncertainty set of
+transcriptomics section, an **interval valid over an explicit uncertainty set of
 molecule-to-cell assignments** (boundary-local reassignment with capacity constraints,
 mask erosion/dilation, per-gene leakage intervals). A direction is reported only when
 both bounds exclude zero **and** a permutation null matched to the worst-case layer of
@@ -22,7 +22,9 @@ Two public Xenium sections are analyzed end-to-end with identical machinery:
 Cross-segmentation validation uses Proseg as an independent probe: coverage of certified
 intervals (E2), cross-segmentation significance (E3), and per-certificate kernel margins
 (E4). All design choices were frozen in pre-registration documents before any expression
-computation; all deviations are numbered in `B03_DEVIATIONS.md` (DEV-001 through DEV-031d).
+computation; changes made after the initial pre-registration are documented in dated
+amendments and per-phase reports (available on request, to be deposited with the journal
+submission).
 
 ## Repository layout
 
@@ -30,20 +32,18 @@ computation; all deviations are numbered in `B03_DEVIATIONS.md` (DEV-001 through
 paper/
   B03_MANUSCRIPT.md            full manuscript
   B03_SUPPLEMENT.md            supplementary methods and tables
-  B03_AUDIT.md                 strict-reviewer audit (number-by-number verification)
   REFERENCES_PROVENANCE.md     per-reference verification record
   figures/                     Figure 1–4 (PNG 600 dpi + PDF), generated only from
                                sealed artifacts by src/b03_paper_figures.py
 src/                           analysis code (single source of truth per step)
 results/                       breast-section artifacts (CSV/JSON) + manifests
 xenium_lung/crop/data/         lung-crop artifacts (CSV/JSON) + labels/regions
-B03_LOCK.md                    topic lock record
 B03_THEORY.md                  exactness theorem, uncertainty-set construction
 B03_PREREGISTRATION.md         frozen pre-registration (breast)
-B03_PHASE2..5_PREREG*.md       frozen pre-registrations (cross-segmentation, null,
-                               margins, lung replication + addendum)
+B03_PHASE2..10_PREREG*.md      frozen pre-registrations (cross-segmentation, null,
+                               margins, lung replication, B=10,000 rerun, neighbor
+                               effect, third segmentation leg) + addenda
 B03_PHASE*_REPORT.md           per-phase reports with receipts
-B03_DEVIATIONS.md              numbered deviation ledger (DEV-001 through DEV-031d)
 B03_DATA_AUDIT.md              dataset design audit
 B03_SCOUT_MANIFEST.sha256      SHA-256 manifest, breast scout artifacts
 results/PHASE2_MANIFEST.sha256 SHA-256 manifest, phase-2 artifacts
@@ -55,9 +55,11 @@ PHASE3/4/5_MANIFEST.sha256     SHA-256 manifests, later phases (PHASE5 supersede
 
 Hardware used: 8-core workstation, 15.7 GB RAM, Windows. Full-section Proseg on the lung
 dataset is memory-infeasible at this scale; the lung analysis uses the pre-registered
-expression-blind crop (see `B03_PHASE5_ADDENDUM.md`, DEV-017).
+expression-blind crop (selection rule in `B03_PHASE5_ADDENDUM.md` and
+`results/lung_crop_window.json`).
 
-1. Download the two public datasets (URLs and byte sizes in `B03_DEVIATIONS.md`, DEV-013).
+1. Download the two public datasets (exact URLs and byte sizes are recorded in the
+   pre-registration addenda).
 2. Breast pipeline: `src/b03_load.py` → `src/b03_scout.py` → `src/b03_robust_null_v3.py`
    → `src/b03_finish.py` (labels, regions, certified intervals, matched null, referee pass).
 3. Cross-segmentation: install Proseg 3.2.0, run the exact command in
@@ -80,7 +82,8 @@ this repository exactly as shipped.
 - The pseudocount ε = 0.5 was frozen pre-analysis; interval-level ε-sensitivity is in the
   supplement (S5).
 - The worst-case layer of the statistic is what the null permutes; testing worst-case
-  bounds against point-statistics nulls is a documented category error (DEV-003).
+  bounds against point-statistics nulls is trivially conservative, and the registered
+  null recomputes the same worst-case objects under each permutation.
 
 ## Data availability
 

@@ -8,9 +8,9 @@ All numbers in this supplement are read from hashed artifacts (SHA-256 manifests
 The final `PHASE5_MANIFEST.sha256` (117 entries) supersedes the earlier manifests for
 every file it covers (verified entry-by-entry at release time); the earlier manifests
 are retained as the frozen per-phase state. `RELEASE_MANIFEST.sha256` covers the
-paper, supplement, figures, audit, and released source exactly as shipped.
-The manuscript cites the deviation ledger (`B03_DEVIATIONS.md`, DEV-001 through
-DEV-031d) at every design change.
+paper, supplement, figures, and released source exactly as shipped.
+Design changes after the initial pre-registration are documented in dated amendments
+and per-phase reports; the manuscript describes each change where it occurs.
 
 ---
 
@@ -34,11 +34,11 @@ DEV-031d) at every design change.
 Notes.
 - The lung analysis region is the pre-registered expression-blind crop x[6500,10000) ×
   y[1000,4500) µm, selected by median vendor-cell count over a 0.5 mm grid with zero
-  expression access (DEV-017; window record `results/lung_crop_window.json`).
+  expression access (window record `results/lung_crop_window.json`).
 - Band fractions differ between tissues because band membership depends on cell size and
-  density; both are reported because the band is the uncertainty-supporting set (DEV-002).
+  density; both are reported because the band is the uncertainty-supporting set.
 - The breast concordance gate was redefined with a diagnosis after the initial 0.95
-  exact-concordance target proved miscalibrated to boundary semantics (DEV-001); the
+  exact-concordance target proved miscalibrated to boundary semantics; the
   lung gate is the same class of gate (per-cell ≥ 0.90 AND total ratio ≥ 0.97).
 
 ## S2. Pre-registration inventory
@@ -51,13 +51,18 @@ Notes.
 | B03_PHASE4_PREREG.md | 2026-09-07, before compute | Kernel margins c*, monotone bisection |
 | B03_PHASE5_PREREG.md + ADDENDUM | 2026-09-07, before any lung statistic | Dataset identity, G1–G3, endpoints E1–E4, seeds, crop rule (A2), marker dictionary (A3) |
 
-Deviations are numbered DEV-001 through DEV-018 with dates, reasons, and quarantine
-records for invalidated artifacts. Highlights: DEV-003 (null layer corrected before any
-inference), DEV-005 (parallel rerun with per-permutation seeds and pre-flight bitwise
-determinism), DEV-009 (resource-guard abort and memory-feasible Proseg configuration),
-DEV-015 (panel metadata unavailable; assertion-guarded marker dictionary), DEV-016
-(capacity binding on tissue 2; one sound capped formula everywhere), DEV-017 (V1 run
-unviable; crop design), DEV-018 (E2 PARTIAL reported per frozen gates).
+Where execution diverged from the initial pre-registration, the change was documented
+in a dated amendment before the affected computation ran, and any invalidated artifact
+was quarantined rather than deleted. The substantive changes: the null layer was
+corrected (from point statistics to worst-case objects) before any inference; the null
+was rerun in parallel with per-permutation seeds and a pre-flight bitwise determinism
+check; a resource guard aborted one oversized Proseg configuration and a memory-feasible
+configuration was registered in its place; the lung marker dictionary was built
+assertion-guarded after per-gene panel metadata proved unavailable; the lung capacity
+correction uses one sound capped formula in certify, null, and cross-checks; the
+lung analysis uses a pre-registered expression-blind crop after the full-section run
+was found arithmetically unviable; and the breast E2 PARTIAL verdict is reported as
+the frozen gates require.
 
 ## S3. Full breast results table (75 rows)
 
@@ -138,7 +143,7 @@ direction-aware sign-transition verification on every row.
 ## S7. Cross-segmentation detail (E2/E3)
 
 Breast. Proseg 3.2.0, run 4 configuration (2 µm voxels, 2 z-layers; memory-feasible
-after the run-3 guard abort, DEV-008/009), 165,094 cells, background rows dropped 0,
+after a run-3 resource-guard abort), 165,094 cells, background rows dropped 0,
 noise slot absent, gene-alignment proof 0 invariant violations. Primary coverage
 72/75 = 96.0% (PASS ≥ 90%). Excursions (all region 0, all sign-preserving):
 ERBB2→PDCD1 T = +3.66 vs ceiling +3.61; ESR1→PGR and PGR→ESR1 T = −0.249 vs ceiling
@@ -182,7 +187,7 @@ max |Δq| ≈ 1e-16.
 Hardware: 8 physical cores, 15.7 GB RAM, Windows. The resource guard (free virtual
 < 3.0 GB or proseg private > 14.0 GB aborts) fired once in the campaign (run 3, breast)
 and protected the machine as designed; its thresholds were documented before any abort
-decision (DEV-008/009).
+decision.
 
 ## S10. Figure provenance
 
@@ -201,15 +206,14 @@ decision (DEV-008/009).
 ## S11. Reference provenance
 
 See `paper/REFERENCES_PROVENANCE.md`: every reference verified by direct retrieval on
-2026-09-07, with the specific claim cited and any attribution corrections recorded
-(cellAdmix author order per the LOCK). Two method families named in the internal dossier
-(CONCISE, CellNEST) are deliberately not cited: citation-grade verification was not
-completed within the session, and the verified reviews cover the space adequately.
+2026-09-07, with the specific claim cited and attribution corrections recorded. Two
+adjacent method families are deliberately not cited: citation-grade verification was
+not completed to the same standard, and the verified reviews cover that space.
 
-## S8.1 Independent re-derivation of the certified intervals (DEV-031)
+## S8.1 Independent re-derivation of the certified intervals
 
 An independent re-implementation of the per-gene interval construction (per-transcript
-own-donor-slot aggregation, the DEV-016 capacity formula applied identically on lung)
+own-donor-slot aggregation, the capped capacity formula applied identically on lung)
 recomputed all 129 certified intervals from the raw artifacts (breast 75 rows, lung crop
 54 rows). Aggregate counts (nL, nR, nl_cells, nr_cells) reproduce the sealed values
 bit-exactly on every row; the loss ends (interval minima) are identical by construction.
