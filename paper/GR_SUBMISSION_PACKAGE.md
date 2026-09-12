@@ -47,18 +47,17 @@ Amy Wang, on behalf of all authors
 ## Statements to paste into the portal
 
 **Data availability.** All data are publicly available: Xenium FFPE Human Breast
-Cancer Rep1 (10x Genomics, Xenium v1.0.1; URLs and byte sizes in the ledger,
-DEV-013) and Xenium Prime 5K FFPE Human Lung Cancer (10x Genomics technote bundle,
-Nov 2024; DEV-013). A third section (Xenium Prime FFPE Human Breast
-Cancer, Oct 2024, "breast_s6") is under acquisition for a panel-controlled
-replication leg (Phase 7 prereg frozen); if its analysis completes before
+Cancer Rep1 (10x Genomics, Xenium v1.0.1) and Xenium Prime 5K FFPE Human Lung Cancer
+(10x Genomics technote bundle, Nov 2024); exact download URLs and byte sizes are
+recorded in the repository pre-registrations. A third section (Xenium Prime FFPE Human
+Breast Cancer, Oct 2024, "breast_s6") is under acquisition for a panel-controlled
+replication leg (pre-registration frozen); if its analysis completes before
 submission it is included, otherwise it is reported as ongoing work.
 
-**Code availability.** All code, pre-registrations, deviation ledger, and SHA-256
-manifests for every result artifact are available at
-https://github.com/amywang2010/b03-certificates. The certificate computation
-requires only Python 3.12+ (numpy, pandas, pyarrow); the exact software
-environment is recorded in the repository README.
+**Code availability.** All code, pre-registrations, and SHA-256 manifests for every
+result artifact are available at https://github.com/amywang2010/b03-certificates. The
+certificate computation requires only Python 3.12+ (numpy, pandas, pyarrow); the exact
+software environment is recorded in the repository README.
 
 **Author contributions (CRediT).** Conceptualization: A.W. Methodology,
 Software, Validation, Formal analysis, Investigation, Data curation: A.W.

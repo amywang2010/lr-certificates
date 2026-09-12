@@ -19,7 +19,7 @@ summaries; recent GR computational papers: spRefine gr.281001.125, CCC dissectio
 | Running title <= 50 chars | 78 (violates) | shorten |
 | Main text ~10,000-word cap | ~6,300 words | compliant; room for addition results |
 | Figures <= 6, tables <= 2 in main text | 4 figures; verify all cited in text (only 2 distinct "Figure N" refs found) | audit citations; move any excess tables to supplement |
-| Code + data availability mandatory, reviewer-ready at submission | repo public (github amywang2010/b03-certificates), hashed manifests, public 10x data with URLs in DEV-013 | reformat into GR-style Data Availability + Code Availability statements |
+| Code + data availability mandatory, reviewer-ready at submission | repo public (github amywang2010/b03-certificates), hashed manifests, public 10x data with URLs recorded in the pre-registrations | reformat into GR-style Data Availability + Code Availability statements |
 | CRediT author contributions, ORCID, COI, funding, 3-5 suggested reviewers (outside author institutions) | not yet prepared | submission package task |
 | Reproducibility culture (referees "notably rigorous on code availability and benchmark comparisons") | strong: pre-registrations, manifests, referee re-derivations | present without advertising process |
 
@@ -44,12 +44,12 @@ with findings:
 | Limitation | Fix | Cost | Status |
 |---|---|---|---|
 | L5: B=1000 p-floor | rerun headline rows at B=10,000 (both tissues) | minutes-hours; one-page prereg addendum first | scheduled |
-| L3: co-expression only | neighbor-effect statistic certificate demo (inside frozen B03_LOCK scope) | ~1 day | scheduled |
+| L3: co-expression only | neighbor-effect statistic certificate demo (inside the frozen topic scope) | ~1 day | scheduled |
 | L4: one independent segmenter | coverage + sign check under Xenium multimodal cell segmentation (public 10x datasets: lymph node 5K, lung preview) | ~2-3 days incl. prereg | scheduled |
 | L1: single section per tissue | screen BioStudies S-BIAD2146 (31 human FFPE Xenium sections, 16 tissues) against the frozen pair list; add ONE section, vendor battery + matched null (proseg optional) | ~5-7 days; KILLABLE if panel overlap fails -> document, drop, scope L1 as remaining | scheduled with kill switch |
 | L2/L6/L7: label freezing, kernel, crop | no changes; already scoped with sensitivities; L6 upside framing retained | none | hold |
 
-Discipline: every fix pre-registered in an addendum before compute (DEV-019+
+Discipline: every fix pre-registered in an addendum before compute
 numbering if deviations occur); same gates; no softening; a tissue that certifies
 nothing is reported as such.
 
