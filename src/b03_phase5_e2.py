@@ -4,7 +4,7 @@ Faithful port of b03_phase2_analysis.py (fixture-validated tissue-1 machinery) w
   - crop paths (xenium_lung/crop/data, xenium_lung/crop/proseg_out)
   - 18 G1-testable pairs / 54 rows; A3-frozen TYPE_MAP/RECV_MAP
   - certified set from scout_final_lung.csv (cert_pos_final / cert_neg_final)
-All schema assertions from tissue 1 retained (DEV-010 naming, noise-slot handling,
+All schema assertions from tissue 1 retained (amendment record naming, noise-slot handling,
 gene-alignment proof, cell-id/mtx mapping, non-evaluable cap).
 
 Endpoint (prereg E2): fraction of certified rows with T(A_proseg) inside the

@@ -7,10 +7,10 @@ Lung-specific I/O per B03_PHASE5_ADDENDUM.md:
   - polygons:    crop cell_boundaries.parquet (same construction algorithm as v3)
   - concordance: full-section h5 (xenium_lung/extracted/cell_feature_matrix.h5),
     restricted to crop-cell barcodes; gate = diagnosis-informed (per_cell >= 0.90,
-    total_ratio >= 0.97) — same gate class as tissue 1 (DEV-001).
+    total_ratio >= 0.97) — same gate class as tissue 1 (amendment record).
   - labels:      addendum A3 frozen marker dictionary, majority vote, tested-LR genes
     excluded (17 tested genes of the 18 testable pairs); classes <200 cells dropped
-    (DEV-007 rule, frozen in prereg item 1).
+    (amendment record rule, frozen in prereg item 1).
   - regions:     k-means k=3 on (log10(1+transcript_counts), x/1000, y/1000), seed
     20260907 (prereg item 2).
 
@@ -57,7 +57,7 @@ MARKERS_RAW = {
 MARKERS = {cls: [g for g in genes if g not in TESTED] for cls, genes in MARKERS_RAW.items()}
 REMOVED_TESTED_MARKERS = sorted(g for cls, genes in MARKERS_RAW.items() for g in genes
                                 if g in TESTED)
-MIN_CLASS_CELLS = 200  # DEV-007 rule, frozen
+MIN_CLASS_CELLS = 200  # amendment record rule, frozen
 
 def load_transcripts():
     f = pq.ParquetFile(f"{CROP}/transcripts.parquet")

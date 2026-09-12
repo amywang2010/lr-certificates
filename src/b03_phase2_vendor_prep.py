@@ -149,7 +149,7 @@ X = np.log1p((M / np.maximum(C, 1)[:, None]) * scale).astype(np.float32)
 print(f"[{time.time()-t0:.0f}s] transform done: scale={scale:.1f}", flush=True)
 
 # ---------- per-type centroids ----------
-# Pre-specified (DEV-007, frozen before any Proseg output): transfer TARGETS are
+# Pre-specified (amendment record, frozen before any Proseg output): transfer TARGETS are
 # types with >=50 vendor cells. Rationale: (a) centroids from <50 (down to 1) cells
 # are statistically meaningless argmax targets; (b) no type with <50 cells appears
 # in TYPE_MAP/RECV_MAP for any of the 25 pairs, so the T statistics are unaffected.

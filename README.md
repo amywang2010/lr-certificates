@@ -39,6 +39,13 @@ re-derived after the initial analysis; the re-derivation reproduces every certif
 verdict bit-exactly and shows the reported intervals are conservative supersets
 (`results/sensitivity/`, Supplement S8.1).
 
+Note on manifests and code: the per-phase manifests record artifact and source hashes
+as they existed at analysis time; the released code differs from the analysis-time
+files only in comment text (internal record identifiers removed), and
+`RELEASE_MANIFEST.sha256` hashes the repository exactly as shipped. Byte-identical
+analysis-time code and the dated amendment records are deposited with the journal as
+supplementary material.
+
 ## Reproduction
 
 Each phase script runs standalone on a workstation (16 GB RAM class); the permutation

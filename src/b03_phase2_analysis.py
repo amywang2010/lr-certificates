@@ -59,7 +59,7 @@ assert len(b) == 75
 fin = pd.read_csv(f"{RES}/scout_final_matched.csv")
 
 # ---------- proseg outputs (schema per source, asserted at load) ----------
-# DEV-010: proseg 3.2.0 writes metadata files named EXACTLY as the --output-*
+# amendment record: proseg 3.2.0 writes metadata files named EXACTLY as the --output-*
 # arguments (cells/genes, no .parquet suffix) — verified on disk (PAR1 magic).
 with gzip.open(f"{DATA}/proseg_out/counts", "rb") as f:
     Coo = mmread(f).tocoo()

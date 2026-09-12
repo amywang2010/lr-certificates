@@ -5,7 +5,7 @@ Drives b03_robust_null_v3 by import with the preregistered tissue-2 configuratio
     spawned workers inherit the same module configuration)
   - seed 20260907 -> per-perm seeds 20260907+100003+p (prereg item 5)
   - A3-frozen TYPE_MAP/RECV_MAP and the 18 G1-testable pairs (parent-side globals)
-  - B03_NULL_CAP=1: DEV-016 capacity-capped dmax, ONE formula with the certify step
+  - B03_NULL_CAP=1: amendment record capacity-capped dmax, ONE formula with the certify step
 Label counts are verified by v3 against label_counts.json (written here from the
 b03_lung_load outputs; v3 asserts an exact match before any permutation runs).
 """

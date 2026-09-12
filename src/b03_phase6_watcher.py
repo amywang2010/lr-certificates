@@ -16,7 +16,7 @@ Behavior:
   - overall != "PASS" -> touch nothing and exit 2 (registered anomaly path:
     outputs quarantined, human code audit required).
   - Idempotent: only if BOTH registered per-tissue outputs already exist.
-    (DEV-031: the original any-match check was satisfied by lung's Sep-8
+    (amendment record: the original any-match check was satisfied by lung's Sep-8
     output alone, causing a false "already present" skip of the breast
     analysis. Presence is now verified per tissue.)
   - A gate file that fails to parse (caught mid-write) is retried, not fatal.

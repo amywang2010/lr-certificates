@@ -1,5 +1,5 @@
 """B03 Phase 3: Proseg-side matched permutation null — per B03_PHASE3_PREREG.md
-(FROZEN 2026-09-07 09:40, before any Phase-3 compute; DEV-011).
+(FROZEN 2026-09-07 09:40, before any Phase-3 compute; amendment record).
 
 Question closed: are the 46 matched-certified directional signs ALSO significant
 under the independent segmentation's own null (within-region decile-matched label
@@ -24,7 +24,7 @@ Hard assertions (abort on failure; prereg section "Hard assertions"):
   D. Pre-flight determinism: perm 0 computed twice (parent + worker) — bitwise
      equality required before the sweep starts.
 
-Null scheme (prereg, identical structure to scout DEV-003/DEV-005):
+Null scheme (prereg, identical structure to scout amendment record/amendment record):
   blocks = (region) x (decile of per-cell TOTAL foreground Proseg counts over ALL
   named genes; per-entry rint then sum — the pipeline's count convention);
   np.quantile linspace(0,1,11), digitize on q[1:-1], clip 0..9; blocks with >=2
@@ -58,7 +58,7 @@ from b03_robust_null_v3 import bh_within_region
 
 DATA = "B03_project/data"
 RES = "B03_project/results"
-# Tissue-2 reuse (DEV-017): paths and expected row count env-overridable.
+# Tissue-2 reuse (amendment record): paths and expected row count env-overridable.
 DATA = os.environ.get("B03_P3_DATA", DATA)
 RES = os.environ.get("B03_P3_RES", RES)
 N_ROWS = int(os.environ.get("B03_P3_ROWS", "75"))

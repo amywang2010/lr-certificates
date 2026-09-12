@@ -1,5 +1,5 @@
 """B03 Phase 4: leakage-kernel sensitivity — certification margins per
-B03_PHASE4_PREREG.md (FROZEN before compute; DEV-012).
+B03_PHASE4_PREREG.md (FROZEN before compute; amendment record).
 
 Model: scalar kernel multiplier c >= 1 scales the scout's geometric worst-case
 flows: effective count interval per gene
@@ -88,7 +88,7 @@ def main():
                ((T_hi_1 < 0) == m.certified_neg.to_numpy()).all())
     assert sign_ok, "Assertion B1 FAILED: interval-sign mismatch at c=1"
     # B2: matched-null certifications are a SUBSET of interval certifications
-    # (DEV-003 history: 37/9 matched vs 39/12 interval; the 5 dropped rows are
+    # (amendment record history: 37/9 matched vs 39/12 interval; the 5 dropped rows are
     # matched-null-insignificant, not sign-flipped).
     subset_ok = ((~m.certified_pos_matched | m.certified_pos).all() and
                  (~m.certified_neg_matched | m.certified_neg).all())

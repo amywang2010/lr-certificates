@@ -3,7 +3,7 @@
 Verifies that per-cell per-gene counts derived from transcripts.parquet (cell_id
 barcodes) match the vendor's cell_feature_matrix.h5 on a random 30-gene subset.
 
-XOA 3.0 schema facts (verified from the file, not assumed — DEV-014):
+XOA 3.0 schema facts (verified from the file, not assumed — amendment record):
   - cell_id is a STRING BARCODE; unassigned = 'UNASSIGNED' (17.5% of rows,
     consistent with metrics fraction_transcripts_assigned = 0.8201).
   - h5 shape is [features, cells] = [10029, 278328]; gene row i -> counts H[i, :].

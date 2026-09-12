@@ -1,6 +1,6 @@
 """B03 Step 4 v3: matched robust permutation null — HARDWARE-AWARE PARALLEL RERUN.
 
-Scientific protocol is IDENTICAL to v2 (see DEV-003); only the sampling loop changed:
+Scientific protocol is IDENTICAL to v2 (see amendment record); only the sampling loop changed:
 
   R1 PARALLELISM: permutations distributed over 4 worker processes (8 physical cores,
      5.7 GB free RAM measured before launch). Same B=1000, same within-region
@@ -10,7 +10,7 @@ Scientific protocol is IDENTICAL to v2 (see DEV-003); only the sampling loop cha
      np.random.default_rng(20260905 + 100003 + p), blocks in the same fixed
      registration order as v2. (v2 used one sequential stream; a mid-run parallel
      continuation of that stream is not reproducible, so the rerun uses per-perm
-     documented seeds. Documented as DEV-005. Estimator validity is unaffected:
+     documented seeds. Documented as amendment record. Estimator validity is unaffected:
      every permutation is a valid uniform within-block draw under H0.)
   R3 CHECKPOINTING: results saved every 50 completed permutations (atomic tmp+rename),
      so interruption never loses more than one chunk. v2's partial block_sums.npy
@@ -28,7 +28,7 @@ import pandas as pd
 import pickle, json, time, math, os, sys
 import multiprocessing as mp
 
-# Tissue-2 reuse (DEV-017): seed base, dirs, and worker count overridable by env so
+# Tissue-2 reuse (amendment record): seed base, dirs, and worker count overridable by env so
 # spawned workers (which re-import this module fresh) inherit the registered
 # tissue-2 configuration. Defaults unchanged -> tissue-1 reruns bitwise identical.
 SEED = int(os.environ.get("B03_NULL_SEED", "20260905"))
@@ -67,7 +67,7 @@ RECV_MAP = {
 # shared state (set once in parent, transferred to workers via initializer)
 # ---------------------------------------------------------------------------
 _W = {}
-# DEV-016 cap support (tissue 2): when B03_NULL_CAP=1, gain capacities are enforced
+# amendment record cap support (tissue 2): when B03_NULL_CAP=1, gain capacities are enforced
 # with the SAME formula as the certify step: dmax = min(dmax_unc, sum_{c in target}
 # min(pot_c(g), cap_c)). pot_by_gene/cap_per_cell arrive via worker_init. Default off
 # -> tissue-1 behavior identical.
@@ -255,7 +255,7 @@ def main():
     pot_by_gene = None
     cap_per_cell = None
     if CAPS:
-        # DEV-016: capacity inputs (same formula as the certify step)
+        # amendment record: capacity inputs (same formula as the certify step)
         cap_per_cell = np.floor(0.5 * cells_meta.transcript_counts.to_numpy(np.int64)).astype(np.int64)
         pot_by_gene = np.zeros((len(tested), n_cells), dtype=np.int64)
         band_tested_p = dm["band_tested_indices"]
@@ -270,7 +270,7 @@ def main():
                     if dptr_p[i + 1] > dptr_p[i]]
             slots = np.concatenate(segs) if segs else np.array([], np.int64)
             pot_by_gene[gi] = np.bincount(slots, minlength=n_cells).astype(np.int64)
-        print(f"[{time.time()-t0:.0f}s] DEV-016 caps: computed pot_by_gene "
+        print(f"[{time.time()-t0:.0f}s] amendment record caps: computed pot_by_gene "
               f"{pot_by_gene.shape}", flush=True)
     for _, r in res.iterrows():
         Lg, Rg = r.pair.split("->")
@@ -320,7 +320,7 @@ def main():
     ckpt_path = f"{OUT}/null_v3_checkpoint.npz"
     # resume: np.savez auto-appends '.npz' to a requested filename, so the crash
     # left the first checkpoint at '*.tmp.npz'; its rows carry per-perm seeds and
-    # are bitwise reproducible, hence valid to reuse. (DEV-005 note added.)
+    # are bitwise reproducible, hence valid to reuse. (amendment record note added.)
     legacy = ckpt_path + ".tmp.npz"
     if os.path.exists(ckpt_path):
         d0 = np.load(ckpt_path)
@@ -387,8 +387,8 @@ def main():
     print(f"[{time.time()-t0:.0f}s] null_robust_matched.csv written", flush=True)
 
     summary = {
-        "method": "matched robust permutation null (DEV-003), within-region "
-                  "decile-matched labels; PARALLEL RERUN per DEV-005 "
+        "method": "matched robust permutation null (amendment record), within-region "
+                  "decile-matched labels; PARALLEL RERUN per amendment record "
                   "(per-perm seeds 20260905+100003+p, pre-flight determinism check)",
         "B": B_PERM,
         "n_workers": N_WORKERS,

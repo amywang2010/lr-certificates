@@ -63,7 +63,7 @@ a("")
 a("## Configuration provenance")
 a("")
 a(f"- Proseg {S['proseg_version']}, run 4 per Amendment A4: 2 um voxels, "
-  f"2 z-layers (memory-feasible configuration after the run-3 guard abort, DEV-009); "
+  f"2 z-layers (memory-feasible configuration after the run-3 guard abort, amendment record); "
   f"diffusion model KEPT; all other parameters default.")
 a(f"- Exact command: `{S['command']}`")
 a(f"- Cells: {S['n_proseg_cells']:,} (background rows dropped per A2a: "

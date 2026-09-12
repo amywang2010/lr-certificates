@@ -147,8 +147,8 @@ def main():
     a(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}  ")
     a("Data: Xenium v1.0.1 FFPE Human Breast Cancer Rep1 (34.49M transcripts, "
       "167,780 cells, 313-plex panel)  ")
-    a("Controlling documents: B03_LOCK.md, B03_PREREGISTRATION.md, B03_THEORY.md, "
-      "B03_DEVIATIONS.md (DEV-001..004)")
+    a("Controlling documents: the frozen topic scope.md, B03_PREREGISTRATION.md, B03_THEORY.md, "
+      "B03_DEVIATIONS.md (amendment record..004)")
     a("")
     a("## Decision")
     a("")
@@ -175,7 +175,7 @@ def main():
     a("")
     a("## Statistical protocol (as executed)")
     a("")
-    a("- Matched robust permutation null (DEV-003, parallel rerun DEV-005): per "
+    a("- Matched robust permutation null (amendment record, parallel rerun amendment record): per "
       "permutation b, worst-case objects T_lo^(b), T_hi^(b) via Theorem-2 extremes "
       "under permuted labels; identical machinery as observed intervals (single code "
       "path; startup re-check of observed intervals within 1e-6 of scout_bounds.csv; "
@@ -206,14 +206,14 @@ def main():
     a("")
     a("- [x] Estimand, pairs, regions, U, null, FDR pre-registered before expression "
       "computation (B03_PREREGISTRATION.md; transcript file still downloading at freeze)")
-    a("- [x] Assignment layer reproduced and verified (concordance diagnosis DEV-001; "
+    a("- [x] Assignment layer reproduced and verified (concordance diagnosis amendment record; "
       "r=0.991 per-gene, boundary-semantics class)")
     a("- [x] Certificates exact (0 violations / 150,000 random configs; subcube "
       "exhaustive enumeration matches greedy extremes; 11/11 global consistency checks)")
-    a("- [x] Null matched to test statistic layer (DEV-003); invalid v1 artifact "
+    a("- [x] Null matched to test statistic layer (amendment record); invalid v1 artifact "
       "quarantined and documented")
-    a("- [x] Coverage gate passed on an independent assignment code path (DEV-004)")
-    a("- [x] Deviations logged with reasons (DEV-001..004); no silent changes")
+    a("- [x] Coverage gate passed on an independent assignment code path (amendment record)")
+    a("- [x] Deviations logged with reasons (amendment record..004); no silent changes")
     a("- [x] Invalidated artifacts quarantined, not deleted (auditable provenance)")
     a("")
     a("## Limitations (stated for the paper)")

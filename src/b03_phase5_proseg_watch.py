@@ -1,6 +1,6 @@
 """B03 Phase 5: proseg completion watcher — validates outputs the moment proseg exits.
 
-Polls every 30 s. On proseg exit: verifies the DEV-010 naming (cells/genes/counts
+Polls every 30 s. On proseg exit: verifies the amendment record naming (cells/genes/counts
 under xenium_lung/crop/proseg_out/), row-count sanity vs the crop, and writes
 proseg_done.json. Does NOT run analyses (E2 runs as its own audited step).
 """

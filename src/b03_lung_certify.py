@@ -94,7 +94,7 @@ def main():
                "max_occupants": int(mov_in_cell.max()), "min_loss_cap": int(loss_cap.min()),
                "cells_violating_gain_cap": int((max_donors > gain_cap).sum()),
                "zero_count_cells": int((base_tc == 0).sum()),
-               "amendment": "DEV-016: capacity-capped dmax tightening applied; "
+               "amendment": "amendment record: capacity-capped dmax tightening applied; "
                             "intervals are certified supersets (sound upper bounds)"},
               open(f"{D}/capacity_check.json", "w"), indent=1)
     # NOT asserted on tissue 2 (caps bind); soundness is preserved by the capped
@@ -110,7 +110,7 @@ def main():
                                               dtype=np.int64)
 
     mov_unassigned = mov_cell < 0
-    # DEV-016 (frozen before statistics): on the lung crop the frozen gain capacity
+    # amendment record (frozen before statistics): on the lung crop the frozen gain capacity
     # (<= 0.5 x vendor transcript count) binds for a small cell population (197 of
     # 47,754; 41 zero-count vendor artifact cells). Sound tightening used EVERYWHERE
     # (certify AND null, one formula):
@@ -271,7 +271,7 @@ def main():
           f"{len(ver)*N_CFG_VERIFY} gene-level configs", flush=True)
     assert ver.violations.sum() == 0, "exactness verification FAILED"
 
-    # ---------- DEV-016 cap cross-verification ----------
+    # ---------- amendment record cap cross-verification ----------
     # The capped dmax enters certificates, so it is verified by an independent path:
     # for every (gene, region) where capping bound, recompute the per-cell mins for
     # 25 random target cells by explicit scalar indexing and compare to the vector
@@ -310,7 +310,7 @@ def main():
                     scalar_min = min(int(pot[c]), int(cap_per_cell[c]))
                     if scalar_min != int(np.minimum(pot[in_t], cap_per_cell[in_t])[pos]):
                         cap_mismatch += 1
-    print(f"DEV-016 cap cross-check: {cap_checks} capped (gene,region) instances; "
+    print(f"amendment record cap cross-check: {cap_checks} capped (gene,region) instances; "
           f"scalar mismatches {cap_mismatch}", flush=True)
     assert cap_mismatch == 0
 

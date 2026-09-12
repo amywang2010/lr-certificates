@@ -1,6 +1,6 @@
 """B03 Step 5: held-out coverage check (pre-registered) + nucleus sensitivity report.
 
-Design decisions (documented in B03_DEVIATIONS.md DEV-004):
+Design decisions (documented in B03_DEVIATIONS.md amendment record):
 
 1. COVERAGE VARIANT = 2 um-eroded cell masks (prereg: "Proseg or erosion variant as
    held-out check"). Rationale: U consists of reassignments of the SAME molecules among
