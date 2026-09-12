@@ -2,7 +2,7 @@
 
 Submission portal: submit.genome.org. Keyword on submission: "Spatial Omics Special
 Issue". Deadline 2026-11-01. Formatting measured 2026-09-11 against the current
-manuscript: abstract 264 words (trim to <= 250 at submission); running title 49 chars;
+manuscript: abstract 250 words (at the 250 limit); running title 49 chars;
 4 figures <= 6; main text ~6.5k words (GR Research Article norms ~4,000 words plus
 methods; trim Section 4.1/4.2 methods detail toward the supplement, keep the results
 narrative intact).
