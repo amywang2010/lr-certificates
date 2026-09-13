@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+title: >-
+  Certified worst-case bounds for ligand-receptor statistics over
+  segmentation uncertainty in spatial transcriptomics
+message: >-
+  If you use this code or the certified-bound construction, please cite the
+  accompanying manuscript and this repository.
+authors:
+  - given-names: Amy
+    family-names: Wang
+version: 1.0.0
+date-released: "2026-09-13"
+repository-code: "https://github.com/amywang2010/lr-certificates"
+abstract: >-
+  Per-contrast intervals for ligand-receptor statistics in spatial
+  transcriptomics, valid over an explicit uncertainty set of molecule-to-cell
+  assignments (boundary-local reassignment with capacity constraints, mask
+  erosion/dilation, per-gene leakage intervals). A direction is certified only
+  when both bounds exclude zero and a permutation null matched to the
+  worst-case layer confirms it; everything else is reported as
+  non-identifiable. Evaluated on three public Xenium sections spanning two
+  panel densities and two tumor types.
+keywords:
+  - spatial transcriptomics
+  - cell-cell communication
+  - segmentation uncertainty
+  - certified bounds
+  - ligand-receptor
