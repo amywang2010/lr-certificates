@@ -38,9 +38,8 @@ positive (`results/baseline_comparison/`, supplement S8.2).
 Cross-segmentation validation uses Proseg as an independent probe on all three sections:
 coverage of certified intervals (E2), cross-segmentation significance (E3), and
 per-certificate kernel margins (E4). All design choices were frozen in pre-registration
-documents before any expression computation; changes made after the initial
-pre-registration are documented in dated addenda, and the per-phase reports are
-deposited with the journal submission.
+documents before any expression computation; the frozen documents ship in
+`preregistration/`.
 
 ## Repository map
 
@@ -62,9 +61,7 @@ polygons and verify it before any statistic is computed: per-gene bitwise or
 totals-level gates per package (breast Rep1 exact-per-cell ≥ 0.90 with per-gene r ≥ 0.958
 over 40 audited genes; lung 20/20 audited genes bitwise-exact; second breast section
 totals-level gates, r = 0.999, per the packaging addendum). The released code differs
-from the analysis-time files only in comment text (internal record identifiers removed);
-byte-identical analysis-time code and the dated addenda are deposited with the journal as
-supplementary material. The interval construction was independently re-derived after the
+from the analysis-time files only in comment text (internal record identifiers removed). The interval construction was independently re-derived after the
 initial analysis; the re-derivation reproduces every certified verdict and shows the
 reported intervals are conservative supersets (`results/sensitivity/`, and for the third
 section `breast_s6/s6_tight_bounds_sensitivity.csv`).
