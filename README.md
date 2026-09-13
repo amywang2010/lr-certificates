@@ -29,6 +29,12 @@ identifiability is the tested genes' share of transcript mass (8.1% of the 313-p
 section's transcripts, 0.4% of the 5,000-plex section's), which compresses effect sizes
 below the certification floor.
 
+The conventional co-expression permutation pipeline (the CellChat/CellPhoneDB-family
+null), run on the same breast section under the registered permutation scheme, calls
+73 of 75 contrasts interactions; the certificates confirm 39, render 28
+non-identifiable, and reverse the six ESR1-PGR rows the conventional test calls
+positive (`results/baseline_comparison/`, supplement S8.2).
+
 Cross-segmentation validation uses Proseg as an independent probe on all three sections:
 coverage of certified intervals (E2), cross-segmentation significance (E3), and
 per-certificate kernel margins (E4). All design choices were frozen in pre-registration
@@ -42,7 +48,7 @@ deposited with the journal submission.
 |---|---|
 | `preregistration/` | All frozen pre-registrations: breast design (`B03_PREREGISTRATION.md`), cross-segmentation through the third-segmentation leg (`B03_PHASE2..10_PREREG*.md`, `B03_PHASE5_ADDENDUM.md`, `B03_PHASE7_ADDENDUM_A1.md`), plus `B03_THEORY.md` (bound construction and exactness argument) and `B03_DATA_AUDIT.md` (dataset identity and audit gates) |
 | `src/` | Analysis code, one script per step: load and concordance (`b03_load.py`, `b03_scout.py`), certified bounds (inline in `b03_scout.py`), matched null (`b03_robust_null_v3.py`), B=10,000 chain (`b03_phase6_*.py`), cross-segmentation and kernel margins (`b03_phase2..5_*.py`), lung pipeline (`b03_lung_*.py`), second-breast-section pipeline (`b03_s6_*.py`), neighbor effect (`b03_phase9_neighbor.py`), figures (`b03_paper_figures.py`) |
-| `results/` | Breast-section artifacts: `scout_final_matched.csv` (75 rows, the source of Figures 1 and 3), `null_robust_matched*.csv`, `b10k_breast/` and `b10k_lung/` (B=10,000 reruns), `phase6/` (determinism gate), `exactness_verification.csv`, `sensitivity/` (independent re-derivation of all intervals), per-phase manifests `*.sha256` |
+| `results/` | Breast-section artifacts: `scout_final_matched.csv` (75 rows, the source of Figures 1 and 3), `null_robust_matched*.csv`, `b10k_breast/` and `b10k_lung/` (B=10,000 reruns), `phase6/` (determinism gate), `exactness_verification.csv`, `sensitivity/` (independent re-derivation of all intervals), per-phase manifests `*.sha256`; `baseline_comparison/` (conventional co-expression permutation baseline vs certificates, Supplement S8.2) |
 | `lung/` | Lung-crop artifacts, same schema: `scout_final_lung.csv` (54 rows), null outputs, E2/E3/E4 summaries |
 | `breast_s6/` | Second-breast-section artifacts, same schema: `scout_final_s6.csv` (30 rows), matched-null output at B=10,000 (`null_robust_matched_final.csv`), E2 coverage (`phase7_e2_coverage.csv`, `phase7_e2_summary.json`), corrected-rule re-derivation (`s6_tight_bounds_sensitivity.csv`, `s6_tight_bounds_summary.json`), verification receipts (`exactness_verification.csv`, `subcube_check.json`, `capacity_check.json`, `type_absent_skips.json`, `concordance.json`) |
 | `RELEASE_MANIFEST.sha256` | Hashes this repository exactly as shipped; verifies byte-for-byte on any platform |

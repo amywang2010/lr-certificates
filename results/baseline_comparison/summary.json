@@ -1,0 +1,125 @@
+{
+ "protocol": "B03_BASELINE_COMPARISON.md v1.0 (frozen 2026-09-13)",
+ "comparison1": {
+  "n": 75,
+  "conventional_calls_any": 73,
+  "conventional_pos_not_certified": 28,
+  "conventional_pos_same_direction_certified": 39,
+  "conventional_pos_direction_flip": 6,
+  "flip_rows": [
+   {
+    "pair": "ESR1->PGR",
+    "region": 0,
+    "T0": -0.7104209369794624
+   },
+   {
+    "pair": "ESR1->PGR",
+    "region": 1,
+    "T0": -1.4520464428580435
+   },
+   {
+    "pair": "ESR1->PGR",
+    "region": 2,
+    "T0": -1.1716178269855717
+   },
+   {
+    "pair": "PGR->ESR1",
+    "region": 0,
+    "T0": -0.7104209369794624
+   },
+   {
+    "pair": "PGR->ESR1",
+    "region": 1,
+    "T0": -1.4520464428580435
+   },
+   {
+    "pair": "PGR->ESR1",
+    "region": 2,
+    "T0": -1.1716178269855717
+   }
+  ],
+  "crosstab": {
+   "negative": {
+    "negative": 2,
+    "none": 1,
+    "positive": 6
+   },
+   "none": {
+    "negative": 0,
+    "none": 1,
+    "positive": 28
+   },
+   "positive": {
+    "negative": 0,
+    "none": 0,
+    "positive": 37
+   }
+  }
+ },
+ "comparison2": [
+  {
+   "section": "breast",
+   "n": 75,
+   "certified": 46,
+   "not_certified": 29,
+   "certified_unstable": 3,
+   "certified_stable": 43,
+   "notcert_unstable": 0,
+   "notcert_stable": 29,
+   "fisher_p": 0.278919,
+   "odds_ratio": 4.7471,
+   "or_lo95": 0.2364,
+   "or_hi95": 95.3328,
+   "zero_cell_corrected": true,
+   "source": "B03_project/results/phase2_proseg_coverage.csv"
+  },
+  {
+   "section": "lung",
+   "n": 54,
+   "certified": 7,
+   "not_certified": 47,
+   "certified_unstable": 1,
+   "certified_stable": 6,
+   "notcert_unstable": 3,
+   "notcert_stable": 44,
+   "fisher_p": 0.436002,
+   "odds_ratio": 2.4444,
+   "or_lo95": 0.2177,
+   "or_hi95": 27.4507,
+   "zero_cell_corrected": false,
+   "source": "xenium_lung/crop/data/phase5_e2_coverage.csv"
+  },
+  {
+   "section": "breast_s6",
+   "n": 30,
+   "certified": 0,
+   "not_certified": 30,
+   "certified_unstable": 0,
+   "certified_stable": 0,
+   "notcert_unstable": 0,
+   "notcert_stable": 30,
+   "fisher_p": 1.0,
+   "odds_ratio": null,
+   "or_lo95": null,
+   "or_hi95": null,
+   "zero_cell_corrected": true,
+   "source": "xenium_breast_s6/crop/data/phase7_e2_coverage.csv"
+  },
+  {
+   "section": "pooled",
+   "n": 159,
+   "certified": 53,
+   "not_certified": 106,
+   "certified_unstable": 4,
+   "certified_stable": 49,
+   "notcert_unstable": 3,
+   "notcert_stable": 103,
+   "fisher_p": 0.222987,
+   "odds_ratio": 2.8027,
+   "or_lo95": 0.6038,
+   "or_hi95": 13.0097,
+   "zero_cell_corrected": false,
+   "source": "phase2_proseg_coverage.csv + phase5_e2_coverage.csv + phase7_e2_coverage.csv"
+  }
+ ]
+}

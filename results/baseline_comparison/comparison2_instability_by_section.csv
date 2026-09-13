@@ -1,0 +1,5 @@
+section,n,certified,not_certified,certified_unstable,certified_stable,notcert_unstable,notcert_stable,fisher_p,odds_ratio,or_lo95,or_hi95,zero_cell_corrected,source
+breast,75,46,29,3,43,0,29,0.278919,4.7471,0.2364,95.3328,True,B03_project/results/phase2_proseg_coverage.csv
+lung,54,7,47,1,6,3,44,0.436002,2.4444,0.2177,27.4507,False,xenium_lung/crop/data/phase5_e2_coverage.csv
+breast_s6,30,0,30,0,0,0,30,1.0,,,,True,xenium_breast_s6/crop/data/phase7_e2_coverage.csv
+pooled,159,53,106,4,49,3,103,0.222987,2.8027,0.6038,13.0097,False,phase2_proseg_coverage.csv + phase5_e2_coverage.csv + phase7_e2_coverage.csv
