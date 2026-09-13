@@ -1,0 +1,39 @@
+{
+  "rows": 30,
+  "loss_ends_identical": true,
+  "sealed_superset": true,
+  "verdict_monotone": true,
+  "sealed_interval_neg": 13,
+  "corrected_interval_neg": 23,
+  "newly_interval_negative": [
+    [
+      "ESR1->PGR",
+      2
+    ],
+    [
+      "PECAM1->CTLA4",
+      0
+    ],
+    [
+      "PECAM1->CTLA4",
+      1
+    ],
+    [
+      "PECAM1->KDR",
+      1
+    ],
+    [
+      "PECAM1->KDR",
+      2
+    ],
+    [
+      "PGR->ESR1",
+      2
+    ]
+  ],
+  "cap_binding_rows": 0,
+  "cap_binding_events": 0,
+  "median_width_sealed": 1.6029136172746066,
+  "median_width_corrected": 1.436833371564235,
+  "width_tightening_pct": 10.361147595261787
+}

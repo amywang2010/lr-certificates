@@ -1,0 +1,14 @@
+{
+  "prereg": "B03_PHASE7_PREREG.md + Addenda A1-g/A1-h",
+  "n_proseg_cells": 59047,
+  "cells_with_marker_signal": 46151,
+  "noise_gene_slot": null,
+  "primary_certified_endpoint": "UNDEFINED: 0 certified rows on s6 (A1-g)",
+  "interval_coverage_all_rows": {
+    "n_inside": 30,
+    "n_evaluable": 30,
+    "fraction": 1.0
+  },
+  "sign_agreement_all_rows": "29/30",
+  "proseg_side_type_absent_rows": 0
+}

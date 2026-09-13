@@ -13,7 +13,7 @@ Design decisions (documented in B03_DEVIATIONS.md amendment record):
      transcripts onto the eroded geometry. No donor/band/certificate machinery is used.
    - Proseg is NOT a valid in-U variant (it merges/splits cells -> changes the cell
      inventory), so it cannot serve this gate; it is deferred to the cross-platform
-     phase of the full campaign (requires a Rust toolchain install -> user approval).
+     phase of the full campaign (requires a Rust toolchain install (one-time environment setup)).
 
 2. NUCLEUS-ONLY VARIANT = sensitivity report only (OUTSIDE U, not gated): nucleus PIP
    removes cytoplasmic transcripts wholesale; T(A_nucleus) quantifies how much of each

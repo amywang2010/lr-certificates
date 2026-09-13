@@ -1,0 +1,17 @@
+{
+ "method": "matched robust permutation null (DEV-003), within-region decile-matched labels; per-perm seeds 20260908+100003+p (Phase 7 prereg, Phase 6 convention); DEV-016 caps active (ONE formula with certify)",
+ "B": 10000,
+ "n_workers": 4,
+ "alignment": "labels/regions polygon-index space; verified by assertion",
+ "obs_crosscheck": "all 30 rows within 1e-6 of scout_bounds.csv",
+ "preflight": "perm 0 bitwise identical across parent + 2 workers",
+ "n_pairs_registered": 18,
+ "n_pairs_evaluated": 10,
+ "type_absent_pairs": 8,
+ "type_absent_reason": "Myeloid dropped by frozen DEV-007 floor (<200 cells: 133) -> 8 Myeloid-dependent (sender,receiver) pairs skipped by the standing guard; recorded in type_absent_skips.json",
+ "n_rows": 30,
+ "certified_pos": 0,
+ "certified_neg": 0,
+ "non_identifiable": 30,
+ "verdict": "all 30 rows non-identifiable: no interval-positive exists and every interval-negative upper bound is reached or exceeded under the density-matched null (p_neg_raw = 1.0)"
+}
