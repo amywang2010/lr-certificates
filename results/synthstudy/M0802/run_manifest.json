@@ -1,0 +1,152 @@
+{
+  "run_id": "M0802",
+  "spec": {
+    "arm": "M",
+    "seed": 912002,
+    "target_pct": 8.0,
+    "note": "seeded transcript-level removal to target share (anchor substrate protected), then injection at f=1.0 of surviving borrowable mass"
+  },
+  "info": {
+    "removed": {
+      "ACTA2": 145625,
+      "CCL5": 28758,
+      "CCR7": 9372,
+      "CD163": 35115,
+      "CD274": 2802,
+      "CD3D": 12461,
+      "CD68": 63988,
+      "CD8A": 30399,
+      "CDH1": 127214,
+      "CTLA4": 9132,
+      "CXCL12": 186701,
+      "CXCR4": 104086,
+      "EGFR": 22094,
+      "ERBB2": 914283,
+      "ESR1": 19653,
+      "KDR": 14082,
+      "KRT8": 223335,
+      "MS4A1": 8761,
+      "PDCD1": 270,
+      "PECAM1": 54705,
+      "PGR": 2769
+    },
+    "injection": {
+      "anchor_seed": 911001,
+      "f": 1.0,
+      "rng_seed": 1559669172,
+      "swapped_L": 7291,
+      "swapped_R": 3398,
+      "ring_nn": 100,
+      "borrow_pools": {
+        "L": [
+          "CDH1"
+        ],
+        "R": [
+          "CD274",
+          "EGFR",
+          "ESR1",
+          "PGR"
+        ]
+      }
+    }
+  },
+  "diag": {
+    "capacity_note": "uncapped construction (certified supersets); per-target audit DEV-019 transfers: geometry and counted sets identical to shipped section",
+    "band_tested": 1812367,
+    "violations": 0,
+    "configs": 30000,
+    "n_rows": 75,
+    "tested_mass": 2759481,
+    "tested_share": 8.000000579819218,
+    "label_top": {
+      "Breast cancer": 60459,
+      "Fibroblasts": 32215,
+      "Breast glandular cells": 32143,
+      "T cells": 20006,
+      "Macrophages": 10116,
+      "B cells": 4858,
+      "Endothelial cells": 2460,
+      "Breast myoepithelial cells": 2298
+    }
+  },
+  "B": 250,
+  "n_cert_pos": 33,
+  "n_cert_neg": 9,
+  "inj_pair_rows": [
+    {
+      "pair": "KRT8->ERBB2",
+      "control": false,
+      "region": 0,
+      "nL": 23479,
+      "nR": 239641,
+      "nl_cells": 8990,
+      "nr_cells": 23621,
+      "dL_min": -18981,
+      "dL_max": 27928,
+      "dR_min": -175074,
+      "dR_max": 72219,
+      "T0": 5.049831750265852,
+      "T_lo": 1.6935590083555414,
+      "T_hi": 6.412890811674091,
+      "width": 4.719331803318549,
+      "certified_pos": true,
+      "certified_neg": false,
+      "p_pos_raw": 0.00398406374501992,
+      "p_neg_raw": 1.0,
+      "q_pos": 0.0049800796812749,
+      "q_neg": 1.0,
+      "certified_pos_matched": true,
+      "certified_neg_matched": false
+    },
+    {
+      "pair": "KRT8->ERBB2",
+      "control": false,
+      "region": 1,
+      "nL": 41914,
+      "nR": 268254,
+      "nl_cells": 15369,
+      "nr_cells": 24409,
+      "dL_min": -32940,
+      "dL_max": 36915,
+      "dR_min": -193476,
+      "dR_max": 110207,
+      "T0": 5.212575404221182,
+      "T_lo": 1.949547185925507,
+      "T_hi": 6.4933507371851125,
+      "width": 4.5438035512596056,
+      "certified_pos": true,
+      "certified_neg": false,
+      "p_pos_raw": 0.00398406374501992,
+      "p_neg_raw": 1.0,
+      "q_pos": 0.004742933029785619,
+      "q_neg": 1.0,
+      "certified_pos_matched": true,
+      "certified_neg_matched": false
+    },
+    {
+      "pair": "KRT8->ERBB2",
+      "control": false,
+      "region": 2,
+      "nL": 27499,
+      "nR": 124985,
+      "nl_cells": 7784,
+      "nr_cells": 12429,
+      "dL_min": -20991,
+      "dL_max": 23338,
+      "dR_min": -89115,
+      "dR_max": 53489,
+      "T0": 5.411747463901641,
+      "T_lo": 2.177578663966131,
+      "T_hi": 6.707033786401479,
+      "width": 4.529455122435348,
+      "certified_pos": true,
+      "certified_neg": false,
+      "p_pos_raw": 0.00398406374501992,
+      "p_neg_raw": 1.0,
+      "q_pos": 0.005242189138184105,
+      "q_neg": 1.0,
+      "certified_pos_matched": true,
+      "certified_neg_matched": false
+    }
+  ]
+}

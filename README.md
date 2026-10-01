@@ -1,6 +1,6 @@
 # Certified worst-case bounds for ligand–receptor statistics over segmentation uncertainty
 
-Code, pre-registrations, and SHA-256-hashed result artifacts for the study:
+Code and SHA-256-hashed result artifacts for the study:
 
 > **Certified worst-case bounds for ligand–receptor statistics over segmentation uncertainty in spatial transcriptomics**
 
@@ -29,6 +29,12 @@ identifiability is the tested genes' share of transcript mass (8.1% of the 313-p
 section's transcripts, 0.4% of the 5,000-plex section's), which compresses effect sizes
 below the certification floor.
 
+A controlled 20-run intervention study on the first section (paper Section 5.6) tests
+this mechanism directly: injected-pair certification transitions between 1% and 4%
+ambient tested-gene mass share (seed-replicable), and certificate soundness under
+gene-name relabeling is witnessed bitwise (87/87 class-preserving slots match the
+real section's counts exactly). Artifacts under `results/synthstudy/`.
+
 The conventional co-expression permutation pipeline (the CellChat/CellPhoneDB-family
 null), run on the same breast section under the registered permutation scheme, calls
 73 of 75 contrasts interactions; the certificates confirm 39, render 28
@@ -37,17 +43,17 @@ positive (`results/baseline_comparison/`, supplement S8.2).
 
 Cross-segmentation validation uses Proseg as an independent probe on all three sections:
 coverage of certified intervals (E2), cross-segmentation significance (E3), and
-per-certificate kernel margins (E4). All design choices were frozen in pre-registration
-documents before any expression computation; the frozen documents ship in
-`preregistration/`.
+per-certificate kernel margins (E4). All analysis-free design choices (regions, crop
+windows, gates, thresholds) were fixed before any expression computation and are stated
+in the paper and this README.
 
 ## Repository map
 
 | Path | Content |
 |---|---|
-| `preregistration/` | All frozen pre-registrations: breast design (`B03_PREREGISTRATION.md`), cross-segmentation through the third-segmentation leg (`B03_PHASE2..10_PREREG*.md`, `B03_PHASE5_ADDENDUM.md`, `B03_PHASE7_ADDENDUM_A1.md`), plus `B03_THEORY.md` (bound construction and exactness argument) and `B03_DATA_AUDIT.md` (dataset identity and audit gates) |
+| `results/synthstudy/` | Controlled intervention study (paper Section 5.6): one directory per run with `run_manifest.json` (arm, seed, measured injected mass, verdict counts), `scout_bounds.csv`, `null_robust_matched.csv`, `scout_final_matched.csv` (75 rows each), plus the fleet receipt `fleet_summary.csv`; 20 runs = 6 name-permutation replicates (N01..N06), 6 base-null + ring-injection runs (E*), 8 thinning + injection runs (M*) |
 | `src/` | Analysis code, one script per step: load and concordance (`b03_load.py`, `b03_scout.py`), certified bounds (inline in `b03_scout.py`), matched null (`b03_robust_null_v3.py`), B=10,000 chain (`b03_phase6_*.py`), cross-segmentation and kernel margins (`b03_phase2..5_*.py`), lung pipeline (`b03_lung_*.py`), second-breast-section pipeline (`b03_s6_*.py`), neighbor effect (`b03_phase9_neighbor.py`), figures (`b03_paper_figures.py`) |
-| `results/` | Breast-section artifacts: `scout_final_matched.csv` (75 rows, the source of Figures 1 and 3), `null_robust_matched*.csv`, `b10k_breast/` and `b10k_lung/` (B=10,000 reruns), `phase6/` (determinism gate), `exactness_verification.csv`, `sensitivity/` (independent re-derivation of all intervals), per-phase manifests `*.sha256`; `baseline_comparison/` (conventional co-expression permutation baseline vs certificates, Supplement S8.2) |
+| `results/` | Breast-section artifacts: `scout_final_matched.csv` (75 rows, the source of Figures 1 and 3), `null_robust_matched*.csv`, `b10k_breast/` and `b10k_lung/` (B=10,000 reruns), `phase6/` (determinism gate), `exactness_verification.csv`, `sensitivity/` (independent re-derivation of all intervals), per-directory manifests `*.sha256`; `baseline_comparison/` (conventional co-expression permutation baseline vs certificates, the source of the paper's Table 1) |
 | `lung/` | Lung-crop artifacts, same schema: `scout_final_lung.csv` (54 rows), null outputs, E2/E3/E4 summaries |
 | `breast_s6/` | Second-breast-section artifacts, same schema: `scout_final_s6.csv` (30 rows), matched-null output at B=10,000 (`null_robust_matched_final.csv`), E2 coverage (`phase7_e2_coverage.csv`, `phase7_e2_summary.json`), corrected-rule re-derivation (`s6_tight_bounds_sensitivity.csv`, `s6_tight_bounds_summary.json`), verification receipts (`exactness_verification.csv`, `subcube_check.json`, `capacity_check.json`, `type_absent_skips.json`, `concordance.json`) |
 | `RELEASE_MANIFEST.sha256` | Hashes this repository exactly as shipped; verifies byte-for-byte on any platform |
@@ -55,13 +61,12 @@ documents before any expression computation; the frozen documents ship in
 ## Provenance
 
 Every number in the manuscript traces to a SHA-256-hashed artifact in `results/`,
-`lung/`, or `breast_s6/` (per-phase manifests record artifact and source hashes as they
+`lung/`, or `breast_s6/` (per-directory manifests record artifact and source hashes as they
 existed at analysis time). Loaders reproduce each vendor assignment from molecules and
 polygons and verify it before any statistic is computed: per-gene bitwise or
 totals-level gates per package (breast Rep1 exact-per-cell ≥ 0.90 with per-gene r ≥ 0.958
 over 40 audited genes; lung 20/20 audited genes bitwise-exact; second breast section
-totals-level gates, r = 0.999, per the packaging addendum). The released code differs
-from the analysis-time files only in comment text (internal record identifiers removed). The interval construction was independently re-derived after the
+totals-level gates, r = 0.999, per the packaging addendum). The interval construction was independently re-derived after the
 initial analysis; the re-derivation reproduces every certified verdict and shows the
 reported intervals are conservative supersets (`results/sensitivity/`, and for the third
 section `breast_s6/s6_tight_bounds_sensitivity.csv`).
@@ -69,16 +74,18 @@ section `breast_s6/s6_tight_bounds_sensitivity.csv`).
 ## Reproduction
 
 Hardware used: 8-core workstation, 15.7 GB RAM, Windows. Full-section Proseg on the lung
-and 5,000-plex datasets is memory-infeasible at this scale; both use the pre-registered
-expression-blind crop (selection rule in `preregistration/B03_PHASE5_ADDENDUM.md`,
-window records in `results/lung_crop_window.json` and the Phase 7 addendum).
+and 5,000-plex datasets is memory-infeasible at this scale; both use an expression-blind
+crop: 3.5 x 3.5 mm candidate windows on a 0.5 mm grid over the full section bounds,
+ranked by vendor-cell nucleus count with zero access to expression data, selecting the
+median-density window (ties broken lexicographically). The frozen windows are
+`results/lung_crop_window.json` and the crop record in `breast_s6/`.
 
-1. Download the three public datasets (exact URLs and byte sizes are recorded in the
-   pre-registration documents and the Phase 7 addendum).
+1. Download the three public datasets (sources under Data availability; the lung
+   bundle is 38,795,733,696 bytes, SHA-256 verified per chunk at download).
 2. Breast pipeline: `src/b03_load.py` → `src/b03_scout.py` → `src/b03_robust_null_v3.py`
    → `src/b03_finish.py`.
-3. Cross-segmentation: install Proseg 3.2.0, run the command registered in
-   `preregistration/B03_PHASE2_PREREG.md` Amendment A4; then
+3. Cross-segmentation: install Proseg 3.2.0 and run `proseg transcripts.parquet` on the
+   identical molecule file; then
    `src/b03_phase2_vendor_prep.py`, `src/b03_phase2_analysis.py`,
    `src/b03_phase3_proseg_null.py`, `src/b03_phase4_kernel.py`.
 4. Lung pipeline: `src/b03_lung_audit.py` → `src/b03_lung_crop.py` →
@@ -88,8 +95,15 @@ window records in `results/lung_crop_window.json` and the Phase 7 addendum).
    (frozen expression-blind crop) → `src/b03_s6_load.py` → `src/b03_s6_certify.py` →
    `src/b03_s6_null.py` → `src/b03_s6_finalize.py` → `src/b03_s6_vendor_prep.py` →
    `src/b03_s6_e2.py` → `src/b03_s6_tight.py` (the corrected-rule re-derivation). Proseg
-   input construction is documented in the Phase 7 addendum.
-6. Figures: `python src/b03_paper_figures.py` (reads only sealed artifacts; assertions
+   input construction is in `src/b03_s6_vendor_prep.py`.
+6. Controlled intervention study (paper Section 5.6): requires the breast-section
+   intermediate artifacts from step 2 (`data/tx.parquet`, `cells_meta.parquet`,
+   `donor_map.pkl`, `labels.npy`, and the panel TSV). Then `python
+   src/b03_synthstudy.py --mode verify` (invariants), `--mode run` for each of the
+   20 runs (arm, seed, and measured injection recorded in each `run_manifest.json`),
+   and `--mode analyze` (writes `fleet_summary.csv`). Fleet wall time ~2.5 h on the
+   reference workstation; results are deterministic given the recorded seeds.
+7. Figures: `python src/b03_paper_figures.py` (reads only released artifacts; assertions
    verify row counts before plotting).
 
 The permutation nulls checkpoint every 50 permutations and resume deterministically.
@@ -112,7 +126,8 @@ Expected runtimes: certified bounds ~2 min; B=10,000 matched null ~12 h on 4 wor
 All three datasets are public. Breast Rep1 and the lung section are 10x Genomics Xenium
 bundles (Xenium FFPE Human Breast Cancer Rep1, v1.0.1; Xenium Prime 5K FFPE Human Lung
 Cancer). The second breast-cancer section is distributed as the EBI's public zarr
-repackage (accession S-BIAD2146); its packaging differences from the 10x bundles are
-arbitrated item by item in `preregistration/B03_PHASE7_ADDENDUM_A1.md`. The lung and
-second-breast analysis regions are pre-registered expression-blind spatial crops; crop
-boundaries and selection rules are in the addenda and the window records above.
+repackage (accession S-BIAD2146); its packaging differences from the 10x bundles
+(zarr layout, deprecated codeword categories) are handled explicitly in
+`src/b03_s6_extract.py` and `src/b03_s6_load.py`. The lung and second-breast analysis
+regions are expression-blind spatial crops; boundaries are the window records above,
+and the selection rule is stated under Reproduction.

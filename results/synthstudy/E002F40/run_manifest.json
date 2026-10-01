@@ -1,0 +1,130 @@
+{
+  "run_id": "E002F40",
+  "spec": {
+    "arm": "E",
+    "seed": 911002,
+    "f": 4.0,
+    "note": "base-null pi (seed anchor+100000) then injection"
+  },
+  "info": {
+    "pi_applied": true,
+    "injection": {
+      "anchor_seed": 911002,
+      "f": 4.0,
+      "rng_seed": 1255760109,
+      "swapped_L": 2823,
+      "swapped_R": 268903,
+      "ring_nn": 400,
+      "borrow_pools": {
+        "L": [
+          "CDH1"
+        ],
+        "R": [
+          "CD274",
+          "EGFR",
+          "ESR1",
+          "PGR"
+        ]
+      }
+    }
+  },
+  "diag": {
+    "capacity_note": "uncapped construction (certified supersets); per-target audit DEV-019 transfers: geometry and counted sets identical to shipped section",
+    "band_tested": 3136405,
+    "violations": 0,
+    "configs": 30000,
+    "n_rows": 75,
+    "tested_mass": 4775086,
+    "tested_share": 13.843433155976298,
+    "label_top": {
+      "Breast cancer": 60459,
+      "Fibroblasts": 32215,
+      "Breast glandular cells": 32143,
+      "T cells": 20006,
+      "Macrophages": 10116,
+      "B cells": 4858,
+      "Endothelial cells": 2460,
+      "Breast myoepithelial cells": 2298
+    }
+  },
+  "B": 250,
+  "n_cert_pos": 20,
+  "n_cert_neg": 0,
+  "inj_pair_rows": [
+    {
+      "pair": "KRT8->ERBB2",
+      "control": false,
+      "region": 0,
+      "nL": 1250,
+      "nR": 511835,
+      "nl_cells": 8990,
+      "nr_cells": 23621,
+      "dL_min": -839,
+      "dL_max": 2265,
+      "dR_min": -378774,
+      "dR_max": 125055,
+      "T0": 3.824434288914174,
+      "T_lo": 1.742857977308414,
+      "T_hi": 4.612891729761099,
+      "width": 2.870033752452685,
+      "certified_pos": true,
+      "certified_neg": false,
+      "p_pos_raw": 0.00398406374501992,
+      "p_neg_raw": 0.00398406374501992,
+      "q_pos": 0.007114399544678429,
+      "q_neg": 0.005242189138184105,
+      "certified_pos_matched": true,
+      "certified_neg_matched": false
+    },
+    {
+      "pair": "KRT8->ERBB2",
+      "control": false,
+      "region": 1,
+      "nL": 1483,
+      "nR": 566795,
+      "nl_cells": 15369,
+      "nr_cells": 24409,
+      "dL_min": -947,
+      "dL_max": 1368,
+      "dR_min": -412895,
+      "dR_max": 193954,
+      "T0": 3.8226539743891457,
+      "T_lo": 1.8638808159279687,
+      "T_hi": 4.44013201590633,
+      "width": 2.576251199978361,
+      "certified_pos": true,
+      "certified_neg": false,
+      "p_pos_raw": 0.00398406374501992,
+      "p_neg_raw": 0.00398406374501992,
+      "q_pos": 0.008300132802124834,
+      "q_neg": 0.007661661048115231,
+      "certified_pos_matched": true,
+      "certified_neg_matched": false
+    },
+    {
+      "pair": "KRT8->ERBB2",
+      "control": false,
+      "region": 2,
+      "nL": 1289,
+      "nR": 281203,
+      "nl_cells": 7784,
+      "nr_cells": 12429,
+      "dL_min": -856,
+      "dL_max": 2146,
+      "dR_min": -203036,
+      "dR_max": 97938,
+      "T0": 3.944084648101528,
+      "T_lo": 1.915404930200788,
+      "T_hi": 4.8671187563175895,
+      "width": 2.951713826116801,
+      "certified_pos": true,
+      "certified_neg": false,
+      "p_pos_raw": 0.00398406374501992,
+      "p_neg_raw": 0.00398406374501992,
+      "q_pos": 0.011066843736166445,
+      "q_neg": 0.007661661048115231,
+      "certified_pos_matched": true,
+      "certified_neg_matched": false
+    }
+  ]
+}
