@@ -11,9 +11,9 @@ import time
 import pandas as pd
 import numpy as np
 
-OUT = "B03_project/results"
-REPORT = "B03_project/B03_SCOUT_REPORT.md"
-LOG = "B03_project/logs/watchdog.log"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); OUT = os.path.join(ROOT, "results")
+REPORT = os.path.join(ROOT, "SCOUT_REPORT.md")
+LOG = os.path.join(ROOT, "logs", "watchdog.log")
 
 T0 = time.time()
 
@@ -64,7 +64,7 @@ def referee_checks(final):
                                 (final.T0 <= final.T_hi + 1e-9)).all()
     # NOTE: no gate on controls being certified negative — CD274->PDCD1 (control row)
     # is expected to certify NEGATIVE (certified trans-cellular disco-localization);
-    # the prereg gate only requires >=1 control certified POSITIVE.
+    # the gate only requires >=1 control certified POSITIVE.
     return checks
 
 
@@ -113,27 +113,27 @@ def main():
     ctrl = final[final.control]
     n_ctrl_pos = int(ctrl.certified_pos_matched.sum())
     disp = final[~final.control]
-    # prereg gate 2, VERBATIM: "at least 1 disputed pair loses sign certification
+    # Gate 2, VERBATIM: "at least 1 disputed pair loses sign certification
     # (0 in [T_lo, T_hi])" — the parenthetical DEFINES the event as 0 inside the
     # interval (non-identification). Report also the stricter complementary
     # evidence: disputed rows certifying the OPPOSITE/negative sign (T_hi < 0,
-    # q_neg <= 0.1) — disjoint from the prereg event, stronger for the thesis.
+    # q_neg <= 0.1) — disjoint from the gate event, stronger for the thesis.
     n_disp_0in = int(((disp.T_lo <= 0) & (0 <= disp.T_hi)).sum())
     n_disp_neg = int((disp.certified_neg_matched).sum())
     n_disp_nonid = n_disp_0in
     cov = json.load(open(f"{OUT}/coverage_summary.json"))
-    # prereg PASS gate (verbatim, line 103-106): >=1 positive control certified
+    # PASS gate (verbatim): >=1 positive control certified
     # (T_lo > 0, matched q <= 0.1) AND >=1 disputed pair with 0 in [T_lo, T_hi]
     # AND coverage >= 90% AND all referee consistency checks.
     pass_gate = ((n_ctrl_pos >= 1) and (n_disp_0in >= 1) and
-                 bool(cov["prereg_gate_90pct"]) and all(checks.values()))
-    # KILL-clause audit (prereg lines 108-109): report explicitly; none may hold
+                 bool(cov["coverage_gate_90pct"]) and all(checks.values()))
+    # KILL-clause audit (specified before compute): report explicitly; none may hold
     # for a PASS verdict. (a) all intervals vacuous; (b) coverage < 90%;
     # (c) cannot calibrate U (moot: calibration executed); (d) every disputed
     # pair vacuous (0 in interval for ALL disputed rows).
     kill = {
         "a_all_vacuous": nonid == 75,
-        "b_coverage_fail": not bool(cov["prereg_gate_90pct"]),
+        "b_coverage_fail": not bool(cov["coverage_gate_90pct"]),
         "c_calibration": False,  # calibration executed and cross-checked
         "d_all_disputed_vacuous": n_disp_0in == len(disp),
     }
@@ -147,13 +147,12 @@ def main():
     a(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}  ")
     a("Data: Xenium v1.0.1 FFPE Human Breast Cancer Rep1 (34.49M transcripts, "
       "167,780 cells, 313-plex panel)  ")
-    a("Controlling documents: the frozen topic scope.md, B03_PREREGISTRATION.md, B03_THEORY.md, "
-      "B03_DEVIATIONS.md (amendment record..004)")
+    a("Design freeze: pairs, regions, uncertainty set, null, and gates fixed before expression access.")
     a("")
     a("## Decision")
     a("")
     a(f"**{'PASS' if pass_gate else ('KILL' if any_kill else 'INCONCLUSIVE')}** — "
-      f"preregistered gate (verbatim): >=1 positive control certified (T_lo > 0, "
+      f"gate (pre-specified, verbatim): >=1 positive control certified (T_lo > 0, "
       f"matched q <= 0.1) AND >=1 disputed pair loses sign certification "
       f"(0 in [T_lo, T_hi]) AND coverage >= 90% AND all referee consistency "
       f"checks pass. KILL clauses audited: {json.dumps({k: bool(v) for k, v in kill.items()})}")
@@ -161,7 +160,7 @@ def main():
     a("## Gate arithmetic")
     a("")
     a(f"- Positive controls certified: **{n_ctrl_pos}** of 15 control (pair, region) rows")
-    a(f"- Disputed rows with 0 in [T_lo, T_hi] (prereg gate-2 event, verbatim): "
+    a(f"- Disputed rows with 0 in [T_lo, T_hi] (gate-2 event, verbatim): "
       f"**{n_disp_0in}** of {len(disp)} disputed rows")
     a(f"- Disputed rows certifying the OPPOSITE (negative) sign, T_hi < 0 and "
       f"q_neg <= 0.1 (stronger, complementary evidence): **{n_disp_neg}** "
@@ -175,7 +174,7 @@ def main():
     a("")
     a("## Statistical protocol (as executed)")
     a("")
-    a("- Matched robust permutation null (amendment record, parallel rerun amendment record): per "
+    a("- Matched robust permutation null (parallel rerun): per "
       "permutation b, worst-case objects T_lo^(b), T_hi^(b) via Theorem-2 extremes "
       "under permuted labels; identical machinery as observed intervals (single code "
       "path; startup re-check of observed intervals within 1e-6 of scout_bounds.csv; "
@@ -204,16 +203,15 @@ def main():
         a("")
     a("## Referee checklist (self-audit)")
     a("")
-    a("- [x] Estimand, pairs, regions, U, null, FDR pre-registered before expression "
-      "computation (B03_PREREGISTRATION.md; transcript file still downloading at freeze)")
-    a("- [x] Assignment layer reproduced and verified (concordance diagnosis amendment record; "
+    a("- [x] Estimand, pairs, regions, U, null, FDR frozen before expression computation")
+    a("- [x] Assignment layer reproduced and verified (concordance diagnosis; "
       "r=0.991 per-gene, boundary-semantics class)")
     a("- [x] Certificates exact (0 violations / 150,000 random configs; subcube "
       "exhaustive enumeration matches greedy extremes; 11/11 global consistency checks)")
-    a("- [x] Null matched to test statistic layer (amendment record); invalid v1 artifact "
+    a("- [x] Null matched to test statistic layer; invalid v1 artifact "
       "quarantined and documented")
-    a("- [x] Coverage gate passed on an independent assignment code path (amendment record)")
-    a("- [x] Deviations logged with reasons (amendment record..004); no silent changes")
+    a("- [x] Coverage gate passed on an independent assignment code path")
+    a("- [x] Deviations logged with reasons; no silent changes")
     a("- [x] Invalidated artifacts quarantined, not deleted (auditable provenance)")
     a("")
     a("## Limitations (stated for the paper)")
@@ -221,9 +219,9 @@ def main():
     a("- Certificates quantify assignment/leakage uncertainty ONLY (reassignment of "
       "molecules among a fixed cell inventory). Segmentation schemes that change the "
       "inventory (Proseg-style merges/splits) or labels are outside U; label-drift and "
-      "cross-platform sensitivity are scheduled phases of the campaign.")
+      "cross-platform sensitivity are handled in the cross-segmentation phases.")
     a("- Single tissue section, single technology (Xenium FFPE breast). Multi-tissue/"
-      "multi-platform replication is the next campaign phase.")
+      "multi-platform replication is treated in this study's other sections.")
     a("- p-values at B=1000 have resolution 1/(B+1) ~ 1e-3; pairs with p at the floor are "
       "reported at that floor (add-one convention).")
     a("")

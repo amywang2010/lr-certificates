@@ -1,8 +1,8 @@
 """B03 Step 5: held-out coverage check (pre-registered) + nucleus sensitivity report.
 
-Design decisions (documented in B03_DEVIATIONS.md amendment record):
+Design decisions (frozen before expression access):
 
-1. COVERAGE VARIANT = 2 um-eroded cell masks (prereg: "Proseg or erosion variant as
+1. COVERAGE VARIANT = 2 um-eroded cell masks (design freeze: "Proseg or erosion variant as
    held-out check"). Rationale: U consists of reassignments of the SAME molecules among
    the SAME cell inventory. The eroded-mask assignment preserves the inventory (every
    cell persists; only its transcript set changes) and is therefore a member of U by
@@ -21,7 +21,7 @@ Design decisions (documented in B03_DEVIATIONS.md amendment record):
    Cells without a valid nucleus are given an empty polygon (all their transcripts
    unassigned). Fixed cell-count convention (inventory preserved) disclosed; conservative.
 
-Coverage criterion (prereg): >= 90% of the 75 (pair, region) rows must satisfy
+Coverage criterion (design freeze): >= 90% of the 75 (pair, region) rows must satisfy
 T_lo <= T(eroded) <= T_hi.
 """
 import sys
@@ -31,12 +31,13 @@ import shapely
 from shapely import STRtree
 import json, time, math
 
-sys.path.insert(0, "B03_project/src")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 from b03_load import load_polygons  # exact same polygon construction/order as A0
 
 EPS = 0.5
-DATA = "B03_project/data"
-OUT = "B03_project/results"
+DATA = os.path.join(ROOT, "data")
+OUT = os.path.join(ROOT, "results")
 ERODE_UM = 2.0
 NUC_FILE = f"{DATA}/Xenium_FFPE_Human_Breast_Cancer_Rep1_nucleus_boundaries.parquet"
 
@@ -200,7 +201,7 @@ def main():
     summary = {
         "coverage_variant": f"cell masks eroded by {ERODE_UM} um (in-U, fresh assignment path)",
         "coverage_fraction": cov,
-        "prereg_gate_90pct": bool(cov >= 0.90),
+        "coverage_gate_90pct": bool(cov >= 0.90),
         "n_rows": len(df),
         "n_covered": int(df.covered_eroded.sum()),
         "nucleus_variant": "sensitivity only (outside U)",

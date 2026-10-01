@@ -10,9 +10,8 @@ assignments** (boundary-local reassignment with capacity constraints, mask
 erosion/dilation, per-gene leakage intervals). A biological direction is reported only
 when both bounds exclude zero **and** a permutation null matched to the worst-case layer
 of the statistic confirms it (within-region Benjamini–Hochberg FDR). Everything else is
-reported as non-identifiable. The manuscript and supplement are provided with the
-journal submission; this repository holds the analysis code and the artifacts every
-number traces to.
+reported as non-identifiable. This repository holds the reproduction materials only: the analysis code, the
+frozen run configuration, and the result artifacts every number traces to.
 
 ## What the study finds
 
@@ -33,7 +32,9 @@ A controlled 20-run intervention study on the first section (paper Section 5.6) 
 this mechanism directly: injected-pair certification transitions between 1% and 4%
 ambient tested-gene mass share (seed-replicable), and certificate soundness under
 gene-name relabeling is witnessed bitwise (87/87 class-preserving slots match the
-real section's counts exactly). Artifacts under `results/synthstudy/`.
+real section's counts exactly). Per-run artifacts and the fleet receipt are under
+`results/synthstudy/`; `src/b03_synthstudy_analysis.py` recomputes every Section 5.6
+number from them.
 
 The conventional co-expression permutation pipeline (the CellChat/CellPhoneDB-family
 null), run on the same breast section under the registered permutation scheme, calls
@@ -52,8 +53,9 @@ in the paper and this README.
 | Path | Content |
 |---|---|
 | `results/synthstudy/` | Controlled intervention study (paper Section 5.6): one directory per run with `run_manifest.json` (arm, seed, measured injected mass, verdict counts), `scout_bounds.csv`, `null_robust_matched.csv`, `scout_final_matched.csv` (75 rows each), plus the fleet receipt `fleet_summary.csv`; 20 runs = 6 name-permutation replicates (N01..N06), 6 base-null + ring-injection runs (E*), 8 thinning + injection runs (M*) |
-| `src/` | Analysis code, one script per step: load and concordance (`b03_load.py`, `b03_scout.py`), certified bounds (inline in `b03_scout.py`), matched null (`b03_robust_null_v3.py`), B=10,000 chain (`b03_phase6_*.py`), cross-segmentation and kernel margins (`b03_phase2..5_*.py`), lung pipeline (`b03_lung_*.py`), second-breast-section pipeline (`b03_s6_*.py`), neighbor effect (`b03_phase9_neighbor.py`), figures (`b03_paper_figures.py`) |
-| `results/` | Breast-section artifacts: `scout_final_matched.csv` (75 rows, the source of Figures 1 and 3), `null_robust_matched*.csv`, `b10k_breast/` and `b10k_lung/` (B=10,000 reruns), `phase6/` (determinism gate), `exactness_verification.csv`, `sensitivity/` (independent re-derivation of all intervals), per-directory manifests `*.sha256`; `baseline_comparison/` (conventional co-expression permutation baseline vs certificates, the source of the paper's Table 1) |
+| `src/` | Analysis code, one script per step: load and concordance (`b03_load.py`, `b03_scout.py`), certified bounds (inline in `b03_scout.py`), matched null (`b03_robust_null_v3.py`), B=10,000 chain (`b03_phase6_*.py`), cross-segmentation and kernel margins (`b03_phase2..5_*.py`), lung pipeline (`b03_lung_*.py`), second-breast-section pipeline (`b03_s6_*.py`), neighbor effect (`b03_phase9_neighbor.py`), figures (`b03_paper_figures.py`), and the
+intervention study (`b03_synthstudy.py`, `b03_synthstudy_analysis.py`) |
+| `results/` | Breast-section artifacts: `scout_final_matched.csv` (75 rows, the source of Figures 1 and 3), `null_robust_matched*.csv`, `b10k_breast/` and `b10k_lung/` (B=10,000 reruns), `phase6/` (determinism gate), `exactness_verification.csv`, `sensitivity/` (independent re-derivation of all intervals), per-directory manifests `*.sha256`; `baseline_comparison/` (conventional co-expression permutation baseline vs certificates, the source of the paper's Table 1); `results/synthstudy/` holds the 20 per-run directories of the intervention study plus `fleet_summary.csv` (two B=10 smoke checks retained alongside the 20 fleet runs) |
 | `lung/` | Lung-crop artifacts, same schema: `scout_final_lung.csv` (54 rows), null outputs, E2/E3/E4 summaries |
 | `breast_s6/` | Second-breast-section artifacts, same schema: `scout_final_s6.csv` (30 rows), matched-null output at B=10,000 (`null_robust_matched_final.csv`), E2 coverage (`phase7_e2_coverage.csv`, `phase7_e2_summary.json`), corrected-rule re-derivation (`s6_tight_bounds_sensitivity.csv`, `s6_tight_bounds_summary.json`), verification receipts (`exactness_verification.csv`, `subcube_check.json`, `capacity_check.json`, `type_absent_skips.json`, `concordance.json`) |
 | `RELEASE_MANIFEST.sha256` | Hashes this repository exactly as shipped; verifies byte-for-byte on any platform |
@@ -73,6 +75,18 @@ section `breast_s6/s6_tight_bounds_sensitivity.csv`).
 
 ## Reproduction
 
+All scripts resolve paths from the repository root (independently of the working
+directory). Breast-section scripts read the vendor bundle from `data/` and write
+intermediates to `data/` and `results/`. The lung and second-breast pipelines operate on
+a small workspace directory next to the repository clone (its parent directory by
+default; override with the `B03_WORKSPACE` environment variable): the lung workspace is
+`xenium_lung/` (`Xenium_Prime_Human_Lung_Cancer_FFPE_outs.zip`, an `extracted/`
+subdirectory, and a `crop/` subdirectory), the second-breast workspace is
+`xenium_breast_s6/` (the S-BIAD2146 zarr zip, `extracted/`, `crop/`, `chunks/`). Vendor
+bundle sizes make these directories unsuitable for version control; everything they
+produce that a number depends on is released under `results/`, `lung/`, and
+`breast_s6/`.
+
 Hardware used: 8-core workstation, 15.7 GB RAM, Windows. Full-section Proseg on the lung
 and 5,000-plex datasets is memory-infeasible at this scale; both use an expression-blind
 crop: 3.5 x 3.5 mm candidate windows on a 0.5 mm grid over the full section bounds,
@@ -81,9 +95,14 @@ median-density window (ties broken lexicographically). The frozen windows are
 `results/lung_crop_window.json` and the crop record in `breast_s6/`.
 
 1. Download the three public datasets (sources under Data availability; the lung
-   bundle is 38,795,733,696 bytes, SHA-256 verified per chunk at download).
+   bundle is 38,795,733,696 bytes, SHA-256 verified per chunk at download) and place
+   the breast bundle files in `data/` and the other two bundles in the workspace
+   directories described above.
 2. Breast pipeline: `src/b03_load.py` → `src/b03_scout.py` → `src/b03_robust_null_v3.py`
-   → `src/b03_finish.py`.
+   → `src/b03_finish.py` (writes `data/tx.parquet`, `data/cells_meta.parquet`,
+   `data/donor_map.pkl`, `data/labels.npy`, `data/regions.npy`, and the panel TSV
+   alongside the vendor files in `data/`; also copy
+   `Xenium_FFPE_Human_Breast_Cancer_Rep1_panel.tsv` into `data/`).
 3. Cross-segmentation: install Proseg 3.2.0 and run `proseg transcripts.parquet` on the
    identical molecule file; then
    `src/b03_phase2_vendor_prep.py`, `src/b03_phase2_analysis.py`,
@@ -103,8 +122,9 @@ median-density window (ties broken lexicographically). The frozen windows are
    20 runs (arm, seed, and measured injection recorded in each `run_manifest.json`),
    and `--mode analyze` (writes `fleet_summary.csv`). Fleet wall time ~2.5 h on the
    reference workstation; results are deterministic given the recorded seeds.
-7. Figures: `python src/b03_paper_figures.py` (reads only released artifacts; assertions
-   verify row counts before plotting).
+7. Figures: `python src/b03_paper_figures.py` (reads only released artifacts from
+   `results/` and `lung/`; assertions verify row counts before plotting; writes PNG and
+   PDF into `figures/`).
 
 The permutation nulls checkpoint every 50 permutations and resume deterministically.
 Expected runtimes: certified bounds ~2 min; B=10,000 matched null ~12 h on 4 workers

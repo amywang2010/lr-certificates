@@ -1,7 +1,7 @@
 {
-  "prereg": "B03_PHASE2_PREREG.md v1.0 (+ Amendments A1, A2)",
+  "design": "regions, cell universe, and label transfer frozen before the Proseg run",
   "proseg_version": "3.2.0",
-  "command": "proseg B03_project/data/Xenium_FFPE_Human_Breast_Cancer_Rep1_transcripts.csv.gz --xenium --burnin-voxel-size 4 --voxel-size 2 --voxel-layers 2 --output-counts counts --output-cell-metadata cells --output-gene-metadata genes --output-cell-metadata-fmt parquet --output-gene-metadata-fmt parquet --output-path B03_project/data/proseg_out/",
+  "command": "proseg Xenium_FFPE_Human_Breast_Cancer_Rep1_transcripts.csv.gz --xenium --burnin-voxel-size 4 --voxel-size 2 --voxel-layers 2 --output-counts counts --output-cell-metadata cells --output-gene-metadata genes --output-cell-metadata-fmt parquet --output-gene-metadata-fmt parquet --output-path data/proseg_out/",
   "counts_format": "gzip MatrixMarket (write_sparse_mtx), rint->int64",
   "n_background_cells_excluded": 0,
   "noise_gene_slot": null,

@@ -1,22 +1,24 @@
 """B03 Phase 6 continuous monitor (non-invasive; reads only).
 
-Appends one JSON line every 300 s to B03_project/results/phase6/monitor.log:
+Appends one JSON line every 300 s to results/phase6/monitor.log (repository-relative):
   ts, done (perms), dl_bytes, battery_status, charge_pct, free_phys_mb,
   and a "stall" flag when the null's done count has not advanced for
   >= 15 min (900 s) — the slip-catcher the polling discipline needs.
 Exit codes: runs until killed. Reads checkpoint read-only; np.load does not
 lock the writer's rename cycle (checkpoint writes are os.replace-atomic in v3).
 """
-import datetime
+import datetime, os
 import json
 import subprocess
 import time
 
 import numpy as np
 
-CKPT = "B03_project/results/b10k_breast/null_v3_checkpoint.npz"
-DL = "xenium_breast_s6/sdata_breast_s6.zarr.zip"
-LOG = "B03_project/results/phase6/monitor.log"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CKPT = os.path.join(ROOT, "results", "b10k_breast", "null_v3_checkpoint.npz")
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+DL = os.path.join(WORKSPACE, "xenium_breast_s6", "sdata_breast_s6.zarr.zip")
+LOG = os.path.join(ROOT, "results", "phase6", "monitor.log")
 STALL_S = 900.0
 POLL_S = 300.0
 
@@ -38,7 +40,7 @@ def dl_bytes():
     # v6 segmented phase: final file absent; count accepted chunk bytes
     try:
         import os
-        cdir = "xenium_breast_s6/chunks"
+        cdir = os.path.join(WORKSPACE, "xenium_breast_s6", "chunks")
         return sum(os.path.getsize(os.path.join(cdir, f))
                    for f in os.listdir(cdir) if f.endswith(".bin"))
     except Exception:

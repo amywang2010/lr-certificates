@@ -6,12 +6,12 @@ within-region permutation null, BH-FDR, erosion coverage, final merged table.
 """
 import numpy as np
 import pandas as pd
-import pickle, json, time, math
+import os, pickle, json, time, math
 from scipy.cluster.vq import kmeans2
 
 EPS = 0.5
-DATA = "B03_project/data"
-OUT = "B03_project/results"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
+OUT = os.path.join(ROOT, "results")
 SEED = 20260905
 B_PERM = 1000
 SUBCUBE_K = 12

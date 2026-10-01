@@ -2,7 +2,7 @@
 
 Identical interval machinery, verification battery, seeds (20260907), and constants;
 differences are I/O only:
-  - data dir xenium_breast_s6/crop/data (b03_s6_load outputs)
+  - data dir: workspace xenium_breast_s6/crop/data (b03_s6_load outputs)
   - PAIRS/TYPE_MAP/RECV_MAP imported from b03_lung_config (A3 single source of
     truth), asserted equal to the lung driver's inline frozen copies.
 Type-absent pairs: the A3 sender/receiver map names Myeloid for 8 pairs; on this
@@ -10,7 +10,7 @@ crop the frozen DEV amendment 007 rule (<200-cell classes dropped) removed Myelo
 cells), so those rows are skipped by the standing n_cells==0 guard — recorded,
 not hidden (A1-c disclosure discipline).
 
-Outputs -> xenium_breast_s6/crop/data/: scout_bounds.csv, exactness_verification.csv,
+Outputs -> the s6 crop data dir: scout_bounds.csv, exactness_verification.csv,
 subcube_check.json, capacity_check.json
 """
 import os, sys, json, pickle, time
@@ -28,7 +28,9 @@ assert PAIRS == lung_ref.PAIRS, "PAIRS diverge from lung driver"
 assert TYPE_MAP == lung_ref.TYPE_MAP, "TYPE_MAP diverge from lung driver"
 assert RECV_MAP == lung_ref.RECV_MAP, "RECV_MAP diverge from lung driver"
 
-D = "xenium_breast_s6/crop/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+D = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "data")
 SEED = 20260907
 N_CFG_VERIFY = 1000   # scout constant
 SUBCUBE_K = 12        # scout constant
@@ -85,7 +87,7 @@ def main():
                "max_occupants": int(mov_in_cell.max()), "min_loss_cap": int(loss_cap.min()),
                "cells_violating_gain_cap": int((max_donors > gain_cap).sum()),
                "zero_count_cells": int((base_tc == 0).sum()),
-               "amendment": "DEV amendment 016: capacity-capped dmax tightening applied; "
+               "capacity_rule": "capacity-capped dmax tightening applied; "
                             "intervals are certified supersets (sound upper bounds)"},
               open(f"{D}/capacity_check.json", "w"), indent=1)
 

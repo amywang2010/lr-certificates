@@ -6,12 +6,12 @@ Fig 2  Kernel-margin distributions c* for both tissues (log scale strip + box).
 Fig 3  Cross-tissue panel: ESR1->PGR, CDH1->ERBB2 (breast) / CDH1->EGFR (lung),
        PECAM1->KDR control; certified interval + vendor T0 + Proseg point.
 Fig 4  Validation summary bars: coverage (E2) and cross-segmentation significance (E3)
-       for both tissues, with preregistered gates marked.
+       for both tissues, with pre-specified gates marked.
 
 Every plotted number is read from the artifact CSVs; assertions verify row counts
 against the sealed summaries before plotting. No synthetic data.
 """
-import json
+import json, os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -19,9 +19,11 @@ from matplotlib.lines import Line2D
 import numpy as np
 import pandas as pd
 
-RES = "B03_project/results"
-LUN = "xenium_lung/crop/data"
-OUT = "B03_project/paper/figures"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RES = os.path.join(ROOT, "results")
+LUN = os.path.join(ROOT, "lung")   # released lung artifacts
+OUT = os.path.join(ROOT, "figures")
+os.makedirs(OUT, exist_ok=True)
 
 plt.rcParams.update({
     "font.size": 7.5, "axes.titlesize": 8.5, "axes.labelsize": 8,

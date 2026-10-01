@@ -2,7 +2,7 @@
 
 The chain's registered job ends at the determinism gate: it runs both B=10k
 nulls, compares per-permutation Tlo/Thi bitwise against the sealed B=1k
-checkpoints, writes determinism_gate.json, and exits. B03_PHASE6_PREREG.md
+checkpoints, writes determinism_gate.json, and exits. The registered plan
 then requires the verdict-stability analysis (b03_phase6_analysis.py) on gate
 PASS. Until now that step was manual; this watcher closes the gap so an
 ~04:00 completion is not idle until morning.
@@ -16,7 +16,7 @@ Behavior:
   - overall != "PASS" -> touch nothing and exit 2 (registered anomaly path:
     outputs quarantined, human code audit required).
   - Idempotent: only if BOTH registered per-tissue outputs already exist.
-    (amendment record: the original any-match check was satisfied by lung's Sep-8
+    (the original any-match check was satisfied by lung's Sep-8
     output alone, causing a false "already present" skip of the breast
     analysis. Presence is now verified per tissue.)
   - A gate file that fails to parse (caught mid-write) is retried, not fatal.
@@ -27,14 +27,16 @@ import subprocess
 import sys
 import time
 
-GATE = "B03_project/results/phase6/determinism_gate.json"
-MARK = "B03_project/results/phase6/analysis_fired.json"
-SCRIPT = "B03_project/src/b03_phase6_analysis.py"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+GATE = os.path.join(ROOT, "results", "phase6", "determinism_gate.json")
+MARK = os.path.join(ROOT, "results", "phase6", "analysis_fired.json")
+SCRIPT = os.path.join(ROOT, "src", "b03_phase6_analysis.py")
 
 # Registered analysis outputs, per tissue (must ALL exist post-fire).
 EXPECTED_OUTPUTS = [
-    "xenium_lung/crop/data/b10k/analysis/b10k_null.csv",
-    "B03_project/results/b10k_breast/analysis/b10k_null.csv",
+    os.path.join(WORKSPACE, "xenium_lung", "crop", "data", "b10k", "analysis", "b10k_null.csv"),
+    os.path.join(ROOT, "results", "b10k_breast", "analysis", "b10k_null.csv"),
 ]
 
 

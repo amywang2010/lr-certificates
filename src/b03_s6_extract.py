@@ -1,7 +1,7 @@
 """B03 Phase 7 step 1: extract the analysis source from the S-BIAD2146 zarr zip.
 
-Per B03_PHASE7_ADDENDUM_A1 (frozen before this run):
-  - members -> xenium_breast_s6/extracted/ mirroring a 10x-like layout
+Registered packaging rules (frozen before this run):
+  - members -> the workspace xenium_breast_s6/extracted/ dir, mirroring a 10x-like layout
   - transcript parts streamed verbatim (16 parts)
   - cell/nucleus boundaries parquet verbatim
   - table_cells CSR snapshot: data/indices/indptr + var gene names + obs cell ids
@@ -12,10 +12,12 @@ Assertions (abort before any downstream step on failure):
 """
 import json, os, shutil, sys, time, zipfile
 
-ZIP = "xenium_breast_s6/sdata_breast_s6.zarr.zip"
-OUT = "xenium_breast_s6/extracted"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+ZIP = os.path.join(WORKSPACE, "xenium_breast_s6", "sdata_breast_s6.zarr.zip")
+OUT = os.path.join(WORKSPACE, "xenium_breast_s6", "extracted")
 TX_DIR = os.path.join(OUT, "transcripts_parts")
-LOG = "xenium_breast_s6/extract_log.json"
+LOG = os.path.join(WORKSPACE, "xenium_breast_s6", "extract_log.json")
 
 def log(d):
     with open(LOG, "a", encoding="utf-8") as f:

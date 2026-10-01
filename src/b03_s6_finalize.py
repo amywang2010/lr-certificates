@@ -1,19 +1,21 @@
 """B03 Phase 7: s6 finalization — scout_final_s6.csv + corrected summary JSON.
 
-Mirrors the sealed watchdog merge (_watchdog_dryrun.py) exactly:
+Mirrors the scout watchdog merge exactly:
   - v3's stored p_* are acc/B; raw add-one p = (1+acc)/(B+1), round-trip asserted;
   - BH within region over the pair family, q <= 0.10;
   - certified_pos_matched = (T_lo > 0) & (q_pos <= 0.10);
     certified_neg_matched = (T_hi < 0) & (q_neg <= 0.10).
 s6 specifics: 30 rows (10 pairs x 3 regions; 8 Myeloid-dependent pairs type-absent
-after the frozen DEV amendment 007 floor dropped Myeloid, 133 cells), B = 10,000, per-perm
-seeds 20260908 + 100003 + p (Phase 7 prereg), DEV amendment 016 caps active.
+after the frozen minimum-class floor dropped Myeloid, 133 cells), B = 10,000, per-perm
+seeds 20260908 + 100003 + p (frozen), capacity-capped dmax active.
 """
-import json
+import json, os
 import numpy as np
 import pandas as pd
 
-D = "xenium_breast_s6/crop/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+D = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "data")
 B = 10000
 
 def bh(p):
@@ -56,9 +58,9 @@ def main():
     n_pos = int(final.certified_pos_matched.sum())
     n_neg = int(final.certified_neg_matched.sum())
     summary = {
-        "method": "matched robust permutation null (DEV amendment 003), within-region "
+        "method": "matched robust permutation null, within-region "
                   "decile-matched labels; per-perm seeds 20260908+100003+p "
-                  "(Phase 7 prereg, Phase 6 convention); DEV amendment 016 caps active "
+                  "(same convention as the first section); capacity-capped dmax active "
                   "(ONE formula with certify)",
         "B": B,
         "n_workers": 4,
@@ -68,7 +70,7 @@ def main():
         "n_pairs_registered": 18,
         "n_pairs_evaluated": 10,
         "type_absent_pairs": 8,
-        "type_absent_reason": "Myeloid dropped by frozen DEV amendment 007 floor (<200 cells: "
+        "type_absent_reason": "Myeloid dropped by the frozen minimum-class floor (<200 cells: "
                               "133) -> 8 Myeloid-dependent (sender,receiver) pairs "
                               "skipped by the standing guard; recorded in "
                               "type_absent_skips.json",

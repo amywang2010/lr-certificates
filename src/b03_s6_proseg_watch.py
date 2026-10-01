@@ -1,7 +1,7 @@
 """B03 Phase 7: proseg completion watcher — validates outputs the moment proseg exits.
 
 Polls every 60 s for the proseg process. On exit, verifies the DEV amendment 010 output
-naming (cells/, genes/, counts/ under xenium_breast_s6/crop/proseg_out/),
+naming (cells/, genes/, counts/ under the workspace xenium_breast_s6/crop/proseg_out/),
 row-count sanity vs the crop, and writes proseg_done.json. Does NOT run
 analyses: E2/E3/E4 run as their own audited step after this gate.
 """
@@ -11,8 +11,10 @@ import subprocess
 import sys
 import time
 
-OUT = "xenium_breast_s6/crop/proseg_out"
-DONE = "xenium_breast_s6/crop/proseg_done.json"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+OUT = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "proseg_out")
+DONE = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "proseg_done.json")
 N_CROP_CELLS = 65964
 N_CROP_TX = 4912129  # is_gene & QV>=20 (the only rows proseg consumes)
 

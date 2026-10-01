@@ -1,16 +1,16 @@
 """B03 Phase 5 (step B): E2 cross-platform coverage — Proseg replication on the crop.
 
 Faithful port of b03_phase2_analysis.py (fixture-validated tissue-1 machinery) with:
-  - crop paths (xenium_lung/crop/data, xenium_lung/crop/proseg_out)
+  - crop paths (workspace xenium_lung/crop/data, xenium_lung/crop/proseg_out)
   - 18 G1-testable pairs / 54 rows; A3-frozen TYPE_MAP/RECV_MAP
   - certified set from scout_final_lung.csv (cert_pos_final / cert_neg_final)
-All schema assertions from tissue 1 retained (amendment record naming, noise-slot handling,
+All schema assertions from tissue 1 retained (type-naming, noise-slot handling,
 gene-alignment proof, cell-id/mtx mapping, non-evaluable cap).
 
-Endpoint (prereg E2): fraction of certified rows with T(A_proseg) inside the
+Endpoint (design freeze, E2): fraction of certified rows with T(A_proseg) inside the
 certified interval. Gate >= 90% PASS, 75-90% PARTIAL, < 75% FAIL.
 Secondary: sign agreement on every certified row.
-Output: xenium_lung/crop/data/phase5_e2_coverage.csv + phase5_e2_summary.json
+Output: the crop data dir's phase5_e2_coverage.csv + phase5_e2_summary.json
 """
 import gzip, json, os, sys, time
 import numpy as np
@@ -21,8 +21,8 @@ from scipy.spatial import cKDTree
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from b03_scout import EPS, t_log2
 
-D = "xenium_lung/crop/data"
-PRO = "xenium_lung/crop/proseg_out"
+D = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
+PRO = os.path.join(WORKSPACE, "xenium_lung", "crop", "proseg_out")
 PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
  ("ERBB2","EGFR"),("ERBB2","PDCD1"),("ESR1","PGR"),("PGR","ESR1"),
  ("CD274","CTLA4"),("CD274","CD8A"),("CXCL12","CCR7"),("PECAM1","PDCD1"),
@@ -191,7 +191,7 @@ frac = n_in / int(cert_eval.sum())
 sign_ok = int((((out["T"] > 0) == out.cert_pos_final)[cert_eval]).sum())
 
 summary = dict(
-    prereg="B03_PHASE5_PREREG.md v1.0 + ADDENDUM v1.0 (A2 crop)",
+    design="E2 Proseg-interval coverage; frozen before compute",
     n_proseg_cells=int(n_pc), n_vendor_cells=int(len(b)) ,
     cells_with_marker_signal=int(has_marker.sum()),
     noise_gene_slot=dropped_noise_gene,

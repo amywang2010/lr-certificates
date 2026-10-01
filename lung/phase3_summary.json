@@ -1,5 +1,5 @@
 {
-  "prereg": "B03_PHASE3_PREREG.md v1.0 (frozen 2026-09-07 09:40)",
+  "design": "cross-segmentation significance null; frozen before compute",
   "smoke": false,
   "B": 1000,
   "n_workers": 4,

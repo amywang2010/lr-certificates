@@ -1,4 +1,4 @@
-"""B03 Phase 6 chain: lung B=10k -> breast B=10k -> determinism gate (B03_PHASE6_PREREG.md).
+"""B03 Phase 6 chain: lung B=10k -> breast B=10k -> determinism gate (design frozen before compute).
 
 Execution model matches the sealed Phase 1/5 runs: each wrapper is invoked as a
 subprocess (python b03_phase6_<tissue>.py), so the wrapper's __main__ guard fires
@@ -22,8 +22,8 @@ import time
 t0 = time.time()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HERE))  # Research/ (sealed runs resolve
-os.chdir(ROOT)  #  all paths relative to this cwd; src/ is two levels down)
+ROOT = os.path.dirname(HERE)  # repository root (wrappers resolve paths themselves)
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
 PY = sys.executable
 
 for tag in ("lung", "breast"):
@@ -40,10 +40,10 @@ import numpy as np  # noqa: E402
 GATE = {}
 
 for tag, new_ckpt, sealed_ckpt, n_perm_sealed in [
-    ("breast", "B03_project/results/b10k_breast/null_v3_checkpoint.npz",
-     "B03_project/results/null_v3_checkpoint.npz", 1000),
-    ("lung", "xenium_lung/crop/data/b10k/null_v3_checkpoint.npz",
-     "xenium_lung/crop/data/null_v3_checkpoint.npz", 1000),
+    ("breast", os.path.join(ROOT, "results", "b10k_breast", "null_v3_checkpoint.npz"),
+     os.path.join(ROOT, "results", "null_v3_checkpoint.npz"), 1000),
+    ("lung", os.path.join(WORKSPACE, "xenium_lung", "crop", "data", "b10k", "null_v3_checkpoint.npz"),
+     os.path.join(WORKSPACE, "xenium_lung", "crop", "data", "null_v3_checkpoint.npz"), 1000),
 ]:
     new = np.load(new_ckpt)
     sealed = np.load(sealed_ckpt)
@@ -73,13 +73,13 @@ for tag, new_ckpt, sealed_ckpt, n_perm_sealed in [
 overall = all(g["pass"] for g in GATE.values())
 report = {
     "phase": "B03 Phase 6 (B=10000 null resolution)",
-    "prereg": "B03_PHASE6_PREREG.md",
+    "design": "B=10,000 null resolution; bitwise checkpoint-resume gate",
     "determinism_gate": GATE,
     "overall": "PASS" if overall else "FAIL",
     "wall_seconds": time.time() - t0,
 }
-os.makedirs("B03_project/results/phase6", exist_ok=True)
-with open("B03_project/results/phase6/determinism_gate.json", "w") as fh:
+os.makedirs(os.path.join(ROOT, "results", "phase6"), exist_ok=True)
+with open(os.path.join(ROOT, "results", "phase6", "determinism_gate.json"), "w") as fh:
     json.dump(report, fh, indent=1)
 
 if not overall:
@@ -88,5 +88,5 @@ if not overall:
     sys.exit(2)
 
 print(f"[{time.time()-t0:.0f}s] PHASE 6 COMPLETE: gate PASS on both tissues. "
-      f"b10k null CSVs are in B03_project/results/b10k_breast and "
-      f"xenium_lung/crop/data/b10k.", flush=True)
+      f"b10k null CSVs are in {os.path.join(ROOT, 'results', 'b10k_breast')} and "
+      f"{os.path.join(WORKSPACE, 'xenium_lung', 'crop', 'data', 'b10k')}.", flush=True)

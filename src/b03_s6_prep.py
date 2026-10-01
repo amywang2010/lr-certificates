@@ -12,9 +12,9 @@ Per B03_PHASE7_ADDENDUM_A1 (frozen):
   4. Crop extraction mirroring b03_lung_crop_extract.py: transcripts filtered to
      the window; polygons of in-window cells; measured-count envelope gate
      (270 B/tx <= 7.0 GB) before any proseg launch.
-Outputs -> xenium_breast_s6/crop/{transcripts.parquet,cell_boundaries.parquet,
+Outputs -> the workspace xenium_breast_s6/crop/ dir: {transcripts.parquet,cell_boundaries.parquet,
 nucleus_boundaries.parquet,cells_meta.parquet} and s6_crop_window.json,
-s6_crop_envelope.json (in xenium_breast_s6/).
+s6_crop_envelope.json (in the workspace xenium_breast_s6/ dir).
 """
 import io, json, os, sys, time, zipfile
 import numpy as np

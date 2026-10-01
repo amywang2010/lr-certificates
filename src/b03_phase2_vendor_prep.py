@@ -3,19 +3,19 @@
 Pre-registered in B03_PHASE2_PREREG.md (frozen BEFORE any Proseg output exists).
 Computes only artifacts that do not depend on Proseg:
 
-  1. Vendor per-type marker centroids (label-transfer targets, prereg section 2).
+  1. Vendor per-type marker centroids (label-transfer targets, design freeze).
      Marker space: panel genes EXCLUDING all 20 tested LR genes (same discipline
      as the scout labels). Transform, identical for vendor and Proseg cells:
         p = count / cell_total_panel_counts      (relative profile)
         x = log1p(p * scale),  scale = median vendor cell panel total
      Type centroid = mean of x over vendor cells of that type.
 
-  2. Region-mapping inputs (prereg section 1): vendor cell centroids (microns)
+  2. Region-mapping inputs (design freeze): vendor cell centroids (microns)
      plus each cell's frozen region, in cells_meta ROW space, so the analysis
      step can build a cKDTree and assign each Proseg cell the region of its
      nearest vendor cell (geometry only, no expression).
 
-Proseg-independence argument (prereg discipline): the ONLY inputs are the
+Proseg-independence argument: the ONLY inputs are the
 vendor cell-by-gene h5, the panel TSV, cells_meta.parquet, and the scout's
 frozen labels/regions/donor_map. The transcript file (and therefore anything
 Proseg produces) is never read here.
@@ -25,14 +25,15 @@ import numpy as np
 import pandas as pd
 import pickle
 import h5py
-import sys
+import os, sys
 import time
 
-sys.path.insert(0, "B03_project/src")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 from b03_scout import ALL_PAIRS  # frozen pair list (single source of truth)
 
-DATA = "B03_project/data"
-OUT = "B03_project/data/vendor_markers.npz"
+DATA = os.path.join(ROOT, "data")
+OUT = os.path.join(ROOT, "data", "vendor_markers.npz")
 
 t0 = time.time()
 
@@ -115,7 +116,7 @@ else:
     raise AssertionError(f"indptr len {len(indptr)} != n_cells+1 ({n_bc+1}); "
                          f"layout not recognized")
 
-# ---------- marker panel (prereg section 2) ----------
+# ---------- marker panel (design freeze) ----------
 panel = pd.read_csv(f"{DATA}/Xenium_FFPE_Human_Breast_Cancer_Rep1_panel.tsv", sep="\t")
 panel_names = panel.Name.dropna().astype(str).tolist()
 feat_set = set(features)
@@ -141,7 +142,7 @@ assert (M.sum(axis=0) > 0).all(), "some marker genes got zero total counts (read
 print(f"[{time.time()-t0:.0f}s] marker submatrix: {M.shape}, total {int(M.sum()):,}",
       flush=True)
 
-# ---------- transform (prereg section 2, verbatim) ----------
+# ---------- transform (design freeze, verbatim) ----------
 C = M.sum(axis=1).astype(np.int64)
 assert (C > 0).mean() > 0.99, "too many cells with zero panel counts"
 scale = float(np.median(C))
@@ -149,7 +150,7 @@ X = np.log1p((M / np.maximum(C, 1)[:, None]) * scale).astype(np.float32)
 print(f"[{time.time()-t0:.0f}s] transform done: scale={scale:.1f}", flush=True)
 
 # ---------- per-type centroids ----------
-# Pre-specified (amendment record, frozen before any Proseg output): transfer TARGETS are
+# Pre-specified (frozen before any Proseg output): transfer TARGETS are
 # types with >=50 vendor cells. Rationale: (a) centroids from <50 (down to 1) cells
 # are statistically meaningless argmax targets; (b) no type with <50 cells appears
 # in TYPE_MAP/RECV_MAP for any of the 25 pairs, so the T statistics are unaffected.

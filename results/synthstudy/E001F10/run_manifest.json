@@ -29,7 +29,7 @@
     }
   },
   "diag": {
-    "capacity_note": "uncapped construction (certified supersets); per-target audit DEV-019 transfers: geometry and counted sets identical to shipped section",
+    "capacity_note": "uncapped construction (certified supersets); per-target capacity audit transfers: geometry and counted sets identical to shipped section",
     "band_tested": 3136405,
     "violations": 0,
     "configs": 30000,

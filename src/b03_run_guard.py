@@ -11,11 +11,11 @@ Triggers (documented before any abort decision):
   - proseg private memory > 14.0 GB (would leave <1.5 GB commit headroom)
 """
 
-import subprocess
+import os, subprocess
 import time
 import sys
 
-LOG = "B03_project/logs/guard.log"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); LOG = os.path.join(ROOT, "logs", "guard.log")
 POLL = 60.0
 FREE_VIRT_ABORT_GB = 3.0
 PROSEG_PRIV_ABORT_GB = 14.0

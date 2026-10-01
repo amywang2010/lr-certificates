@@ -1,5 +1,5 @@
 {
-  "prereg": "B03_PHASE7_PREREG.md + Addenda A1-g/A1-h",
+  "design": "E2 Proseg-interval coverage for the second breast section; frozen before compute",
   "n_proseg_cells": 59047,
   "cells_with_marker_signal": 46151,
   "noise_gene_slot": null,

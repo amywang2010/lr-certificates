@@ -1,10 +1,10 @@
 """B03 Phase 7 (step F): corrected-rule re-derivation of the s6 certified intervals.
 
-Extends the S8.1 independent re-derivation (DEV amendment 031 corrected per-gene-slot rule,
+Extends the independent re-derivation (corrected per-gene-slot rule,
 Phase 9 builder) to the third leg. Reuses the sealed CorrectedBounds machinery by
-import; the only behavioral difference is that the DEV amendment 016 gain-cap formula is
+import; the only behavioral difference is that the capacity-capped gain-cap formula is
 allowed to BIND here (it binds on s6; the Phase 9 assert is breast/Rep1-specific,
-where caps never bind — sealed capacity_check.json), with binding recorded per row
+where caps never bind — released capacity_check.json), with binding recorded per row
 as the registered reporting convention requires.
 
 Registered checks (mirroring S8.1 on tissues 1/2):
@@ -17,7 +17,7 @@ Registered checks (mirroring S8.1 on tissues 1/2):
   R4. corrected interval verdicts (eps = 0.5) are a SUPERSET of the sealed
       interval verdicts (monotonicity; verdict losses prohibited).
 
-Output: xenium_breast_s6/crop/data/s6_tight_bounds_sensitivity.csv +
+Output: the s6 crop data dir's s6_tight_bounds_sensitivity.csv +
         s6_tight_bounds_summary.json
 """
 import json
@@ -35,9 +35,11 @@ from b03_lung_config import TYPE_MAP, RECV_MAP
 
 # The Phase 9 constructor reads cap from module-global DATA; point it at the s6
 # leg BEFORE construction (call-time evaluation uses module globals).
-p9.DATA = "xenium_breast_s6/crop/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+p9.DATA = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "data")
 
-D = "xenium_breast_s6/crop/data"
+D = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "data")
 t0 = time.time()
 
 tx = pd.read_parquet(f"{D}/tx.parquet", columns=["feature_name", "cell_idx"])
@@ -51,7 +53,7 @@ assert len(labels) == len(regions) == 65964
 
 
 class S6Corrected(p9.CorrectedBounds):
-    """DEV amendment 031 corrected rule; DEV amendment 016 cap allowed to bind (recorded)."""
+    """Corrected per-gene-slot rule; capacity cap allowed to bind (recorded)."""
 
     binding_events = 0
 

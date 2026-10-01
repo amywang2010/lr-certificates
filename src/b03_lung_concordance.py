@@ -3,7 +3,7 @@
 Verifies that per-cell per-gene counts derived from transcripts.parquet (cell_id
 barcodes) match the vendor's cell_feature_matrix.h5 on a random 30-gene subset.
 
-XOA 3.0 schema facts (verified from the file, not assumed — amendment record):
+XOA 3.0 schema facts (verified from the file, not assumed):
   - cell_id is a STRING BARCODE; unassigned = 'UNASSIGNED' (17.5% of rows,
     consistent with metrics fraction_transcripts_assigned = 0.8201).
   - h5 shape is [features, cells] = [10029, 278328]; gene row i -> counts H[i, :].
@@ -14,7 +14,7 @@ Memory architecture (v2): the naive single-pass to_pandas() hit ArrowMemoryError
 per chunk, numpy masks + one vectorized barcode->column remap + bincount into a
 (30 x ncells) accumulator. Disk streams once (~2.4 GB x read amplification).
 """
-import time
+import os, time
 
 import h5py
 import numpy as np
@@ -22,9 +22,11 @@ import pandas as pd
 import pyarrow.parquet as pq
 from scipy.sparse import csc_matrix
 
-TX = "xenium_lung/extracted/transcripts.parquet"
-H5 = "xenium_lung/extracted/cell_feature_matrix.h5"
-OUT = "B03_project/results/lung_concordance.csv"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+TX = os.path.join(WORKSPACE, "xenium_lung", "extracted", "transcripts.parquet")
+H5 = os.path.join(WORKSPACE, "xenium_lung", "extracted", "cell_feature_matrix.h5")
+OUT = os.path.join(ROOT, "results", "lung_concordance.csv")
 SEED = 20260907
 N_TEST_GENES = 30
 UNASSIGNED = "UNASSIGNED"

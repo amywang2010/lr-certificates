@@ -1,17 +1,17 @@
 """B03 Phase 7 (step B): E2 cross-segmentation coverage — Proseg replication on s6.
 
 Faithful port of b03_phase5_e2.py (fixture-validated machinery) with:
-  - crop paths (xenium_breast_s6/crop/data, xenium_breast_s6/crop/proseg_out)
+  - crop paths (workspace xenium_breast_s6/crop/data, xenium_breast_s6/crop/proseg_out)
   - 10 vendor-evaluable pairs / 30 rows; A3-frozen TYPE_MAP/RECV_MAP (imported)
   - marker centroids from vendor_markers.npz (A1-h phase2-space targets)
-  - A1-g endpoints: the certified-set primary endpoint is UNDEFINED at 0
+  - Endpoints: the certified-set primary endpoint is UNDEFINED at 0
     certified rows (reported as such); registered replacements are (a) interval
     coverage on all 30 vendor-evaluable rows with the standing T0-in-interval
     assertion, (b) sign agreement on all 30 rows.
-All schema assertions from tissues 1/2 retained (DEV amendment 010 naming, noise-slot
+All schema assertions from tissues 1/2 retained (type-naming, noise-slot
 handling, gene-alignment proof, cell-id/mtx mapping).
 
-Output: xenium_breast_s6/crop/data/phase7_e2_coverage.csv + phase7_e2_summary.json
+Output: the s6 crop data dir's phase7_e2_coverage.csv + phase7_e2_summary.json
 """
 import gzip, json, os, sys, time
 import numpy as np
@@ -23,8 +23,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from b03_scout import EPS, t_log2
 from b03_lung_config import PAIRS, TYPE_MAP, RECV_MAP
 
-D = "xenium_breast_s6/crop/data"
-PRO = "xenium_breast_s6/crop/proseg_out"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+D = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "data")
+PRO = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "proseg_out")
 t0 = time.time()
 tested = sorted({g for p in PAIRS for g in p})
 gidx = {g: i for i, g in enumerate(tested)}
@@ -157,7 +159,7 @@ cell_slot = regions * n_slots + np.array(
 rows = []
 n_type_absent = 0
 # The registered E2 universe is the 30 vendor-evaluable rows in scout_bounds.csv
-# (the 8 Myeloid-dependent pairs are vendor-side absent by DEV amendment 007 and are not
+# (the 8 Myeloid-dependent pairs are vendor-side absent by the frozen class floor and are not
 # part of any registered endpoint on this leg).
 for _, r in b.iterrows():
     Lg, Rg = r.pair.split("->")
@@ -167,7 +169,7 @@ for _, r in b.iterrows():
     sR = cell_slot == region_id * n_slots + type_shift[R]
     nL, nR = int(sS.sum()), int(sR.sum())
     if nL == 0 or nR == 0:
-        # proseg-side type absence on a vendor-evaluable row (A1-g counts these)
+        # proseg-side type absence on a vendor-evaluable row (counted in the all-rows endpoint)
         n_type_absent += 1
         rows.append(dict(pair=r.pair, region=region_id, nL=nL, nR=nR,
                          N_L=0, N_R=0, T=None))
@@ -182,7 +184,7 @@ n_excl = int(P["T"].isna().sum())
 n_eval = 30 - n_excl
 print(f"[{time.time()-t0:.0f}s] evaluable rows: {n_eval}/30 (excluded {n_excl}; "
       f"proseg-side type-absent {n_type_absent})", flush=True)
-# A1-g cap: <=10% over the 30 vendor-evaluable rows
+# Registered cap: <=10% over the 30 vendor-evaluable rows
 assert n_excl <= 3, f"{n_excl}/30 non-evaluable (>10%) - ABORT"
 
 # ---------- endpoints ----------
@@ -197,11 +199,11 @@ n_in_all = int(out.loc[out["T"].notna(), "inside"].sum())
 sign_agree_all = int((((out["T"] > 0) == (out.T0 > 0))[out["T"].notna()]).sum())
 
 summary = dict(
-    prereg="B03_PHASE7_PREREG.md + Addenda A1-g/A1-h",
+    design="E2 Proseg-interval coverage for the second breast section; frozen before compute",
     n_proseg_cells=int(n_pc),
     cells_with_marker_signal=int(has_marker.sum()),
     noise_gene_slot=dropped_noise_gene,
-    primary_certified_endpoint="UNDEFINED: 0 certified rows on s6 (A1-g)",
+    primary_certified_endpoint="UNDEFINED: 0 certified rows on s6",
     interval_coverage_all_rows=dict(
         n_inside=n_in_all, n_evaluable=n_eval, fraction=(n_in_all / n_eval)),
     sign_agreement_all_rows=f"{sign_agree_all}/{n_eval}",

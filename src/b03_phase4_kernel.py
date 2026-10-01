@@ -1,5 +1,5 @@
-"""B03 Phase 4: leakage-kernel sensitivity — certification margins per
-B03_PHASE4_PREREG.md (FROZEN before compute; amendment record).
+"""B03 Phase 4: leakage-kernel sensitivity — certification margins
+(FROZEN before compute).
 
 Model: scalar kernel multiplier c >= 1 scales the scout's geometric worst-case
 flows: effective count interval per gene
@@ -26,10 +26,11 @@ import time
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, "B03_project/src")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 from b03_certify import T_bounds_from_count_intervals
 
-RES = os.environ.get("B03_P4_RES", "B03_project/results")
+RES = os.environ.get("B03_P4_RES", os.path.join(ROOT, "results"))
 N_ROWS = int(os.environ.get("B03_P4_ROWS", "75"))
 N_CERT = int(os.environ.get("B03_P4_CERT", "46"))
 SMOKE = os.environ.get("B03_P4_SMOKE") == "1"
@@ -88,7 +89,7 @@ def main():
                ((T_hi_1 < 0) == m.certified_neg.to_numpy()).all())
     assert sign_ok, "Assertion B1 FAILED: interval-sign mismatch at c=1"
     # B2: matched-null certifications are a SUBSET of interval certifications
-    # (amendment record history: 37/9 matched vs 39/12 interval; the 5 dropped rows are
+    # (history: 37/9 matched vs 39/12 interval; the 5 dropped rows are
     # matched-null-insignificant, not sign-flipped).
     subset_ok = ((~m.certified_pos_matched | m.certified_pos).all() and
                  (~m.certified_neg_matched | m.certified_neg).all())
@@ -153,7 +154,7 @@ def main():
     cs = cert.c_star.to_numpy()
     fin_vals = cs[np.isfinite(cs)]
     summary = dict(
-        prereg="B03_PHASE4_PREREG.md v1.0 (frozen before compute)",
+        design="kernel-margin computation; frozen before compute",
         smoke=SMOKE,
         n_certified=46,
         kernel_immune=int(np.isinf(cs).sum()),

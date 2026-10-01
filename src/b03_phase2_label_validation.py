@@ -14,13 +14,14 @@ import numpy as np
 import pandas as pd
 import h5py
 import pickle
-import sys
+import os, sys
 import time
 
-sys.path.insert(0, "B03_project/src")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 from b03_scout import ALL_PAIRS
 
-DATA = "B03_project/data"
+DATA = os.path.join(ROOT, "data")
 t0 = time.time()
 tested = sorted({g for p in ALL_PAIRS for g in p})
 
@@ -109,8 +110,8 @@ for a, b, c, n in top_conf[:8]:
     print(f"  {a} -> {b}: {c}/{n}")
 
 out = pd.DataFrame(conf, index=type_names, columns=type_names)
-out.to_csv("B03_project/results/phase2_label_transfer_cv_confusion.csv")
-with open("B03_project/results/phase2_label_transfer_cv.json", "w") as f:
+out.to_csv(os.path.join(ROOT, "results", "phase2_label_transfer_cv_confusion.csv"))
+with open(os.path.join(ROOT, "results", "phase2_label_transfer_cv.json"), "w") as f:
     import json
     json.dump(dict(accuracy_2fold_cv=acc, n_eval=int(eval_mask.sum()),
                    n_types=len(type_names), transform="frozen from vendor_markers.npz"),

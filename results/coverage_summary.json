@@ -1,7 +1,7 @@
 {
   "coverage_variant": "cell masks eroded by 2.0 um (in-U, fresh assignment path)",
   "coverage_fraction": 1.0,
-  "prereg_gate_90pct": true,
+  "coverage_gate_90pct": true,
   "n_rows": 75,
   "n_covered": 75,
   "nucleus_variant": "sensitivity only (outside U)",

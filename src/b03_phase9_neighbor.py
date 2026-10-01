@@ -1,8 +1,8 @@
 """B03 Phase 9: neighbor-effect statistic — observed side + registered gates.
 
-Prereg: B03_PHASE9_PREREG.md (FROZEN before any compute) + the 2026-09-11
-addendum (frozen before corrected compute; see amendment record in B03_DEVIATIONS.md).
-amendment record amends G9-2's wording (centroid-tree vs polygon brute-force are
+Design freeze: all gates below were fixed before any compute (the 2026-09-11
+addendum included); every correction is documented in this docstring.
+The addendum amends G9-2's wording (centroid-tree vs polygon brute-force are
 different geometries; the registered check is tree-vs-brute-force-tree
 agreement on the SAME metric).
 
@@ -13,35 +13,35 @@ Design (exactness-preserving):
   so denominators (nl_adj, nr_adj) are fixed numbers and every bound operation
   remains a restriction of the same bipartite graph the exactness proof covers.
 - The counted-set restriction is implemented by passing the eligible cell-id
-  set DIRECTLY into the corrected interval builder (addendum section 1):
+  set DIRECTLY into the corrected interval builder (see below):
   counted(sender) = {(region==rid) & (labels==S) & send_m}, counted(receiver)
   analogous. Donor sets (band geometry, kernel intervals) are untouched, so a
   band transcript on an ineligible sender legitimately contributes a +1 delta
   (it can reassign INTO an eligible cell under the uncertainty set) and a
   transcript on an eligible sender contributes its usual -1/0/+1 range.
-- Interval construction: corrected per-gene-slot rule (amendment record) with the
-  amendment record capacity formula (the sealed null's own rule, one formula everywhere):
+- Interval construction: corrected per-gene-slot rule with the
+  capacity-capped formula (the shipped null's own rule, one formula everywhere):
     dmin(g) = -(# band transcripts of g with source in the counted set)  [exact]
     dmax(g) = min( #{out-of-set band transcripts of g with >=1 own donor slot in
                      the counted set},  sum_{c in counted} min(pot_c(g), cap_c) )
-  On breast the capacity never binds (sealed capacity_check.json), so dmax is
+  On breast the capacity never binds (released capacity_check.json), so dmax is
   the attained per-gene optimum; the formula is retained for the one-rule
   discipline and is verified non-binding by assertion.
 - G9-0 (artifact integrity): recomputed scout labels must equal labels.npy
-  exactly, proving the frozen artifact is the sealed scout's.
-- G9-1 (amended per addendum section 2): with the all-eligible counted set,
-  the corrected builder must reproduce the amendment record corrected bounds
+  exactly, proving the frozen artifact is the shipped scout's.
+- G9-1 (amended): with the all-eligible counted set,
+  the corrected builder must reproduce the corrected bounds
   (results/sensitivity/breast_tight_bounds_sensitivity.csv) BIT-EXACTLY on
   every (dL_min, dL_max, dR_min, dR_max), AND the sealed scout_bounds.csv
   intervals must contain the corrected intervals row-wise (superset check —
   the soundness direction).
-- G9-2 (adjacency determinism, amendment record): eligibility masks recomputed by
+- G9-2 (adjacency determinism): eligibility masks recomputed by
   brute-force per-cell radius queries must equal the KD-tree masks exactly
   (explicit self-exclusion for same-type pairs).
 
 This script computes the OBSERVED side only. p-values require the matched
-worst-case permutation null (b03_phase9_null.py) under the SAME corrected
-construction, registered at execution time (single-null-per-machine rule).
+worst-case permutation null under the SAME corrected
+construction (computed at execution time; the observed side ships here).
 """
 import os
 import sys
@@ -55,8 +55,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
 from b03_certify import (ALL_PAIRS, POSITIVE_CONTROLS, T_bounds_from_count_intervals,
                          assign_cell_types, load_all, make_regions)
 
-DATA = "B03_project/data"
-OUT = "B03_project/results"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
+OUT = os.path.join(ROOT, "results")
 SENS = f"{OUT}/sensitivity/breast_tight_bounds_sensitivity.csv"
 
 # Frozen scout maps (sealed b03_certify main(); module-level so main() and G9-1
@@ -129,7 +129,7 @@ def g02_adjacency_determinism(centroids, labels, s_type, r_type, radius,
             # neighbor test uses OTHER_TYPE (senders need a receiver-type
             # neighbor; receivers a sender-type) — the original draft hardcoded
             # is_r here, which failed G9-2 for receivers at first execution
-            # (logged amendment record).
+            # (fixed after first execution; noted here).
             if any(other_type[nbr] and nbr != cell_i for nbr in nbrs_all[k_i]):
                 brute[k_i] = True
         if not np.array_equal(brute, mask[sample]):
@@ -139,13 +139,13 @@ def g02_adjacency_determinism(centroids, labels, s_type, r_type, radius,
 
 
 class CorrectedBounds:
-    """amendment record corrected per-gene-slot interval builder (one rule everywhere).
+    """Corrected per-gene-slot interval builder (one rule everywhere).
 
     dmin(g) = -(# band transcripts of g whose source cell is in the counted set) —
     exact (extracellular destination always available).
-    dmax(g) = min( binary-donor count, amendment record capacity sum ) where the binary
+    dmax(g) = min( binary-donor count, capacity-capped sum ) where the binary
     count is over each transcript's OWN donor slots only (no cross-gene slot
-    absorption), and the amendment record capacity sum is sum_{c in counted}
+    absorption), and the capacity sum is sum_{c in counted}
     min(pot_c(g), cap_c) with pot_c(g) fixed per gene and cap_c the frozen
     gain capacity. On breast caps never bind (asserted).
     """
@@ -185,7 +185,7 @@ class CorrectedBounds:
             self.own[g] = (m, self.mov_cell[m], ok, idx, offs, pot)
 
     def interval(self, gene, counted_ids):
-        """(dmin, dmax) for gene over counted cell-id set; amendment record cap applied."""
+        """(dmin, dmax) for gene over counted cell-id set; capacity cap applied."""
         m, cells_m, ok, idx, offs, pot = self.own[gene]
         counted_ids = np.asarray(counted_ids, dtype=np.int64)
         src_in = np.isin(cells_m, counted_ids) & (cells_m >= 0)
@@ -204,12 +204,12 @@ class CorrectedBounds:
         else:
             dmax_cap = 0
         dmax = min(dmax_bin, dmax_cap)
-        assert dmax == dmax_bin, "amendment record capacity bound on breast (must not bind)"
+        assert dmax == dmax_bin, "capacity bound on breast (must not bind)"
         return dmin, dmax
 
 
 def g91_corrected_reproduction(cb, labels, region_of_cell, scout, sens):
-    """Amended G9-1: corrected builder == amendment record corrected bounds bit-exactly;
+    """Amended G9-1: corrected builder == corrected bounds bit-exactly;
     sealed intervals contain corrected intervals row-wise (superset)."""
     sens_idx = {(r.pair, int(r.region)): r for r in sens.itertuples()}
     n_ok = 0
@@ -232,7 +232,7 @@ def g91_corrected_reproduction(cb, labels, region_of_cell, scout, sens):
             assert dl_sealed[0] <= dmin and dmax <= dl_sealed[1], \
                 f"G9-1 FAIL superset {row['pair']} r{rid} {G}"
             n_ok += 1
-    print(f"G9-1 PASS (amended): {n_ok} gene-side intervals reproduce amendment record "
+    print(f"G9-1 PASS (amended): {n_ok} gene-side intervals reproduce the "
           f"corrected bounds bit-exactly; sealed intervals contain them row-wise",
           flush=True)
 

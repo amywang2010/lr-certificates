@@ -1,20 +1,20 @@
 """B03 Phase 5: lung-crop vendor load — PIP, concordance, band geometry, labels, regions.
 
 Reuses tissue-1 machinery BY IMPORT (b03_load: assign_pip, boundary_and_band,
-donor_sets_for_band_tested; b03_certify: make_regions with prereg seed 20260907).
-Lung-specific I/O per B03_PHASE5_ADDENDUM.md:
-  - transcripts: xenium_lung/crop/transcripts.parquet (frozen crop window)
+donor_sets_for_band_tested; b03_certify: make_regions with frozen seed 20260907).
+Lung-specific I/O (frozen before compute):
+  - transcripts: <workspace>/xenium_lung/crop/transcripts.parquet (frozen crop window)
   - polygons:    crop cell_boundaries.parquet (same construction algorithm as v3)
-  - concordance: full-section h5 (xenium_lung/extracted/cell_feature_matrix.h5),
+  - concordance: full-section h5 (<workspace>/xenium_lung/extracted/cell_feature_matrix.h5),
     restricted to crop-cell barcodes; gate = diagnosis-informed (per_cell >= 0.90,
-    total_ratio >= 0.97) — same gate class as tissue 1 (amendment record).
+    total_ratio >= 0.97) — same gate class as tissue 1.
   - labels:      addendum A3 frozen marker dictionary, majority vote, tested-LR genes
     excluded (17 tested genes of the 18 testable pairs); classes <200 cells dropped
-    (amendment record rule, frozen in prereg item 1).
+    (rule frozen before expression access).
   - regions:     k-means k=3 on (log10(1+transcript_counts), x/1000, y/1000), seed
-    20260907 (prereg item 2).
+    20260907 (frozen before expression access).
 
-Outputs -> xenium_lung/crop/data/: tx.parquet, donor_map.pkl, cells_meta.parquet,
+Outputs -> the crop data dir: tx.parquet, donor_map.pkl, cells_meta.parquet,
 concordance.json, labels.npy, regions.npy
 Smoke mode (B03_LUNG_SMOKE=1): first 300k transcripts, no artifact overwrite
 (writes to data/smoke_*), all assertions still run.
@@ -30,7 +30,10 @@ from b03_load import assign_pip, boundary_and_band, donor_sets_for_band_tested, 
 from b03_certify import make_regions
 
 SMOKE = os.environ.get("B03_LUNG_SMOKE") == "1"
-CROP = "xenium_lung/crop"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+CROP = os.path.join(WORKSPACE, "xenium_lung", "crop")
+EXTRACTED = os.path.join(WORKSPACE, "xenium_lung", "extracted")
 OUTD = f"{CROP}/data"
 os.makedirs(OUTD, exist_ok=True)
 
@@ -57,7 +60,7 @@ MARKERS_RAW = {
 MARKERS = {cls: [g for g in genes if g not in TESTED] for cls, genes in MARKERS_RAW.items()}
 REMOVED_TESTED_MARKERS = sorted(g for cls, genes in MARKERS_RAW.items() for g in genes
                                 if g in TESTED)
-MIN_CLASS_CELLS = 200  # amendment record rule, frozen
+MIN_CLASS_CELLS = 200  # minimum-class rule, frozen
 
 def load_transcripts():
     f = pq.ParquetFile(f"{CROP}/transcripts.parquet")
@@ -100,7 +103,7 @@ def load_polygons_lung():
 
 def verify_concordance_lung(tx, owner, cid_map):
     """PIP vs full-section h5 restricted to crop barcodes, 40 random genes (same gate)."""
-    with h5py.File("xenium_lung/extracted/cell_feature_matrix.h5", "r") as f:
+    with h5py.File(os.path.join(EXTRACTED, "cell_feature_matrix.h5"), "r") as f:
         g = f["matrix"]; shape = g["shape"][:]
         barcodes = [b.decode() if isinstance(b,bytes) else b for b in g["barcodes"][:]]
         features = [b.decode() if isinstance(b,bytes) else b for b in g["features"]["name"][:]]
@@ -181,7 +184,7 @@ def main():
     owner = assign_pip(tx, polys)
     print(f"PIP done ({time.time()-t0:.0f}s)", flush=True)
     # barcode set for h5 restriction (must exist before concordance)
-    with h5py.File("xenium_lung/extracted/cell_feature_matrix.h5","r") as f:
+    with h5py.File(os.path.join(EXTRACTED, "cell_feature_matrix.h5"), "r") as f:
         barcodes_all = [b.decode() if isinstance(b,bytes) else b for b in f["matrix"]["barcodes"][:]]
     crop_bc = set(pq.read_table(f"{CROP}/cells.parquet", columns=["cell_id"]).column("cell_id").to_pylist())
     keep_cols_set = {i for i,b in enumerate(barcodes_all) if b in crop_bc}
@@ -208,7 +211,7 @@ def main():
     n_cells = len(cells_meta)
     tx["cell_idx"] = owner  # attach BEFORE labeling (label_cells consumes it)
     labels = label_cells(tx, n_cells)
-    # regions: prereg item 2 (k-means k=3, seed 20260907)
+    # regions: frozen rule (k-means k=3, seed 20260907)
     regions = make_regions(cells_meta, labels, k=3, seed=20260907)
     print(f"region sizes: {np.bincount(regions).tolist()}", flush=True)
     dist, band, tree, edge_cell = boundary_and_band(tx, polys)

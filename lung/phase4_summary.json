@@ -1,5 +1,5 @@
 {
-  "prereg": "B03_PHASE4_PREREG.md v1.0 (frozen before compute)",
+  "design": "kernel-margin computation; frozen before compute",
   "smoke": false,
   "n_certified": 46,
   "kernel_immune": 0,

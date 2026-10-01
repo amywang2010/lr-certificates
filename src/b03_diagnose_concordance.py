@@ -17,9 +17,9 @@ import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 import h5py
-import json, time, pickle
+import json, os, time, pickle
 
-DATA = "B03_project/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
 
 def main():
     t0 = time.time()

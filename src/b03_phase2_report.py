@@ -1,6 +1,6 @@
 """Phase-2 report generator: assembles B03_PHASE2_REPORT.md from analysis artifacts.
 
-Implements the preregistered verdict trichotomy verbatim (B03_PHASE2_PREREG.md):
+Implements the registered verdict trichotomy verbatim:
   >= 90% of evaluable rows inside -> PASS
   75-90%                          -> PARTIAL (mechanistic diagnosis required)
   < 75%                           -> FAIL (U does not transfer; report openly)
@@ -9,12 +9,13 @@ UTF-8 output. Referee pass happens after the real report renders.
 """
 
 import json
-import sys
+import os, sys
 
 import numpy as np
 import pandas as pd
 
-RES = sys.argv[1] if len(sys.argv) > 1 else "B03_project/results"
+RES = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
 OUT_PATH = f"{RES}/B03_PHASE2_REPORT.md"
 
 S = json.load(open(f"{RES}/phase2_proseg_summary.json"))
@@ -55,15 +56,15 @@ a("# B03 Phase 2 — Proseg Cross-Platform Replication Report")
 a("")
 a(f"## Verdict: **{verdict}**")
 a("")
-a(f"Pre-registered gate (B03_PHASE2_PREREG.md, Amendment A3 semantics): "
+a(f"Pre-specified gate (frozen before the Proseg run): "
   f"**{n_in}/{n_eval}** evaluable rows inside their certified intervals = "
   f"**{frac*100:.1f}%** (gate >= 90%; {S['primary'].get('n_excluded', 0)} rows "
   f"excluded as non-evaluable, >10% exclusion aborts).")
 a("")
 a("## Configuration provenance")
 a("")
-a(f"- Proseg {S['proseg_version']}, run 4 per Amendment A4: 2 um voxels, "
-  f"2 z-layers (memory-feasible configuration after the run-3 guard abort, amendment record); "
+a(f"- Proseg {S['proseg_version']}: 2 um voxels, "
+  f"2 z-layers (memory-feasible configuration after the run-3 guard abort); "
   f"diffusion model KEPT; all other parameters default.")
 a(f"- Exact command: `{S['command']}`")
 a(f"- Cells: {S['n_proseg_cells']:,} (background rows dropped per A2a: "
@@ -94,7 +95,7 @@ else:
     a("")
     a("None (all evaluable rows inside).")
 a("")
-a("## Interpretation contract (frozen in prereg)")
+a("## Interpretation contract (frozen before compute)")
 a("")
 a("- PASS: certification coverage transfers to an independent probabilistic "
   "segmentation algorithm — the uncertainty-set thesis gains cross-platform support.")

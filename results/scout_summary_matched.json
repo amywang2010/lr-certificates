@@ -1,5 +1,5 @@
 {
-  "method": "matched robust permutation null (DEV-003), within-region decile-matched labels; PARALLEL RERUN per DEV-005 (per-perm seeds 20260905+100003+p, pre-flight determinism check)",
+  "method": "matched robust permutation null, within-region decile-matched labels; parallel rerun (per-perm seeds 20260905+100003+p, pre-flight determinism check)",
   "B": 1000,
   "n_workers": 4,
   "alignment": "labels/regions polygon-index space; verified by assertion",

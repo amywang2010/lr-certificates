@@ -13,8 +13,9 @@ import time
 import gzip
 import sys
 
-LOG = "B03_project/logs/phase2_watcher.log"
-OUT = "B03_project/data/proseg_out"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOG = os.path.join(ROOT, "logs", "phase2_watcher.log")
+OUT = os.path.join(ROOT, "data", "proseg_out")
 POLL = 60.0
 
 def w(msg):
@@ -53,7 +54,7 @@ while True:
         w(f"outputs: files_complete={files_ok} mtx_complete={mtx_ok} ({detail})")
         if files_ok and mtx_ok:
             w("COMPLETION VERIFIED - launching analysis")
-            r = subprocess.run(["python", "B03_project/src/b03_phase2_analysis.py"],
+            r = subprocess.run(["python", os.path.join(ROOT, "src", "b03_phase2_analysis.py")],
                                capture_output=True, text=True, timeout=3600)
             tail = "\n".join((r.stdout + r.stderr).splitlines()[-12:])
             w(f"analysis exit={r.returncode}; tail:\n{tail}")

@@ -3,7 +3,7 @@
 Mirrors b03_phase2_vendor_prep.py exactly (transform x = log1p((M/Ctot)*scale),
 scale = median vendor cell marker total; per-class centroids from vendor cells),
 with the addendum-A3 marker dictionary (tested-LR genes excluded mechanically).
-Outputs xenium_lung/crop/data/vendor_markers.npz: centroids, type_names,
+Outputs the crop data dir's vendor_markers.npz: centroids, type_names,
 marker_genes, scale, vendor_centroids_xy, regions_row.
 """
 import os, sys, pickle
@@ -12,7 +12,9 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-D = "xenium_lung/crop/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+D = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
 PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
  ("ERBB2","EGFR"),("ERBB2","PDCD1"),("ESR1","PGR"),("PGR","ESR1"),
  ("CD274","CTLA4"),("CD274","CD8A"),("CXCL12","CCR7"),("PECAM1","PDCD1"),

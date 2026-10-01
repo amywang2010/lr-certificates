@@ -1,6 +1,6 @@
-"""B03 Phase 2 (step B): Proseg replication analysis per B03_PHASE2_PREREG.md.
+"""B03 Phase 2 (step B): Proseg replication analysis.
 
-Endpoint (prereg, primary): fraction of the 75 (pair, region) rows with
+Endpoint (design freeze, primary): fraction of the 75 (pair, region) rows with
 T(A_proseg, K0) inside the scout's certified interval [T_lo, T_hi]. Gate >= 90%.
 Secondary: sign agreement on rows certified by the matched null (q <= 0.10).
 
@@ -15,10 +15,10 @@ Input schema (verified from proseg 3.2.0 source, output.rs/main.rs — not assum
               centroid_x, centroid_y, ...; row order = cell id order (writer
               enumerates 0..ncells-1), so mtx row i (1-based) = cells row i (0-based).
 
-Machinery reuse (prereg section 4): EPS and t_log2 IMPORTED from b03_scout.py.
+Machinery reuse (design freeze): EPS and t_log2 IMPORTED from b03_scout.py.
 Labels: frozen vendor centroids (vendor_markers.npz, identical transform, step A).
-Regions: nearest vendor centroid (prereg section 1). Background cells (id <= 0),
-if any exist, are excluded per prereg Amendment A1 and the count is reported.
+Regions: nearest vendor centroid (design freeze). Background cells (id <= 0),
+if any exist, are excluded per the registered background rule and the count is reported.
 """
 
 import gzip
@@ -31,11 +31,12 @@ import pandas as pd
 from scipy.io import mmread
 from scipy.spatial import cKDTree
 
-sys.path.insert(0, "B03_project/src")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 from b03_scout import ALL_PAIRS, TYPE_MAP, RECV_MAP, EPS, t_log2
 
-DATA = "B03_project/data"
-RES = "B03_project/results"
+DATA = os.path.join(ROOT, "data")
+RES = os.path.join(ROOT, "results")
 t0 = time.time()
 
 tested = sorted({g for p in ALL_PAIRS for g in p})
@@ -59,7 +60,7 @@ assert len(b) == 75
 fin = pd.read_csv(f"{RES}/scout_final_matched.csv")
 
 # ---------- proseg outputs (schema per source, asserted at load) ----------
-# amendment record: proseg 3.2.0 writes metadata files named EXACTLY as the --output-*
+# Note: proseg 3.2.0 writes metadata files named EXACTLY as the --output-*
 # arguments (cells/genes, no .parquet suffix) — verified on disk (PAR1 magic).
 with gzip.open(f"{DATA}/proseg_out/counts", "rb") as f:
     Coo = mmread(f).tocoo()
@@ -75,7 +76,7 @@ assert Coo.shape[1] in (len(genes_p), len(genes_p) - 1), \
 gene_names = genes_p["gene"].astype(str).to_numpy()
 assert len(set(gene_names)) == len(gene_names), "duplicate gene names"
 
-# ---------- prereg Amendment A2: cell universe + gene-alignment verification ----------
+# ---------- cell universe + gene-alignment verification (frozen before compute) ----------
 # (a) counts mtx is documented (sampler.rs:249) as foreground (non-noise) counts, so
 # cells.parquet should contain only real cells; drop rows with the vendor unassigned
 # marker original_cell_id == "0" iff present (expected 0) and report the count.
@@ -152,7 +153,7 @@ assert (Gm.sum(axis=0) > 0).all(), "some tested gene has zero total counts"
 print(f"[{time.time()-t0:.0f}s] submatrix built: {Mall.shape}, total "
       f"{int(Mall.sum()):,}", flush=True)
 
-# ---------- label transfer (prereg section 2) ----------
+# ---------- label transfer (frozen before compute) ----------
 Ctot = M.sum(axis=1).astype(np.int64)
 has_marker = Ctot > 0
 Xp = np.log1p((M / np.maximum(Ctot, 1)[:, None]) * scale).astype(np.float64)
@@ -164,7 +165,7 @@ labels[has_marker] = np.array(type_names, dtype=object)[sim.argmax(axis=1)]
 print(f"[{time.time()-t0:.0f}s] labels: "
       f"{pd.Series(labels).value_counts().head(8).to_dict()}", flush=True)
 
-# ---------- region mapping (prereg section 1) ----------
+# ---------- region mapping (frozen before compute) ----------
 pc_xy = pc[["centroid_x", "centroid_y"]].to_numpy(np.float64)
 tree = cKDTree(vendor_xy)
 dist, nn = tree.query(pc_xy, k=1)
@@ -202,7 +203,7 @@ for (Lg, Rg) in ALL_PAIRS:
                          N_L=N_L, N_R=N_R, T=t_log2(N_L, N_R, nL, nR)))
 P = pd.DataFrame(rows)
 assert len(P) == 75
-# prereg Amendment A3: non-evaluable rows (empty sender or receiver population under
+# Non-evaluable rows (empty sender or receiver population under
 # A_proseg) are excluded from the denominator and reported; >10% non-evaluable aborts.
 n_excl = int(P["T"].isna().sum())
 n_eval = 75 - n_excl
@@ -231,9 +232,9 @@ cert_eval = cert_mask & out["T"].notna()
 sign_ok = int((((out["T"] > 0) == out.certified_pos_matched)[cert_eval]).sum())
 
 summary = dict(
-    prereg="B03_PHASE2_PREREG.md v1.0 (+ Amendments A1, A2)",
+    design="regions, cell universe, and label transfer frozen before the Proseg run",
     proseg_version="3.2.0",
-    command=open("B03_project/logs/proseg_cmd.txt").read().strip(),
+    command=open(os.path.join(ROOT, "logs", "proseg_cmd.txt")).read().strip(),
     counts_format="gzip MatrixMarket (write_sparse_mtx), rint->int64",
     n_background_cells_excluded=n_bg_cells,
     noise_gene_slot=dropped_noise_gene,

@@ -3,8 +3,8 @@
 Reuses certified machinery BY IMPORT (b03_load: assign_pip, boundary_and_band,
 donor_sets_for_band_tested, BAND_UM; b03_certify: make_regions, seed 20260907).
 s6-specific I/O per B03_PHASE7_ADDENDUM_A1 + A1-b (frozen before any compute):
-  - transcripts: xenium_breast_s6/crop/transcripts.parquet (frozen window
-    x[7500,11000] x y[6500,10000], DEV amendment 017 crop rule verbatim on centroid density).
+  - transcripts: <workspace>/xenium_breast_s6/crop/transcripts.parquet (frozen window
+    x[7500,11000] x y[6500,10000], frozen crop rule verbatim on centroid density).
   - polygons:    crop cell_boundaries.parquet as per-cell WKB (simpler than the 10x
     exploded format; same validity filter: area > 1e-6, buffer(0) repair, largest part).
   - concordance: A1-c totals-level gate — vendor obs/transcript_counts (polygon id
@@ -14,12 +14,12 @@ s6-specific I/O per B03_PHASE7_ADDENDUM_A1 + A1-b (frozen before any compute):
     tissues 1/2 is structurally unavailable here; this gate was frozen before any
     gene-level computation.
   - labels:      A3 frozen marker dictionary, majority vote, tested-LR genes excluded;
-    classes < 200 cells dropped (DEV amendment 007 rule, frozen).
+    classes < 200 cells dropped (frozen minimum-class rule).
   - regions:     k-means k=3 on (log10(1+transcript_counts), x/1000, y/1000), seed
     20260907. transcript_counts joined from the zip obs (vendor per-cell total),
     asserted to match the CSR row totals exactly.
 
-Outputs -> xenium_breast_s6/crop/data/: tx.parquet, donor_map.pkl, cells_meta.parquet,
+Outputs -> the s6 crop data dir: tx.parquet, donor_map.pkl, cells_meta.parquet,
 concordance.json, labels.npy, regions.npy  (lung-loader schema, downstream-compatible).
 Smoke mode (B03_S6_SMOKE=1): first 300k transcripts, smoke_* artifacts, all
 assertions still run; concordance recorded but not gated (structural mismatch of
@@ -38,11 +38,13 @@ from shapely import from_wkb
 from shapely.geometry import Polygon
 
 SMOKE = os.environ.get("B03_S6_SMOKE") == "1"
-CROP = "xenium_breast_s6/crop"
-TC = "xenium_breast_s6/extracted/table_cells"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+CROP = os.path.join(WORKSPACE, "xenium_breast_s6", "crop")
+TC = os.path.join(WORKSPACE, "xenium_breast_s6", "extracted", "table_cells")
 OUTD = f"{CROP}/data"
 os.makedirs(OUTD, exist_ok=True)
-LOG = "xenium_breast_s6/load_log.json"
+LOG = os.path.join(WORKSPACE, "xenium_breast_s6", "load_log.json")
 
 def log(d):
     d = {k: (v.item() if hasattr(v, "item") else v) for k, v in d.items()}
@@ -71,7 +73,7 @@ MARKERS_RAW = {
 MARKERS = {cls: [g for g in genes if g not in TESTED] for cls, genes in MARKERS_RAW.items()}
 REMOVED_TESTED_MARKERS = sorted(g for cls, genes in MARKERS_RAW.items() for g in genes
                                 if g in TESTED)
-MIN_CLASS_CELLS = 200  # DEV amendment 007 rule, frozen
+MIN_CLASS_CELLS = 200  # minimum-class rule, frozen
 
 def decode_zarr_string_dir(d):
     """Decode a zarr v2 string array extracted as chunk files (numcodecs direct)."""

@@ -1,11 +1,11 @@
 """B03 Phase 5: lung-crop matched robust permutation null — v3 machinery, re-pointed.
 
-Drives b03_robust_null_v3 by import with the preregistered tissue-2 configuration:
-  - DATA/OUT -> xenium_lung/crop/data (env B03_NULL_DATA/B03_NULL_OUT; env so the
+Drives b03_robust_null_v3 by import with the frozen tissue-2 configuration:
+  - DATA/OUT -> the workspace xenium_lung/crop/data directory (env B03_NULL_DATA/B03_NULL_OUT; env so the
     spawned workers inherit the same module configuration)
-  - seed 20260907 -> per-perm seeds 20260907+100003+p (prereg item 5)
-  - A3-frozen TYPE_MAP/RECV_MAP and the 18 G1-testable pairs (parent-side globals)
-  - B03_NULL_CAP=1: amendment record capacity-capped dmax, ONE formula with the certify step
+  - seed 20260907 -> per-perm seeds 20260907+100003+p (frozen)
+  - frozen TYPE_MAP/RECV_MAP and the 18 G1-testable pairs (parent-side globals)
+  - B03_NULL_CAP=1: capacity-capped dmax, ONE formula with the certify step
 Label counts are verified by v3 against label_counts.json (written here from the
 b03_lung_load outputs; v3 asserts an exact match before any permutation runs).
 """
@@ -13,9 +13,11 @@ import os, sys, json
 import numpy as np
 import pandas as pd
 
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
 os.environ["B03_NULL_SEED"] = "20260907"
-os.environ["B03_NULL_DATA"] = "xenium_lung/crop/data"
-os.environ["B03_NULL_OUT"] = "xenium_lung/crop/data"
+os.environ["B03_NULL_DATA"] = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
+os.environ["B03_NULL_OUT"] = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
 os.environ["B03_NULL_CAP"] = "1"
 os.environ["B03_NULL_B"] = "1000"
 os.environ["B03_NULL_WORKERS"] = "4"
@@ -24,7 +26,7 @@ os.environ["B03_NULL_CKPT"] = "50"
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import b03_robust_null_v3 as v3
 
-D = "xenium_lung/crop/data"
+D = os.environ["B03_NULL_DATA"]
 PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
  ("ERBB2","EGFR"),("ERBB2","PDCD1"),("ESR1","PGR"),("PGR","ESR1"),
  ("CD274","CTLA4"),("CD274","CD8A"),("CXCL12","CCR7"),("PECAM1","PDCD1"),

@@ -1,8 +1,9 @@
 """B03 baseline comparison: descriptive cross-tabs from sealed artifacts only.
 
-Implements B03_BASELINE_COMPARISON.md (frozen 2026-09-13) exactly:
+Implements the registered baseline-comparison protocol (frozen 2026-09-13) exactly:
   Comparison 1 (breast): conventional point-estimate permutation calls
-    (quarantined null_perm_INVALID_layer_mismatch_DEV003.csv, B=1,000) vs the
+    (a quarantined first-generation null whose permutation layer mismatched the
+    certificates', B=1,000) vs the
     two-layer certificates at the same screen resolution (scout_final_matched.csv).
   Comparison 2 (all sections): certified vs not x Proseg-T inside vs outside the
     certified interval, per section and pooled; Fisher exact p, odds ratio with
@@ -24,22 +25,21 @@ import os
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RESEARCH = os.path.dirname(ROOT)
-OUT = os.path.join(RESEARCH, "B03_project", "results", "baseline_comparison")
+OUT = os.path.join(ROOT, "results", "baseline_comparison")
 
 SOURCES = {
-    "breast_final": "B03_project/results/scout_final_matched.csv",
-    "breast_conventional": "B03_project/results/baseline_comparison/conventional_null_breast.csv",
-    "breast_e2": "B03_project/results/phase2_proseg_coverage.csv",
-    "lung_final": "xenium_lung/crop/data/scout_final_lung.csv",
-    "lung_e2": "xenium_lung/crop/data/phase5_e2_coverage.csv",
-    "s6_final": "xenium_breast_s6/crop/data/scout_final_s6.csv",
-    "s6_e2": "xenium_breast_s6/crop/data/phase7_e2_coverage.csv",
+    "breast_final": "results/scout_final_matched.csv",
+    "breast_conventional": "results/baseline_comparison/conventional_null_breast.csv",
+    "breast_e2": "results/phase2_proseg_coverage.csv",
+    "lung_final": "lung/scout_final_lung.csv",
+    "lung_e2": "lung/phase5_e2_coverage.csv",
+    "s6_final": "breast_s6/scout_final_s6.csv",
+    "s6_e2": "breast_s6/phase7_e2_coverage.csv",
 }
 
 
 def p(name: str) -> str:
-    return os.path.join(RESEARCH, name)
+    return os.path.join(ROOT, name)
 
 
 def fisher_two_sided(a: int, b: int, c: int, d: int) -> float:
@@ -195,7 +195,7 @@ def main() -> None:
     c2.to_csv(os.path.join(OUT, "comparison2_instability_by_section.csv"), index=False)
 
     summary = {
-        "protocol": "B03_BASELINE_COMPARISON.md v1.0 (frozen 2026-09-13)",
+        "protocol": "conventional co-expression permutation baseline vs two-layer certificates; descriptive cross-tabs (paper Table 1)",
         "comparison1": {
             "n": 75,
             "conventional_calls_any": conv_pos_any,

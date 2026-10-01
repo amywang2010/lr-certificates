@@ -1,6 +1,6 @@
 {
  "phase": "B03 Phase 6 (B=10000 null resolution)",
- "prereg": "B03_PHASE6_PREREG.md",
+ "design": "B=10,000 null resolution; bitwise checkpoint-resume gate",
  "determinism_gate": {
   "breast": {
    "shared_perms": 1000,

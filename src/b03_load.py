@@ -23,9 +23,9 @@ import shapely
 from shapely import STRtree
 from shapely.geometry import Polygon
 from scipy.spatial import cKDTree
-import json, pickle, time
+import json, os, pickle, time
 
-DATA = "B03_project/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
 QV_MIN = 20.0
 BAND_UM = 3.0
 DONOR_RADIUS_UM = 2 * BAND_UM

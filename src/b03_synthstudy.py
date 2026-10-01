@@ -1,4 +1,4 @@
-"""B03 semi-synthetic certification study runner (spec: B03_SYNTHSTUDY_SPEC.md).
+"""B03 semi-synthetic certification study runner (design frozen before compute).
 
 Builds pseudo-sections on the real breast Rep1 molecule file. The ONLY things
 interventions touch are feature-name assignments of transcript rows; molecule
@@ -30,14 +30,14 @@ functions, in-process; identical per-permutation seeds, blocks, tie convention,
 BH, output schema), writing bounds/null/final tables plus a run manifest into
 results/synthstudy/<run_id>/.
 
-Usage:
-  python B03_project/src/b03_synthstudy.py --mode verify
-  python B03_project/src/b03_synthstudy.py --mode smoke
-  python B03_project/src/b03_synthstudy.py --mode run --arm N --run-id N01 --seed 910001
-  python B03_project/src/b03_synthstudy.py --mode run --arm E --run-id E101 --seed 911001 --f 1.0
-  python B03_project/src/b03_synthstudy.py --mode run --arm M --run-id M0801 --target 8.0 --seed 912001
-  python B03_project/src/b03_synthstudy.py --mode fleet
-  python B03_project/src/b03_synthstudy.py --mode analyze
+Usage (paths are repository-relative; run from anywhere):
+  python src/b03_synthstudy.py --mode verify
+  python src/b03_synthstudy.py --mode smoke
+  python src/b03_synthstudy.py --mode run --arm N --run-id N01 --seed 910001
+  python src/b03_synthstudy.py --mode run --arm E --run-id E101 --seed 911001 --f 1.0
+  python src/b03_synthstudy.py --mode run --arm M --run-id M0801 --target 8.0 --seed 912001
+  python src/b03_synthstudy.py --mode fleet
+  python src/b03_synthstudy.py --mode analyze
 """
 import argparse
 import itertools
@@ -508,14 +508,14 @@ def run_intervals(codes, uniq, run_dir: Path):
     ver.to_csv(run_dir / "exactness_verification.csv", index=False)
 
     in_tested = np.isin(codes, tested_codes)
-    # DEV-019 semantics: the aggregate boolean is NOT a binding test (it counts
-    # cells outside every counted set). Per-target audit on the shipped section
-    # found 42/78 gain and 12/45 loss targets tightenable, 0 of 75 verdict
-    # changes; identical donor geometry and counted sets transfer this finding
-    # verbatim to every pseudo-section, so intervals here are certified
+    # Capacity semantics: the aggregate boolean is NOT a binding test (it counts
+    # cells outside every counted set). The per-target audit on the shipped
+    # section found 42/78 gain and 12/45 loss targets tightenable, 0 of 75
+    # verdict changes; identical donor geometry and counted sets transfer this
+    # finding verbatim to every pseudo-section, so intervals here are certified
     # supersets under the same uncapped construction as the shipped tables.
     diag = dict(capacity_note="uncapped construction (certified supersets); "
-                              "per-target audit DEV-019 transfers: geometry and "
+                              "per-target capacity audit transfers: geometry and "
                               "counted sets identical to shipped section",
                 band_tested=int(len(band_tested)),
                 violations=int(ver.violations.sum()),

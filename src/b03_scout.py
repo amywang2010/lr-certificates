@@ -1,6 +1,6 @@
 """B03 Step 2 (final, vectorized): labels, regions, exact certificates, nulls, coverage.
 
-Implements B03_PREREGISTRATION.md + B03_THEORY.md with full vectorization.
+Implements the registered design and certified interval construction, fully vectorized.
 
 Correctness notes (referee-facing):
 - ALIGNMENT: tx.cell_idx uses polygon indices (PIP over cell polygons). cells.parquet rows
@@ -27,12 +27,12 @@ Correctness notes (referee-facing):
 """
 import numpy as np
 import pandas as pd
-import pickle, json, time, math
+import os, pickle, json, time, math
 from scipy.cluster.vq import kmeans2
 
 EPS = 0.5
-DATA = "B03_project/data"
-OUT = "B03_project/results"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
+OUT = os.path.join(ROOT, "results")
 SEED = 20260905
 B_PERM = 1000
 N_CFG_VERIFY = 1000

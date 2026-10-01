@@ -2,7 +2,7 @@
 
 Mirrors the sealed Phase 5 driver (b03_lung_null.py) exactly: same seed
 (20260907), same data dir, same A3-frozen pair list and type maps from the
-shared config module, same B03_NULL_CAP=1. Differences per prereg: B=10000 and
+shared config module, same B03_NULL_CAP=1. Frozen differences: B=10000 and
 a fresh OUT directory so the sealed B=1000 artifacts remain untouched.
 Per-perm seeds 20260907+100003+p: perms 0..999 are bitwise identical to the
 B=1000 run; the chain script enforces the exact-match determinism gate against
@@ -12,8 +12,10 @@ import os
 import sys
 
 os.environ["B03_NULL_SEED"] = "20260907"
-os.environ["B03_NULL_DATA"] = "xenium_lung/crop/data"
-os.environ["B03_NULL_OUT"] = "xenium_lung/crop/data/b10k"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+os.environ["B03_NULL_DATA"] = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
+os.environ["B03_NULL_OUT"] = os.path.join(WORKSPACE, "xenium_lung", "crop", "data", "b10k")
 os.environ["B03_NULL_CAP"] = "1"
 os.environ["B03_NULL_B"] = "10000"
 os.environ["B03_NULL_WORKERS"] = "4"

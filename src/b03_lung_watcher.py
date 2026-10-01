@@ -1,24 +1,26 @@
 """B03 Phase 5 watcher: fires the arrival audit + extraction the moment the
 download completes. Polls every 30 s; completion = curl process gone AND zip size
 matches the Content-Length (22,618,312,339 B). Then: CRC verify -> G1/G2 audit ->
-extract needed members to xenium_lung/extracted/. Stops there: the sender/receiver
-map addendum freeze is the next human-gated step (prereg discipline), then compute.
+extract needed members to the workspace xenium_lung/extracted/ directory. Stops there: the sender/receiver
+map freeze is the next human-gated step, then compute.
 
 Runs once, exactly once (exit after the chain). All output logged to
-xenium_lung/watcher.log. Robust to transient stat errors (download in flight).
+the workspace xenium_lung/ directory (watcher.log). Robust to transient stat errors (download in flight).
 """
 import os
 import subprocess
 import sys
 import time
 
-sys.path.insert(0, "B03_project/src")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 
-ZIP = "xenium_lung/Xenium_Prime_Human_Lung_Cancer_FFPE_outs.zip"
+ZIP = os.path.join(WORKSPACE, "xenium_lung", "Xenium_Prime_Human_Lung_Cancer_FFPE_outs.zip")
 EXPECTED = 22618312339
-LOG = "xenium_lung/watcher.log"
-AUDIT_OUT = "B03_project/logs/lung_audit.json"
-EXTRACT_DIR = "xenium_lung/extracted"
+LOG = os.path.join(WORKSPACE, "xenium_lung", "watcher.log")
+AUDIT_OUT = os.path.join(ROOT, "logs", "lung_audit.json")
+EXTRACT_DIR = os.path.join(WORKSPACE, "xenium_lung", "extracted")
 EXTRACT_MEMBERS = [
     "gene_panel.json",
     "metrics_summary.csv",

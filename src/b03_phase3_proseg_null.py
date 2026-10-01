@@ -1,12 +1,12 @@
-"""B03 Phase 3: Proseg-side matched permutation null — per B03_PHASE3_PREREG.md
-(FROZEN 2026-09-07 09:40, before any Phase-3 compute; amendment record).
+"""B03 Phase 3: Proseg-side matched permutation null
+(FROZEN 2026-09-07 09:40, before any Phase-3 compute).
 
 Question closed: are the 46 matched-certified directional signs ALSO significant
 under the independent segmentation's own null (within-region decile-matched label
 permutation of Proseg labels)? Gate: >= 85% of certified rows significant at
 within-region BH q <= 0.10 in the certified direction.
 
-Machinery reuse (prereg):
+Machinery reuse (design freeze):
   - EPS, t_log2, ALL_PAIRS, TYPE_MAP, RECV_MAP: IMPORTED from b03_scout.py.
   - bh_within_region: IMPORTED from b03_robust_null_v3.py (identical BH code the
     scout used; module import is side-effect-free, main is guarded).
@@ -14,7 +14,7 @@ Machinery reuse (prereg):
     (verbatim logic; correctness enforced by Assertion A below, which pins the
     reproduction to the phase-2 outputs on all 75 rows).
 
-Hard assertions (abort on failure; prereg section "Hard assertions"):
+Hard assertions (abort on failure; specified here):
   A. Label/region reproduction: re-derived per-(pair,region) sender/receiver cell
      counts nL/nR must equal phase2_proseg_coverage.csv EXACTLY for all 75 rows.
   B. Observed-statistic crosscheck: T_obs recomputed here equals the coverage CSV
@@ -24,7 +24,7 @@ Hard assertions (abort on failure; prereg section "Hard assertions"):
   D. Pre-flight determinism: perm 0 computed twice (parent + worker) — bitwise
      equality required before the sweep starts.
 
-Null scheme (prereg, identical structure to scout amendment record/amendment record):
+Null scheme (design freeze, identical structure to the scout's matched null):
   blocks = (region) x (decile of per-cell TOTAL foreground Proseg counts over ALL
   named genes; per-entry rint then sum — the pipeline's count convention);
   np.quantile linspace(0,1,11), digitize on q[1:-1], clip 0..9; blocks with >=2
@@ -52,13 +52,14 @@ from scipy.io import mmread
 from scipy.spatial import cKDTree
 import multiprocessing as mp
 
-sys.path.insert(0, "B03_project/src")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 from b03_scout import ALL_PAIRS, TYPE_MAP, RECV_MAP, EPS, t_log2
 from b03_robust_null_v3 import bh_within_region
 
-DATA = "B03_project/data"
-RES = "B03_project/results"
-# Tissue-2 reuse (amendment record): paths and expected row count env-overridable.
+DATA = os.path.join(ROOT, "data")
+RES = os.path.join(ROOT, "results")
+# Tissue-2 reuse: paths and expected row count env-overridable.
 DATA = os.environ.get("B03_P3_DATA", DATA)
 RES = os.environ.get("B03_P3_RES", RES)
 N_ROWS = int(os.environ.get("B03_P3_ROWS", "75"))
@@ -180,7 +181,7 @@ def main():
     Gm = Mall[:, [need_pos[g] for g in tested]].astype(np.int32)
     del Mall, Sub, Coo
 
-    # decile covariate: per-cell total over ALL named genes (prereg), per-entry rint
+    # decile covariate: per-cell total over ALL named genes (design freeze), per-entry rint
     Csr_full = None
     with gzip.open(f"{DATA}/proseg_out/counts", "rb") as f:
         Full = mmread(f).tocoo()
@@ -329,7 +330,7 @@ def main():
 
     nul.to_csv(f"{OUT}/phase3_proseg_null.csv", index=False)
     summary = dict(
-        prereg="B03_PHASE3_PREREG.md v1.0 (frozen 2026-09-07 09:40)",
+        design="cross-segmentation significance null; frozen before compute",
         smoke=SMOKE, B=B_PERM, n_workers=N_WORKERS,
         seed_base=SEED_BASE,
         assertions=dict(

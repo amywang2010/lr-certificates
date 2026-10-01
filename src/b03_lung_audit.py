@@ -1,8 +1,8 @@
-"""B03 Phase 5 (step A): dataset arrival audit — per B03_PHASE5_PREREG.md gates G1/G2.
+"""B03 Phase 5 (step A): dataset arrival audit — frozen gates G1/G2.
 
 Runs the moment the zip lands. Zero statistics, zero assumptions:
   1. Zip CRC integrity on all members.
-  2. G1 panel audit: which of the 25 preregistered pairs have BOTH genes in
+  2. G1 panel audit: which of the 25 pre-specified pairs have BOTH genes in
      gene_panel.json -> the mechanical testable-pair subset (every exclusion
      printed with its missing gene).
   3. G2 schema audit: file formats, parquet columns, transcript header — dumped
@@ -14,14 +14,16 @@ Exit code 1 on integrity failure (zip corrupt, needed member missing).
 import gzip
 import io
 import json
-import sys
+import os, sys
 import zipfile
 
-sys.path.insert(0, "B03_project/src")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "src"))
 from b03_scout import ALL_PAIRS
 
-ZIP_DEFAULT = "xenium_lung/Xenium_Prime_Human_Lung_Cancer_FFPE_outs.zip"
-OUT_DEFAULT = "B03_project/logs/lung_audit.json"
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+ZIP_DEFAULT = os.path.join(WORKSPACE, "xenium_lung", "Xenium_Prime_Human_Lung_Cancer_FFPE_outs.zip")
+OUT_DEFAULT = os.path.join(ROOT, "logs", "lung_audit.json")
 
 NEED = [
     "gene_panel.json",

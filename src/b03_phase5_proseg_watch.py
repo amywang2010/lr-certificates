@@ -1,13 +1,15 @@
 """B03 Phase 5: proseg completion watcher — validates outputs the moment proseg exits.
 
-Polls every 30 s. On proseg exit: verifies the amendment record naming (cells/genes/counts
-under xenium_lung/crop/proseg_out/), row-count sanity vs the crop, and writes
+Polls every 30 s. On proseg exit: verifies the Proseg naming (cells/genes/counts
+under the workspace xenium_lung/crop/proseg_out/), row-count sanity vs the crop, and writes
 proseg_done.json. Does NOT run analyses (E2 runs as its own audited step).
 """
 import json, os, subprocess, sys, time
 
-OUT = "xenium_lung/crop/proseg_out"
-DONE = "xenium_lung/crop/proseg_done.json"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+OUT = os.path.join(WORKSPACE, "xenium_lung", "crop", "proseg_out")
+DONE = os.path.join(WORKSPACE, "xenium_lung", "crop", "proseg_done.json")
 
 def proseg_alive():
     r = subprocess.run(["powershell", "-NoProfile", "-Command",
@@ -27,7 +29,7 @@ def validate():
         if os.path.exists(cpath):
             md = pq.ParquetFile(cpath).metadata
             info["proseg_cells"] = md.num_rows
-            cm = pq.ParquetFile("xenium_lung/crop/cells.parquet").metadata
+            cm = pq.ParquetFile(os.path.join(WORKSPACE, "xenium_lung", "crop", "cells.parquet")).metadata
             info["vendor_cells"] = cm.num_rows
             info["cell_count_delta"] = md.num_rows - cm.num_rows
         gpath = os.path.join(OUT, "genes")

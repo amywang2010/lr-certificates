@@ -23,8 +23,10 @@ import os
 import numpy as np
 import pandas as pd
 
-RES = "B03_project/results"
-LUN = "xenium_lung/crop/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+RES = os.path.join(ROOT, "results")
+LUN = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
 B = 10000
 
 TISSUES = {

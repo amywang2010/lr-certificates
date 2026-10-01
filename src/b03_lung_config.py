@@ -2,11 +2,14 @@
 
 Extracted verbatim from b03_lung_null.py (2026-09-08) so that the sealed Phase 5
 driver and the Phase 6 B=10,000 driver share the identical frozen pair list and
-type maps. These values are frozen in B03_PHASE5_ADDENDUM.md section A3 and must
-not be edited; changes require a new pre-registered addendum.
+type maps. These values are frozen and must not be edited; changes require a new
+registered addendum.
 """
+import os
 
-D = "xenium_lung/crop/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+D = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
 
 PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
  ("ERBB2","EGFR"),("ERBB2","PDCD1"),("ESR1","PGR"),("PGR","ESR1"),

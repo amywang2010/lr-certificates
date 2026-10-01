@@ -1,5 +1,5 @@
 {
-  "prereg": "B03_PHASE5_PREREG.md v1.0 + ADDENDUM v1.0 (A2 crop)",
+  "design": "E2 Proseg-interval coverage; frozen before compute",
   "n_proseg_cells": 47286,
   "n_vendor_cells": 54,
   "cells_with_marker_signal": 30693,

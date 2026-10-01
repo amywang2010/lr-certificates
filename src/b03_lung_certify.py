@@ -3,14 +3,14 @@
 Reimplements the scout's vectorized interval machinery EXACTLY as read from
 b03_scout.py (gene_interval, row assembly, capacity feasibility, exactness
 verification, subcube check), parameterized to:
-  - crop data dir xenium_lung/crop/data (b03_lung_load outputs)
+  - crop data dir xenium_lung/crop/data in the workspace (b03_lung_load outputs)
   - 18 G1-testable pairs + addendum-A3 TYPE_MAP/RECV_MAP (frozen)
-  - verification seed 20260907 (prereg seed base)
-The raw decile null of the scout is NOT ported: the preregistered tissue-2 null is
+  - verification seed 20260907 (frozen seed base)
+The raw decile null of the scout is NOT ported: the frozen tissue-2 null is
 the matched robust permutation null (b03_robust_null_v3 scheme, driven by
 b03_lung_null.py). scout_bounds.csv schema matches the scout's.
 
-Outputs -> xenium_lung/crop/data/: scout_bounds.csv, exactness_verification.csv,
+Outputs -> the crop data dir: scout_bounds.csv, exactness_verification.csv,
 subcube_check.json, capacity_check.json
 """
 import os, sys, json, pickle, time
@@ -20,7 +20,9 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from b03_scout import t_log2, EPS
 
-D = "xenium_lung/crop/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+D = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
 SEED = 20260907
 N_CFG_VERIFY = 1000   # scout constant
 SUBCUBE_K = 12        # scout constant
@@ -94,7 +96,7 @@ def main():
                "max_occupants": int(mov_in_cell.max()), "min_loss_cap": int(loss_cap.min()),
                "cells_violating_gain_cap": int((max_donors > gain_cap).sum()),
                "zero_count_cells": int((base_tc == 0).sum()),
-               "amendment": "amendment record: capacity-capped dmax tightening applied; "
+               "capacity_rule": "capacity-capped dmax tightening applied; "
                             "intervals are certified supersets (sound upper bounds)"},
               open(f"{D}/capacity_check.json", "w"), indent=1)
     # NOT asserted on tissue 2 (caps bind); soundness is preserved by the capped
@@ -110,7 +112,7 @@ def main():
                                               dtype=np.int64)
 
     mov_unassigned = mov_cell < 0
-    # amendment record (frozen before statistics): on the lung crop the frozen gain capacity
+    # Frozen before statistics: on the lung crop the frozen gain capacity
     # (<= 0.5 x vendor transcript count) binds for a small cell population (197 of
     # 47,754; 41 zero-count vendor artifact cells). Sound tightening used EVERYWHERE
     # (certify AND null, one formula):
@@ -271,7 +273,7 @@ def main():
           f"{len(ver)*N_CFG_VERIFY} gene-level configs", flush=True)
     assert ver.violations.sum() == 0, "exactness verification FAILED"
 
-    # ---------- amendment record cap cross-verification ----------
+    # ---------- capacity-cap cross-verification ----------
     # The capped dmax enters certificates, so it is verified by an independent path:
     # for every (gene, region) where capping bound, recompute the per-cell mins for
     # 25 random target cells by explicit scalar indexing and compare to the vector
@@ -310,7 +312,7 @@ def main():
                     scalar_min = min(int(pot[c]), int(cap_per_cell[c]))
                     if scalar_min != int(np.minimum(pot[in_t], cap_per_cell[in_t])[pos]):
                         cap_mismatch += 1
-    print(f"amendment record cap cross-check: {cap_checks} capped (gene,region) instances; "
+    print(f"capacity-cap cross-check: {cap_checks} capped (gene,region) instances; "
           f"scalar mismatches {cap_mismatch}", flush=True)
     assert cap_mismatch == 0
 

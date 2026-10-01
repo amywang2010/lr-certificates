@@ -1,6 +1,6 @@
 """B03 Step 2 (v2): Certificate engine.
 
-Implements B03_THEORY.md exactly:
+Implements the certified interval construction exactly:
 - T(A) = log2((N_L/n_L + eps)) + log2((N_R/n_R + eps))  [separable]
 - Exact bounds: per-coordinate integer interval [N_min, N_max] of region-aggregate counts
   under boundary reassignment flows, computed by greedy per-transcript optimization with
@@ -12,14 +12,14 @@ Implements B03_THEORY.md exactly:
 """
 import numpy as np
 import pandas as pd
-import pickle, json, time
+import os, pickle, json, time
 from collections import defaultdict
 
 EPS = 0.5
-DATA = "B03_project/data"
-OUT = "B03_project/results"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
+OUT = os.path.join(ROOT, "results")
 
-# Pre-registered pairs (from B03_PREREGISTRATION.md — frozen)
+# Pre-specified pairs (frozen before expression access)
 POSITIVE_CONTROLS = [
     ("CD274", "PDCD1"), ("CXCL12", "CXCR4"), ("CCL5", "CCR7"),
     ("PECAM1", "KDR"), ("CD163", "CD3D"),
@@ -91,7 +91,7 @@ def interval_bounds_region(tx, dm, labels, region_of_cell, region_id, pair,
                            capacity_loss=0.6):
     """Exact [N_min, N_max] for gene counts in region under reassignment flows.
 
-    NOTE (amendment record): superseded by the scout's inline per-gene-slot construction and by
+    NOTE: superseded by the scout's inline per-gene-slot construction and by
     the lung b03_lung_certify.py implementation, both of which consume donor_sets
     positionally over band_tested_indices. This id-keyed variant expects a donor map
     keyed by transcript id and is retained only as a reference implementation.

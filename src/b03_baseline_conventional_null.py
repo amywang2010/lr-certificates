@@ -1,5 +1,5 @@
 """B03 conventional point-null (breast): the field's standard first pass, computed
-fresh per B03_BASELINE_COMPARISON.md Amendment v1.1.
+fresh (registered amendment of the conventional protocol).
 
 Why recomputed: the quarantined first-generation null artifact is degenerate by
 construction (q_pos = 1.0 on all rows; worst-case bounds trivially dominate point
@@ -19,7 +19,7 @@ permutation test (CellPhoneDB/CellChat-family null), no worst-case layer.
 Cross-implementation check: the recomputed T(A0) must match the sealed scout T0
 column (max |delta| < 1e-9) before any p-value is produced.
 
-Output: B03_project/results/baseline_comparison/conventional_null_breast.csv
+Output: results/baseline_comparison/conventional_null_breast.csv
         (pair, region, T0, p_pos, p_neg, q_pos, q_neg — add-one p-values).
 """
 from __future__ import annotations
@@ -38,9 +38,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from b03_certify import ALL_PAIRS  # registered pair list, sealed
 from b03_robust_null_v3 import TYPE_MAP, RECV_MAP  # registered sender/receiver maps
 
-RESEARCH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA = os.path.join(RESEARCH, "B03_project", "data")
-RES = os.path.join(RESEARCH, "B03_project", "results")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, "data")
+RES = os.path.join(ROOT, "results")
 OUTDIR = os.path.join(RES, "baseline_comparison")
 EPS = 0.5
 B_PERM = 1000

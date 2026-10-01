@@ -8,7 +8,7 @@ phase2 design anticipated this and carries the signal assertion
 x = log1p((M/C)*scale), scale = median vendor cell marker total; centroids =
 mean of x over vendor cells of each surviving class (DEV amendment 007: Myeloid absent
 by design). Sparse accumulation throughout (n_cells x ~5k markers).
-Outputs xenium_breast_s6/crop/data/vendor_markers.npz.
+Outputs the s6 crop data dir's vendor_markers.npz.
 """
 import os, sys, time
 import numpy as np
@@ -22,8 +22,10 @@ import b03_phase5_vendor_prep as lung_ref
 
 assert PAIRS == lung_ref.PAIRS, "PAIRS diverge from lung driver"
 
-D = "xenium_breast_s6/crop/data"
-CROP = "xenium_breast_s6/crop"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+D = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "data")
+CROP = os.path.join(WORKSPACE, "xenium_breast_s6", "crop")
 TESTED = sorted({g for p in PAIRS for g in p})
 assert len(TESTED) == 17
 MIN_CLASS_CELLS = 50  # phase2 vendor_prep threshold

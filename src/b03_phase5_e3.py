@@ -3,14 +3,16 @@
 Drives b03_phase3_proseg_null by import with the tissue-2 configuration:
 env-driven DATA/RES/rows; b03_scout globals patched BEFORE phase3 import so its
 module-level `from b03_scout import ALL_PAIRS, TYPE_MAP, RECV_MAP` binds the lung
-values. Seeds: 20260907+100003+p (prereg item 5; phase3's SEED is already 20260907).
+values. Seeds: 20260907+100003+p (frozen; phase3's SEED is already 20260907).
 Gate E3: >= 85% of certified rows significant in the certified direction under the
 proseg-side null.
 """
 import os, sys
 
-os.environ["B03_P3_DATA"] = "xenium_lung/crop/data"
-os.environ["B03_P3_RES"] = "xenium_lung/crop/data"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
+os.environ["B03_P3_DATA"] = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
+os.environ["B03_P3_RES"] = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
 os.environ["B03_P3_ROWS"] = "54"
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
