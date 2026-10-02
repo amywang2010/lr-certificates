@@ -156,7 +156,7 @@ def main():
     summary = dict(
         design="kernel-margin computation; frozen before compute",
         smoke=SMOKE,
-        n_certified=46,
+        n_certified=N_CERT,
         kernel_immune=int(np.isinf(cs).sum()),
         c_star_median=float(np.median(fin_vals)),
         c_star_min=float(fin_vals.min()),

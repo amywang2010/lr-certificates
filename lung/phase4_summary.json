@@ -1,7 +1,7 @@
 {
   "design": "kernel-margin computation; frozen before compute",
   "smoke": false,
-  "n_certified": 46,
+  "n_certified": 7,
   "kernel_immune": 0,
   "c_star_median": 20.402315950886255,
   "c_star_min": 1.0340430602639095,
