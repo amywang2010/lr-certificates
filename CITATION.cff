@@ -15,7 +15,7 @@ abstract: >-
   Per-contrast intervals for ligand-receptor statistics in spatial
   transcriptomics, valid over an explicit uncertainty set of molecule-to-cell
   assignments (boundary-local reassignment with capacity constraints, mask
-  erosion/dilation, per-gene leakage intervals). A direction is certified only
+  erosion/dilation, and a parameterised donor radius). A direction is certified only
   when both bounds exclude zero and a permutation null matched to the
   worst-case layer confirms it; everything else is reported as
   non-identifiable. Evaluated on three public Xenium sections spanning two

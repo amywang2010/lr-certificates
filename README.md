@@ -6,9 +6,9 @@ Code and SHA-256-hashed result artifacts for the study:
 
 The study computes, for each ligand–receptor (LR) contrast in a spatial transcriptomics
 section, an **interval valid over an explicit uncertainty set of molecule-to-cell
-assignments** (boundary-local reassignment with capacity constraints, mask
-erosion/dilation, per-gene leakage intervals). A biological direction is reported only
-when both bounds exclude zero **and** a permutation null matched to the worst-case layer
+assignments** (boundary-local reassignment with per-cell capacity constraints,
+mask erosion/dilation, and a parameterised donor radius). A biological direction is
+reported only when both bounds exclude zero **and** a permutation null matched to the worst-case layer
 of the statistic confirms it (within-region Benjamini–Hochberg FDR). Everything else is
 reported as non-identifiable. This repository holds the reproduction materials only: the analysis code, the
 frozen run configuration, and the result artifacts every number traces to.
@@ -24,8 +24,8 @@ frozen run configuration, and the result artifacts every number traces to.
 The third section isolates a mechanism the two-tissue comparison could not: on the same
 tissue and the same 10 pairs, certification collapses (22/30 → 0/30) while certified
 intervals get *narrower* (median width 2.60 → 1.60 log2 units). What governs
-identifiability is the tested genes' share of transcript mass (8.1% of the 313-plex
-section's transcripts, 0.4% of the 5,000-plex section's), which compresses effect sizes
+identifiability is the tested genes' share of transcript mass (8.08% of the 313-plex
+section's transcripts, 0.36% of the 5,000-plex section's), which compresses effect sizes
 below the certification floor.
 
 A controlled 20-run intervention study on the first section (paper Section 5.6) tests

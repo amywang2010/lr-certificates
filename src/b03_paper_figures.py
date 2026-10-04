@@ -32,6 +32,11 @@ plt.rcParams.update({
     "font.family": "DejaVu Sans",
 })
 
+# Figures are drawn at the LNCS text width (4.8 in) and included at
+# width=\textwidth, so no scaling occurs and the specified point sizes are the
+# printed point sizes. Drawing wider and scaling down would shrink the type.
+TEXT_W = 4.8
+
 C_POS = "#B2182B"   # certified positive
 C_NEG = "#2166AC"   # certified negative
 C_NON = "#9E9E9E"   # non-identifiable
@@ -53,7 +58,7 @@ pair_meta = pair_meta.sort_values(["ctrl", "med"], ascending=[False, True])
 pairs = list(pair_meta.index)
 ypos = {p: i for i, p in enumerate(pairs)}
 
-fig, ax = plt.subplots(figsize=(7.08, 5.6))
+fig, ax = plt.subplots(figsize=(TEXT_W, 4.0))
 for _, r in fin.iterrows():
     y = ypos[r.pair] + (r.region - 1) * 0.26
     col = {"pos": C_POS, "neg": C_NEG, "non": C_NON}[r.verdict]
@@ -86,7 +91,7 @@ kb = pd.read_csv(f"{RES}/phase4_kernel_margins.csv")
 kl = pd.read_csv(f"{LUN}/phase4_kernel_margins.csv")
 assert len(kb) == 46 and len(kl) == 7
 
-fig, ax = plt.subplots(figsize=(3.35, 2.5))
+fig, ax = plt.subplots(figsize=(TEXT_W, 2.2))
 rng = np.random.default_rng(20260907)
 data = [kb.c_star.to_numpy(), kl.c_star.to_numpy()]
 labels = ["Breast\n(46 certificates)", "Lung\n(7 certificates)"]
@@ -116,7 +121,7 @@ assert len(f3) == 18
 sel = f3.copy()
 # layout: rows = pair, columns = regions 0..2, two tissue blocks
 blocks = [("Breast", sel[sel.tissue == "breast"]), ("Lung", sel[sel.tissue == "lung"])]
-fig, ax = plt.subplots(figsize=(3.35, 3.9))
+fig, ax = plt.subplots(figsize=(TEXT_W, 3.4))
 ylabels, yvals, ycols, ypoints, ycert = [], [], [], [], []
 y = 0
 for bname, bdf in blocks:
@@ -160,7 +165,7 @@ s2 = json.load(open(f"{RES}/phase2_proseg_summary.json"))
 s3 = json.load(open(f"{RES}/phase3_summary.json"))
 s2l = json.load(open(f"{LUN}/phase5_e2_summary.json"))
 s3l = json.load(open(f"{LUN}/phase3_summary.json"))
-fig, axes = plt.subplots(1, 2, figsize=(3.35, 2.1))
+fig, axes = plt.subplots(1, 2, figsize=(TEXT_W, 1.9))
 ax = axes[0]
 vals = [s2["primary"]["fraction"] * 100, s2l["primary"]["fraction"] * 100]
 ax.bar([0, 1], vals, width=0.55, color=["#762A83", "#762A83"], alpha=0.85)
@@ -185,3 +190,69 @@ fig.savefig(f"{OUT}/fig4_validation.pdf")
 plt.close(fig)
 
 print("figures written")
+
+# ------------------------------------------------------- Fig 0: schematic
+# Pipeline schematic. Drawn as a flow of labelled stages with the three
+# mechanisms of U shown where they enter, so a reader can locate the interval
+# construction, the matched null, and the verdict rule on one page.
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+
+fig, ax = plt.subplots(figsize=(TEXT_W, 2.55))
+ax.set_xlim(0, 100)
+ax.set_ylim(0, 100)
+ax.axis("off")
+
+BOX = dict(boxstyle="round,pad=0.6", linewidth=0.7, edgecolor="#333333")
+GREY = dict(BOX, facecolor="#F2F2F2")
+BLUE = dict(BOX, facecolor="#DEEBF7", edgecolor="#2166AC")
+RED = dict(BOX, facecolor="#FBE5E1", edgecolor="#B2182B")
+
+
+def box(x, y, w, h, text, style=GREY, fs=6.4):
+    ax.add_patch(FancyBboxPatch((x, y), w, h, **style))
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center",
+            fontsize=fs, linespacing=1.35)
+
+
+def arrow(x1, y1, x2, y2, label=None):
+    ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2),
+                                 arrowstyle="-|>", mutation_scale=7,
+                                 linewidth=0.7, color="#333333",
+                                 shrinkA=1.0, shrinkB=1.0))
+    if label:
+        ax.text((x1 + x2) / 2, (y1 + y2) / 2 + 3.2, label, ha="center",
+                fontsize=5.8, color="#333333")
+
+
+box(1, 66, 21, 20, "molecules +\nvendor masks\n\n(assignment $A_0$)", GREY)
+box(27, 66, 24, 20,
+    "uncertainty set $U$\n\nband $d=3\\,\\mu$m\ndonor radius $2d$\ncell caps +50/$-60$%", BLUE)
+box(56, 66, 21, 20, "per-gene count\ninterval $[N_{lo},N_{hi}]$\n\n(Proposition 2)", BLUE)
+box(82, 66, 17, 20, "certified\n$T_{lo},T_{hi}$\nfor pair $\\times$ region", BLUE)
+
+arrow(22, 76, 27, 76)
+arrow(51, 76, 56, 76)
+arrow(77, 76, 82, 76)
+
+box(27, 22, 24, 20,
+    "matched null\n\nlabels permuted\nwithin region $\\times$\ndecile, $B=1000$", GREY)
+box(56, 22, 21, 20,
+    "add-one $p$\nBH within region\n$q\\leq0.10$\nBY check (Prop. 3)", GREY)
+box(82, 22, 17, 20,
+    "verdict\n\ncertified $+$ / $-$\nnon-identifiable", RED)
+
+arrow(39, 66, 39, 42, "same machinery")
+arrow(51, 32, 56, 32)
+arrow(77, 32, 82, 32)
+arrow(90.5, 66, 90.5, 42)
+
+ax.text(1, 92, "Uncertainty set, interval construction, and matched null",
+        fontsize=7.2, weight="bold")
+ax.text(1, 8, "Geometry and vendor outputs enter at the left; no expression value is read\n"
+              "before the regions, crop windows, and gates are frozen.",
+        fontsize=5.9, color="#333333", va="bottom", linespacing=1.4)
+
+fig.savefig(f"{OUT}/fig0_workflow.png", dpi=600, bbox_inches="tight")
+fig.savefig(f"{OUT}/fig0_workflow.pdf", bbox_inches="tight")
+plt.close(fig)
+print("fig0_workflow written")
