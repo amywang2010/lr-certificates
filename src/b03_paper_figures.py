@@ -91,26 +91,53 @@ kb = pd.read_csv(f"{RES}/phase4_kernel_margins.csv")
 kl = pd.read_csv(f"{LUN}/phase4_kernel_margins.csv")
 assert len(kb) == 46 and len(kl) == 7
 
-fig, ax = plt.subplots(figsize=(TEXT_W, 2.2))
-rng = np.random.default_rng(20260907)
-data = [kb.c_star.to_numpy(), kl.c_star.to_numpy()]
-labels = ["Breast\n(46 certificates)", "Lung\n(7 certificates)"]
-for i, d in enumerate(data):
-    x = i + 1
-    ax.hlines(np.median(d), x - 0.18, x + 0.18, color="black", lw=1.4, zorder=3)
-    q1, q3 = np.quantile(d, [0.25, 0.75])
-    ax.vlines(x, q1, q3, color="black", lw=3, alpha=0.25, zorder=2)
-    jit = rng.uniform(-0.09, 0.09, len(d))
-    ax.plot(x + jit, d, "o", ms=2.6, mfc="#4D4D4D", mec="none", alpha=0.75, zorder=4)
-ax.set_yscale("log")
-ax.set_xticks([1, 2])
-ax.set_xticklabels(labels)
-ax.set_ylabel(r"critical kernel multiplier  $c^*$")
-ax.axhline(1.0, color="black", lw=0.7, ls=":")
-ax.text(2.42, 1.02, "boundary-local\nkernel (c = 1)", fontsize=6, va="bottom", ha="right")
-ax.set_xlim(0.55, 2.45)
-ax.set_title("a", loc="left", fontweight="bold", fontsize=10)
-fig.tight_layout(pad=0.4)
+fig, ax = plt.subplots(figsize=(TEXT_W, 1.95))
+
+# Horizontal layout: one row per tissue, value on a log x-axis. Horizontal
+# reading matches the reader's eye and leaves room to annotate each median,
+# which a two-column strip on a log y-axis could not.
+data = [("Breast", kb.c_star.to_numpy()), ("Lung", kl.c_star.to_numpy())]
+
+
+def beeswarm(vals, width=0.34, sep=0.052):
+    """Deterministic 1-D beeswarm offsets, so points never overplot."""
+    order = np.argsort(vals, kind="stable")
+    offs = np.zeros(len(vals))
+    last, level = None, 0
+    for k in order:
+        level = 0 if last is None or vals[k] - last > sep else level + 1
+        offs[k] = 0.0 if level == 0 else (width if level % 2 else -width) * (
+            (level + 1) // 2) / max(1, (len(vals) // 8) + 1)
+        last = vals[k]
+    return np.clip(offs, -0.42, 0.42)
+
+
+for row, (name, d) in enumerate(data):
+    d = np.asarray(d, float)
+    q1, med, q3 = np.quantile(d, [0.25, 0.5, 0.75])
+    ax.plot([q1, q3], [row, row], color="#9E9E9E", lw=4.5,
+            solid_capstyle="butt", zorder=2)
+    ax.plot(d, row + beeswarm(d), "o", ms=3.0, mfc="white", mec="#4D4D4D",
+            mew=0.6, zorder=3)
+    ax.plot([med, med], [row - 0.30, row + 0.30], color="black", lw=1.6,
+            zorder=4)
+    ax.annotate(f"median {med:.2f}", (med, row + 0.34),
+                ha="center", va="bottom", fontsize=6.2)
+
+ax.axvline(1.0, color="black", lw=0.8, ls=":")
+ax.annotate("constructed set, $c = 1$", (1.0, 1.44), ha="center", va="bottom",
+            fontsize=6.2)
+ax.set_xscale("log")
+ax.set_yticks([0, 1])
+ax.set_yticklabels([f"{n}\n({len(d)} certificates)" for n, d in data],
+                   fontsize=6.6)
+ax.set_ylim(-0.55, 1.62)
+ax.set_xlabel("critical kernel multiplier  $c^*$  (log scale)", fontsize=6.8)
+for s in ("top", "right", "left"):
+    ax.spines[s].set_visible(False)
+ax.tick_params(axis="y", length=0)
+ax.grid(axis="x", which="major", color="#E8E8E8", lw=0.5, zorder=0)
+fig.tight_layout(pad=0.3)
 fig.savefig(f"{OUT}/fig2_kernel_margins.png", dpi=600)
 fig.savefig(f"{OUT}/fig2_kernel_margins.pdf")
 plt.close(fig)
@@ -192,67 +219,119 @@ plt.close(fig)
 print("figures written")
 
 # ------------------------------------------------------- Fig 0: schematic
-# Pipeline schematic. Drawn as a flow of labelled stages with the three
-# mechanisms of U shown where they enter, so a reader can locate the interval
-# construction, the matched null, and the verdict rule on one page.
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+# Pipeline schematic in the style of a mermaid/flowchart diagram: white shapes
+# with thin black outlines, shape chosen by role (parallelogram = data, box =
+# process, hexagon = test, stadium = output), straight orthogonal connectors,
+# and grouping bars over the columns. The point the figure has to make is that
+# the observed assignment and every permutation enter the SAME interval
+# machinery, which is what makes the null a matched null.
+from matplotlib.patches import Polygon, FancyBboxPatch, FancyArrowPatch
 
-fig, ax = plt.subplots(figsize=(TEXT_W, 2.55))
+fig, ax = plt.subplots(figsize=(TEXT_W, 2.45))
 ax.set_xlim(0, 100)
 ax.set_ylim(0, 100)
 ax.axis("off")
 
-BOX = dict(boxstyle="round,pad=0.6", linewidth=0.7, edgecolor="#333333")
-GREY = dict(BOX, facecolor="#F2F2F2")
-BLUE = dict(BOX, facecolor="#DEEBF7", edgecolor="#2166AC")
-RED = dict(BOX, facecolor="#FBE5E1", edgecolor="#B2182B")
+LW = 0.7
+BLACK = "#1A1A1A"
 
 
-def box(x, y, w, h, text, style=GREY, fs=6.4):
-    ax.add_patch(FancyBboxPatch((x, y), w, h, **style))
-    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center",
-            fontsize=fs, linespacing=1.35)
+def data_shape(x, y, w, h, text, skew=0.13):
+    """Parallelogram: an input."""
+    s = w * skew
+    pts = [(x + s, y), (x + w, y), (x + w - s, y + h), (x, y + h)]
+    ax.add_patch(Polygon(pts, closed=True, facecolor="white", edgecolor=BLACK,
+                         linewidth=LW))
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=5.9,
+            linespacing=1.35)
 
 
-def arrow(x1, y1, x2, y2, label=None):
-    ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2),
-                                 arrowstyle="-|>", mutation_scale=7,
-                                 linewidth=0.7, color="#333333",
-                                 shrinkA=1.0, shrinkB=1.0))
-    if label:
-        ax.text((x1 + x2) / 2, (y1 + y2) / 2 + 3.2, label, ha="center",
-                fontsize=5.8, color="#333333")
+def box_shape(x, y, w, h, text):
+    """Rectangle: a process."""
+    ax.add_patch(Polygon([(x, y), (x + w, y), (x + w, y + h), (x, y + h)],
+                         closed=True, facecolor="white", edgecolor=BLACK,
+                         linewidth=LW))
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=5.9,
+            linespacing=1.35)
 
 
-box(1, 66, 21, 20, "molecules +\nvendor masks\n\n(assignment $A_0$)", GREY)
-box(27, 66, 24, 20,
-    "uncertainty set $U$\n\nband $d=3\\,\\mu$m\ndonor radius $2d$\ncell caps +50/$-60$%", BLUE)
-box(56, 66, 21, 20, "per-gene count\ninterval $[N_{lo},N_{hi}]$\n\n(Proposition 2)", BLUE)
-box(82, 66, 17, 20, "certified\n$T_{lo},T_{hi}$\nfor pair $\\times$ region", BLUE)
+def hex_shape(x, y, w, h, text):
+    """Hexagon: the test applied to the interval."""
+    k = w * 0.18
+    pts = [(x + k, y), (x + w - k, y), (x + w, y + h / 2), (x + w - k, y + h),
+           (x + k, y + h), (x, y + h / 2)]
+    ax.add_patch(Polygon(pts, closed=True, facecolor="white", edgecolor=BLACK,
+                         linewidth=LW))
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=5.9,
+            linespacing=1.35)
 
-arrow(22, 76, 27, 76)
-arrow(51, 76, 56, 76)
-arrow(77, 76, 82, 76)
 
-box(27, 22, 24, 20,
-    "matched null\n\nlabels permuted\nwithin region $\\times$\ndecile, $B=1000$", GREY)
-box(56, 22, 21, 20,
-    "add-one $p$\nBH within region\n$q\\leq0.10$\nBY check (Prop. 3)", GREY)
-box(82, 22, 17, 20,
-    "verdict\n\ncertified $+$ / $-$\nnon-identifiable", RED)
+def stadium(x, y, w, h, text):
+    """Stadium: the reported output."""
+    ax.add_patch(FancyBboxPatch((x + h / 2, y), w - h, h,
+                                boxstyle=f"round,pad=0,rounding_size={h / 2}",
+                                facecolor="white", edgecolor=BLACK,
+                                linewidth=LW, mutation_aspect=1))
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=5.9,
+            linespacing=1.35)
 
-arrow(39, 66, 39, 42, "same machinery")
-arrow(51, 32, 56, 32)
-arrow(77, 32, 82, 32)
-arrow(90.5, 66, 90.5, 42)
 
-ax.text(1, 92, "Uncertainty set, interval construction, and matched null",
-        fontsize=7.2, weight="bold")
-ax.text(1, 8, "Geometry and vendor outputs enter at the left; no expression value is read\n"
-              "before the regions, crop windows, and gates are frozen.",
-        fontsize=5.9, color="#333333", va="bottom", linespacing=1.4)
+def arrow(pts, head_at_end=True):
+    """Orthogonal polyline connector with a filled head at the last segment."""
+    for i in range(len(pts) - 1):
+        (x1, y1), (x2, y2) = pts[i], pts[i + 1]
+        last = i == len(pts) - 2
+        ax.add_patch(FancyArrowPatch(
+            (x1, y1), (x2, y2), arrowstyle="-|>" if last else "-",
+            mutation_scale=6 if last else 1, linewidth=LW, color=BLACK,
+            shrinkA=0, shrinkB=0, joinstyle="miter"))
 
-fig.savefig(f"{OUT}/fig0_workflow.png", dpi=600, bbox_inches="tight")
-fig.savefig(f"{OUT}/fig0_workflow.pdf", bbox_inches="tight")
+
+# ---- grouping bars over the columns
+def group(x0, x1, label, y=90.5):
+    ax.plot([x0, x1], [y, y], color=BLACK, lw=0.6)
+    ax.plot([x0 + 0.14 * (x1 - x0), x1 - 0.14 * (x1 - x0)], [y, y],
+            color="white", lw=2.6)
+    ax.text((x0 + x1) / 2, y + 1.8, label, ha="center", va="bottom",
+            fontsize=6.6)
+
+
+group(2, 45, "Uncertainty set")
+group(50, 71, "Interval machinery")
+group(76, 95, "Inference")
+
+# ---- observed path (upper row)
+data_shape(2, 62, 19, 15, "Molecules and\nvendor masks\n(assignment $A_0$)")
+box_shape(26, 61, 19, 17,
+          "Build $U$\nband $3\\,\\mu$m, donor $6\\,\\mu$m,\ncell caps $+50\\%/\\!-60\\%$")
+box_shape(50, 40, 21, 32,
+          "Per-gene interval\nmachinery\n\n$[\\min,\\max]$ counts,\nthen $T_{\\mathrm{lo}}$,\n"
+          "$T_{\\mathrm{hi}}$ over $U$")
+hex_shape(76, 46, 19, 16,
+          "Interval sign\nand matched-null\nsign agree?")
+stadium(76, 20, 19, 14, "Certificate\ncertified $+$, certified $-$,\nor non-identifiable")
+
+# ---- permuted path (lower row)
+data_shape(2, 33, 19, 15,
+           "Region $\\times$ decile\nblocks frozen\nfrom $A_0$")
+box_shape(26, 32, 19, 15,
+          "Matched null\nlabels permuted\nwithin blocks, $B=1000$")
+
+arrow([(21, 69.5), (26, 69.5)])
+arrow([(21, 40.5), (23.2, 40.5), (23.2, 39.5), (26, 39.5)])
+arrow([(45, 69.5), (47.6, 69.5), (47.6, 66), (50, 66)])
+arrow([(45, 39.5), (47.6, 39.5), (47.6, 46), (50, 46)])
+arrow([(71, 54), (76, 54)])
+arrow([(85.5, 46), (85.5, 34)])
+
+ax.text(1, 4.5,
+        "Both inputs enter the same interval machinery, which is what makes the null "
+        "matched to the certified object.\nRegions, crop windows and gates are "
+        "frozen before any expression value is read.",
+        fontsize=5.6, color=BLACK, va="bottom", linespacing=1.45)
+
+fig.savefig(f"{OUT}/fig0_workflow.png", dpi=600, bbox_inches="tight",
+            pad_inches=0.02)
+fig.savefig(f"{OUT}/fig0_workflow.pdf", bbox_inches="tight", pad_inches=0.02)
 plt.close(fig)
 print("fig0_workflow written")
