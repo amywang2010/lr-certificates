@@ -60,28 +60,68 @@ def plabel(ax, letter, size=9):
             fontweight="bold", fontsize=size)
 
 
-def check_legend(ax, leg, name, segments, pad=1.0):
-    """Assert that a legend box covers no drawn interval.
+MIN_LEGEND_GAP_MM = 2.0
 
-    A legend is placed in the empty part of the panel, and the empty part is a
-    property of the data, not of the corner. Sampling each interval along its
-    length and testing the points against the rendered legend box catches a
-    legend that sits on top of a bar, which no corner choice can be trusted to
-    avoid.
+
+def legend_gap_mm(ax, leg):
+    """Smallest visual gap, in printed millimetres, between legend and data ink.
+
+    Measured against the full drawn extent of every interval and point estimate,
+    inflated by half a line width, so a bar running under the legend in its
+    middle counts the same as one touching it at its end. Two clearances are
+    demanded, one for each way a legend and a bar can appear to collide: an
+    artist that shares the legend's height band must stand clear of it
+    horizontally, and an artist that shares its width must stand clear of it
+    vertically. Artists that share neither are diagonally separated and cannot
+    touch it.
+
+    The figure is included in the manuscript at its natural size, so a
+    millimetre here is a millimetre on the page. Non-overlap alone is not
+    enough: a legend edge a tenth of a millimetre from the end of a bar reads as
+    a collision, which is how the first version of this figure failed.
     """
-    ax.figure.canvas.draw()
-    eb = leg.get_window_extent()
-    hits = []
-    for x0, x1, y in segments:
-        for t in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0):
-            px, py = ax.transData.transform((x0 + (x1 - x0) * t, y))
-            if eb.x0 - pad <= px <= eb.x1 + pad and eb.y0 - pad <= py <= eb.y1 + pad:
-                hits.append((round(x0, 2), round(x1, 2), y))
-                break
-    if hits:
-        raise AssertionError(f"{name} legend overlaps {len(hits)} drawn intervals, "
-                             f"e.g. {hits[:3]}")
+    fig = ax.figure
+    fig.canvas.draw()
+    eb = leg.get_window_extent(fig.canvas.get_renderer())
+    mm_per_px = 25.4 / fig.dpi
+    worst, where = float("inf"), None
+    for ln in ax.get_lines():
+        xy = ln.get_xydata()
+        ls, mk = ln.get_linestyle(), ln.get_marker()
+        if mk not in ("None", "none", "", None):
+            d, half = ax.transData.transform(xy), ln.get_markersize()
+            tag = f"point estimate at ({xy[0][0]:+.2f}, {xy[0][1]:+.2f})"
+        elif len(xy) == 2 and ls not in ("None", "none", ""):
+            d = ax.transData.transform(xy)
+            half = max(1.5, ln.get_linewidth() * fig.dpi / 72.0)
+            tag = f"interval [{xy[0][0]:+.2f}, {xy[-1][0]:+.2f}] at y={xy[0][1]:+.2f}"
+        else:
+            continue
+        x0, x1 = d[:, 0].min() - half, d[:, 0].max() + half
+        y0, y1 = d[:, 1].min() - half, d[:, 1].max() + half
+        x_ov = x1 > eb.x0 and x0 < eb.x1
+        y_ov = y1 > eb.y0 and y0 < eb.y1
+        if x_ov and y_ov:
+            gap = -1.0
+        elif y_ov:
+            gap = max(eb.x0 - x1, x0 - eb.x1)
+        elif x_ov:
+            gap = max(eb.y0 - y1, y0 - eb.y1)
+        else:
+            continue
+        if gap < worst:
+            worst, where = gap, tag
+    return worst * mm_per_px, where
 
+
+def check_legend(ax, leg, name, min_gap_mm=MIN_LEGEND_GAP_MM):
+    """Assert the legend clears every drawn interval and point estimate."""
+    gap, where = legend_gap_mm(ax, leg)
+    if gap < min_gap_mm:
+        raise AssertionError(
+            f"{name} legend is {gap:.2f} mm from the nearest drawn artist "
+            f"({where}), below the {min_gap_mm:g} mm minimum; no file written")
+    return gap
 
 def check_layout(fig, name, pad=1.5):
     """Assert that no drawn text leaves the canvas or collides with other text.
@@ -163,14 +203,12 @@ ax = fig.add_subplot(gs[0])
 for i in range(len(pairs)):
     if i % 2:
         ax.axhspan(i - 0.5, i + 0.5, color=GREY, zorder=0)
-segs_a = []
 for _, r in fin.iterrows():
     y = ypos[r.pair] + (r.region - 1) * 0.30
     ax.plot([r.T_lo, r.T_hi], [y, y], color=verdict_color(r.certified_pos_matched,
             r.certified_neg_matched), lw=1.5, solid_capstyle="butt", zorder=3)
     ax.plot(r.T0, y, marker=REGION_MARK[int(r.region)], ms=2.4, mfc="white",
             mec="black", mew=0.5, ls="none", zorder=4)
-    segs_a.append((float(r.T_lo), float(r.T_hi), float(y)))
 
 tr = blended_transform_factory(ax.transAxes, ax.transData)
 for p, y in ypos.items():
@@ -191,10 +229,16 @@ for r in (0, 1, 2):
     handles.append(Line2D([], [], color="black", marker=REGION_MARK[r], ls="none",
                           ms=3.4, mfc="white", mec="black", mew=0.6,
                           label=f"region {r}"))
-# A single narrow column sits in the free right band; two columns are wide enough
-# to reach the control intervals near the right.
+# Placement is measured, not chosen by corner reputation. In this panel the
+# lower-right corner is the worst place for a legend: the widest intervals, which
+# are the most negative pairs, sit in the bottom rows and reach furthest right,
+# leaving 0.2 mm between the longest bar and the legend edge. Sweeping the anchor
+# with the same metric the build gate uses peaks at y = 0.33, where the legend
+# clears the band below it (T_hi = +6.13 at y = +4.30) by 6.7 mm and the control
+# bands above it by the same margin. check_legend fails the build below 2 mm.
 leg_a = ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=6.4,
-                  ncol=1, handletextpad=0.5, borderaxespad=0.2)
+                  ncol=1, handletextpad=0.5, borderaxespad=0.2,
+                  bbox_to_anchor=(1.0, 0.33), bbox_transform=ax.transAxes)
 
 # ---- (b) cross-tissue certificates
 ax = fig.add_subplot(gs[1])
@@ -222,7 +266,6 @@ for tname, tlist, tkey in rows:
         ylabels.append(f"{pair.split('->')[0]} \u2192 {pair.split('->')[1]}")
         ypos_b.append(y)
         group_y[tname].append(y)
-        segs_b.append((float(sub.T_lo.min()), float(sub.T_hi.max()), float(y)))
         y += 1
     y += 1.8
 ax.set_yticks(ypos_b)
@@ -248,8 +291,10 @@ leg_b = ax.legend(handles=[Line2D([], [], color=C_PRO, marker="D", ls="none", ms
                   loc="center right", frameon=False, fontsize=6.2, handletextpad=0.5,
                   borderaxespad=0.3)
 plabel(ax, "b")
-check_legend(fig.axes[0], leg_a, "fig1_main(a)", segs_a)
-check_legend(fig.axes[1], leg_b, "fig1_main(b)", segs_b)
+for _ax, _leg, _nm in ((fig.axes[0], leg_a, "fig1_main(a)"),
+                       (fig.axes[1], leg_b, "fig1_main(b)")):
+    print(f"  {_nm}: legend clears the nearest drawn artist by "
+          f"{check_legend(_ax, _leg, _nm):.2f} mm")
 check_layout(fig, "fig1_main")
 fig.savefig(f"{OUT}/fig1_main.png", dpi=600)
 fig.savefig(f"{OUT}/fig1_main.pdf", metadata={"CreationDate": None})
