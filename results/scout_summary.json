@@ -1,0 +1,11 @@
+{
+  "n_pairs": 25,
+  "n_regions": 3,
+  "n_certified_pos": 0,
+  "n_certified_neg": 3,
+  "n_nonidentifiable": 72,
+  "n_control_certified": 0,
+  "n_disputed_collapsed": 57,
+  "exactness_violations": 0,
+  "subcube_ok": true
+}

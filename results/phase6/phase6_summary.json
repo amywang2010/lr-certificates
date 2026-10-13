@@ -1,0 +1,30 @@
+{
+ "lung": {
+  "tissue": "lung",
+  "B": 10000,
+  "n_rows": 54,
+  "min_p_pos": 9.999000099990002e-05,
+  "min_p_neg": 9.999000099990002e-05,
+  "n_cert_pos_sealed": 1,
+  "n_cert_neg_sealed": 6,
+  "n_cert_pos_b10k": 1,
+  "n_cert_neg_b10k": 6,
+  "flips_pos": [],
+  "flips_neg": [],
+  "verdict_flips_vs_b1000": 0
+ },
+ "breast": {
+  "tissue": "breast",
+  "B": 10000,
+  "n_rows": 75,
+  "min_p_pos": 9.999000099990002e-05,
+  "min_p_neg": 9.999000099990002e-05,
+  "n_cert_pos_sealed": 37,
+  "n_cert_neg_sealed": 9,
+  "n_cert_pos_b10k": 37,
+  "n_cert_neg_b10k": 9,
+  "flips_pos": [],
+  "flips_neg": [],
+  "verdict_flips_vs_b1000": 0
+ }
+}

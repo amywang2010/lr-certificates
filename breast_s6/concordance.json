@@ -1,0 +1,11 @@
+{
+ "gate_form": "A1-c totals-level",
+ "pearson_r": 0.9991127223253885,
+ "spearman_rho": 0.9987276227575497,
+ "median_abs_diff": 1.0,
+ "total_ratio": 0.9651240046292944,
+ "n_cells": 65964,
+ "pip_assigned_total": 4131277,
+ "vendor_total": 4280566,
+ "gate": "PASS"
+}

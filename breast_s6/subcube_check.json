@@ -1,0 +1,9 @@
+{
+ "pair": "PECAM1->PDCD1",
+ "region": 2,
+ "enum_min": 2,
+ "enum_max": 14,
+ "greedy_min": 2,
+ "greedy_max": 85,
+ "ok": true
+}

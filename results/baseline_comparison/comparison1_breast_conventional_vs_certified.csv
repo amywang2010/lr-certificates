@@ -1,0 +1,10 @@
+conv_call,cert_call,n,source
+negative,negative,2,results/baseline_comparison/conventional_null_breast.csv + results/scout_final_matched.csv
+none,negative,1,results/baseline_comparison/conventional_null_breast.csv + results/scout_final_matched.csv
+positive,negative,6,results/baseline_comparison/conventional_null_breast.csv + results/scout_final_matched.csv
+negative,none,0,results/baseline_comparison/conventional_null_breast.csv + results/scout_final_matched.csv
+none,none,1,results/baseline_comparison/conventional_null_breast.csv + results/scout_final_matched.csv
+positive,none,28,results/baseline_comparison/conventional_null_breast.csv + results/scout_final_matched.csv
+negative,positive,0,results/baseline_comparison/conventional_null_breast.csv + results/scout_final_matched.csv
+none,positive,0,results/baseline_comparison/conventional_null_breast.csv + results/scout_final_matched.csv
+positive,positive,37,results/baseline_comparison/conventional_null_breast.csv + results/scout_final_matched.csv

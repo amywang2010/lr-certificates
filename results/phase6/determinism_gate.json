@@ -1,0 +1,20 @@
+{
+ "phase": "B03 Phase 6 (B=10000 null resolution)",
+ "design": "B=10,000 null resolution; bitwise checkpoint-resume gate",
+ "determinism_gate": {
+  "breast": {
+   "shared_perms": 1000,
+   "max_abs_delta_Tlo": 0.0,
+   "max_abs_delta_Thi": 0.0,
+   "pass": true
+  },
+  "lung": {
+   "shared_perms": 1000,
+   "max_abs_delta_Tlo": 0.0,
+   "max_abs_delta_Thi": 0.0,
+   "pass": true
+  }
+ },
+ "overall": "PASS",
+ "wall_seconds": 248230.7339372635
+}

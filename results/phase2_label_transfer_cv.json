@@ -1,0 +1,6 @@
+{
+  "accuracy_2fold_cv": 0.723911732612604,
+  "n_eval": 166157,
+  "n_types": 15,
+  "transform": "frozen from vendor_markers.npz"
+}
