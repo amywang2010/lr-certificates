@@ -168,7 +168,7 @@ def build(outdir):
 
     fig, ax = plt.subplots(figsize=(TEXT_W, 2.30))
     # Axes must span the whole figure, otherwise grid units are not the layout
-    # units and the containment arithmetic below is wrong.
+    # units, and the containment arithmetic below misbehaves.
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     ax.set_xlim(0, 100)
     ax.set_ylim(0, 100)
@@ -213,8 +213,8 @@ def build(outdir):
     arrow(ax, [(86.5, 48), (86.5, 29)])                  # test -> output
 
     ax.text(11, 4.0,
-            "Both inputs enter the same interval machinery, which is what makes the "
-            "null matched to the certified object.",
+            "Both inputs enter the same interval machinery, so the null is computed on "
+            "the same layer as the observed bound.",
             fontsize=5.2, color=BLACK, va="bottom", ha="left", linespacing=1.4)
 
     _verify(fig, ax)

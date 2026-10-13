@@ -4,7 +4,7 @@ Extends the independent re-derivation (corrected per-gene-slot rule,
 Phase 9 builder) to the third leg. Reuses the CorrectedBounds machinery by import; the
 only behavioral difference is that the capacity-capped gain-cap formula is allowed to
 bind here (it binds on s6; the Phase 9 assert is breast/Rep1-specific, where caps never
-bind — released capacity_check.json), with binding recorded per row.
+bind, released capacity_check.json), with binding recorded per row.
 
 Checks, the same four as on the first two tissues:
   R1. aggregate counts (nL, nR, nl_cells, nr_cells) reproduce scout_bounds.csv

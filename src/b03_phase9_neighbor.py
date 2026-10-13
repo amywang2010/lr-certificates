@@ -1,6 +1,6 @@
-"""B03 Phase 9: neighbor-effect statistic — observed side + frozen gates.
+"""Corrected-rule re-derivation of the certified intervals, and the neighbor-effect check.
 
-The gates below are fixed in this script. G9-2 is checked as tree-versus-brute-force
+The checks below are fixed in this script. Adjacency determinism is checked as tree-versus-brute-force
 agreement on the same metric, since centroid-tree and polygon brute-force describe
 different geometries.
 
@@ -25,15 +25,15 @@ Design (exactness-preserving):
   On breast the capacity never binds (released capacity_check.json), so dmax is
   the attained per-gene optimum; the formula is retained for the one-rule
   discipline and is verified non-binding by assertion.
-- G9-0 (artifact integrity): recomputed scout labels must equal labels.npy
+- artifact integrity: recomputed scout labels must equal labels.npy
   exactly, proving the frozen artifact is the shipped scout's.
-- G9-1 (amended): with the all-eligible counted set,
+- re-derivation: with the all-eligible counted set,
   the corrected builder must reproduce the corrected bounds
   (results/sensitivity/breast_tight_bounds_sensitivity.csv) BIT-EXACTLY on
   every (dL_min, dL_max, dR_min, dR_max), and the released scout_bounds.csv
-  intervals must contain the corrected intervals row-wise (superset check —
+  intervals must contain the corrected intervals row-wise (superset check , 
   the soundness direction).
-- G9-2 (adjacency determinism): eligibility masks recomputed by
+- adjacency determinism: eligibility masks recomputed by
   brute-force per-cell radius queries must equal the KD-tree masks exactly
   (explicit self-exclusion for same-type pairs).
 
@@ -57,7 +57,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.pa
 OUT = os.path.join(ROOT, "results")
 SENS = f"{OUT}/sensitivity/breast_tight_bounds_sensitivity.csv"
 
-# Frozen scout maps (module-level so main() and G9-1 share one source, copied from
+# Frozen scout maps (module-level so main() and the re-derivation share one source, copied from
 # b03_certify.py).
 TYPE_MAP = {
     "CD274": "Breast cancer", "CXCL12": "Fibroblasts", "CCL5": "Macrophages",
@@ -83,8 +83,8 @@ def g90_label_artifact_integrity(tx, panel, labels_saved):
     labels_recomputed = assign_cell_types(tx, panel, set(tested), len(labels_saved))
     if not np.array_equal(np.asarray(labels_recomputed, dtype=object),
                           np.asarray(labels_saved, dtype=object)):
-        raise SystemExit("G9-0 FAIL: labels.npy is not the scout artifact")
-    print("G9-0 PASS: labels.npy == recomputed scout labels (exact)", flush=True)
+        raise SystemExit("artifact integrity FAIL: labels.npy is not the scout artifact")
+    print("artifact integrity PASS: labels.npy == recomputed scout labels (exact)", flush=True)
 
 
 def eligible_masks(centroids, labels, s_type, r_type, radius):
@@ -129,15 +129,15 @@ def g02_adjacency_determinism(centroids, labels, s_type, r_type, radius,
             if any(other_type[nbr] and nbr != cell_i for nbr in nbrs_all[k_i]):
                 brute[k_i] = True
         if not np.array_equal(brute, mask[sample]):
-            raise SystemExit(f"G9-2 FAIL: {name} mask mismatch (tree vs brute force)")
-    print(f"G9-2 PASS: {s_type}->{r_type} masks reproduce brute force on sample",
+            raise SystemExit(f"adjacency determinism FAIL: {name} mask mismatch (tree vs brute force)")
+    print(f"adjacency determinism PASS: {s_type}->{r_type} masks reproduce brute force on sample",
           flush=True)
 
 
 class CorrectedBounds:
     """Corrected per-gene-slot interval builder (one rule everywhere).
 
-    dmin(g) = -(# band transcripts of g whose source cell is in the counted set) —
+    dmin(g) = -(# band transcripts of g whose source cell is in the counted set) , 
     exact (extracellular destination always available).
     dmax(g) = min( binary-donor count, capacity-capped sum ) where the binary
     count is over each transcript's OWN donor slots only (no cross-gene slot
@@ -205,7 +205,7 @@ class CorrectedBounds:
 
 
 def g91_corrected_reproduction(cb, labels, region_of_cell, scout, sens):
-    """Amended G9-1: corrected builder == corrected bounds bit-exactly;
+    """Re-derivation: corrected builder == corrected bounds bit-exactly;
     the original intervals contain the corrected intervals row-wise (superset)."""
     sens_idx = {(r.pair, int(r.region)): r for r in sens.itertuples()}
     n_ok = 0
@@ -223,12 +223,12 @@ def g91_corrected_reproduction(cb, labels, region_of_cell, scout, sens):
             counted = np.flatnonzero((region_of_cell == rid) & (labels == tname))
             dmin, dmax = cb.interval(G, counted)
             assert (dmin, dmax) == (dl_corr_sens[0], dl_corr_sens[1]), \
-                f"G9-1 FAIL corrected {row['pair']} r{rid} {G}: " \
+                f"re-derivation FAIL corrected {row['pair']} r{rid} {G}: " \
                 f"({dmin},{dmax}) vs {dl_corr_sens}"
             assert dl_sealed[0] <= dmin and dmax <= dl_sealed[1], \
-                f"G9-1 FAIL superset {row['pair']} r{rid} {G}"
+                f"re-derivation FAIL superset {row['pair']} r{rid} {G}"
             n_ok += 1
-    print(f"G9-1 PASS (amended): {n_ok} gene-side intervals reproduce the "
+    print(f"re-derivation PASS: {n_ok} gene-side intervals reproduce the "
           f"corrected bounds bit-exactly; the original intervals contain them row-wise",
           flush=True)
 

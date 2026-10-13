@@ -92,8 +92,8 @@ def main():
         if not os.path.exists(leaf):
             with z.open(m) as src, open(leaf, "wb") as f:
                 shutil.copyfileobj(src, f, 1 << 20)
-    # obs/cell_id: the instance-key join column for the G3 concordance gate
-    # (verified present in the zip before this run; A1-b documents the join).
+    # obs/cell_id: the instance-key join column for the concordance gate
+    # (verified present in the zip before this run; the join is documented above).
     cid = [n for n in names if n.startswith(f"{base}/obs/cell_id/") and not n.endswith((".zarray", ".zattrs"))]
     assert cid, "obs/cell_id missing from zip"
     os.makedirs(os.path.join(tc, "obs_cell_id"), exist_ok=True)

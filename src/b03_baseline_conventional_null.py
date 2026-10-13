@@ -12,14 +12,14 @@ rng(SEED_BASE + p) with SEED_BASE = 20260905 + 100003, B = 1,000, frozen cell-co
 denominators (nl_cells, nr_cells from scout_bounds.csv), epsilon = 0.5, BH within
 region. The single difference is the tested object: the point statistic
     T(A) = log2(N_L/nLc + eps) + log2(N_R/nRc + eps)
-under permuted labels, tested against T(A0) — the conventional co-expression
+under permuted labels, tested against T(A0), the conventional co-expression
 permutation test (CellPhoneDB/CellChat-family null), no worst-case layer.
 
 Cross-implementation check: the recomputed T(A0) must match the scout T0
 column (max |delta| < 1e-9) before any p-value is produced.
 
 Output: results/baseline_comparison/conventional_null_breast.csv
-        (pair, region, T0, p_pos, p_neg, q_pos, q_neg — add-one p-values).
+        (pair, region, T0, p_pos, p_neg, q_pos, q_neg, add-one p-values).
 """
 from __future__ import annotations
 

@@ -4,7 +4,7 @@ Endpoint (frozen, primary): fraction of the 75 (pair, region) rows with
 T(A_proseg, K0) inside the scout's certified interval [T_lo, T_hi]. Gate >= 90%.
 Secondary: sign agreement on rows certified by the matched null (q <= 0.10).
 
-Input schema (verified from proseg 3.2.0 source, output.rs/main.rs — not assumed):
+Input schema (verified from proseg 3.2.0 source, output.rs/main.rs, not assumed):
   - counts:   gzipped MatrixMarket coordinate (cells x genes), 1-indexed, written by
               write_sparse_mtx from params.foreground_counts ("point estimate of
               transcript counts per cell"). Values are x.xx floats; counts are
@@ -61,7 +61,7 @@ fin = pd.read_csv(f"{RES}/scout_final_matched.csv")
 
 # ---------- proseg outputs (schema per source, asserted at load) ----------
 # Note: proseg 3.2.0 writes metadata files named EXACTLY as the --output-*
-# arguments (cells/genes, no .parquet suffix) — verified on disk (PAR1 magic).
+# arguments (cells/genes, no .parquet suffix), verified on disk (PAR1 magic).
 with gzip.open(f"{DATA}/proseg_out/counts", "rb") as f:
     Coo = mmread(f).tocoo()
 cells_meta_p = pd.read_parquet(f"{DATA}/proseg_out/cells")

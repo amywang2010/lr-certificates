@@ -4,7 +4,7 @@ Drives b03_matched_null by import with the frozen tissue-2 configuration:
   - DATA/OUT -> the workspace xenium_lung/crop/data directory (env B03_NULL_DATA/B03_NULL_OUT; env so the
     spawned workers inherit the same module configuration)
   - seed 20260907 -> per-perm seeds 20260907+100003+p (frozen)
-  - frozen TYPE_MAP/RECV_MAP and the 18 G1-testable pairs (parent-side globals)
+  - frozen TYPE_MAP/RECV_MAP and the 18 testable pairs (parent-side globals)
   - B03_NULL_CAP=1: capacity-capped dmax, ONE formula with the certify step
 Label counts are verified against label_counts.json (written here from the
 b03_lung_load outputs; the null asserts an exact match before any permutation runs).

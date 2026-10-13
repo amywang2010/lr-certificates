@@ -1,12 +1,12 @@
-"""B03 Phase 7 (step A, A1-h): vendor-side label-transfer targets for breast_s6.
+"""B03 Phase 7 (step A): vendor-side label-transfer targets for breast_s6.
 
-Marker space per A1-h: crop is_gene vocabulary minus the 17 tested LR genes
-(the phase2 tissue-1 definition). Rationale recorded in A1-h: the phase5
+Marker space: crop is_gene vocabulary minus the 17 tested LR genes
+(the phase2 tissue-1 definition). Rationale: the phase5
 9-gene dictionary yields scale = 0 on s6, collapsing the transform; the
 phase2 design anticipated this and carries the signal assertion
 (C>0).mean() > 0.99, restored here. Transform identical to sealed legs:
 x = log1p((M/C)*scale), scale = median vendor cell marker total; centroids =
-mean of x over vendor cells of each surviving class (DEV amendment 007: Myeloid absent
+mean of x over vendor cells of each surviving class (Myeloid absent
 as specified). Sparse accumulation throughout (n_cells x ~5k markers).
 Outputs the s6 crop data dir's vendor_markers.npz.
 """
@@ -33,7 +33,7 @@ MIN_CLASS_CELLS = 50  # phase2 vendor_prep threshold
 t0 = time.time()
 
 def marker_space():
-    """Crop is_gene vocabulary minus tested LR genes (A1-h)."""
+    """Crop is_gene vocabulary minus tested LR genes."""
     f = pq.ParquetFile(f"{CROP}/transcripts.parquet")
     names = set()
     for i in range(f.num_row_groups):
@@ -67,9 +67,9 @@ def main():
     frac_signal = float((C > 0).mean())
     print(f"[{time.time()-t0:.0f}s] cells with marker signal: {frac_signal:.4f}",
           flush=True)
-    # A1-h (correction): s6-calibrated signal gates. The phase2 0.99 threshold is
+    # s6-calibrated signal gates. The phase2 0.99 threshold is
     # mechanically unreachable here (2,488/65,964 vendor cells are EMPTY under the
-    # repackage's CellVi segmentation - a section property). Purpose preserved:
+    # repackage's CellVi segmentation, a section property). Purpose preserved:
     # (a) non-degenerate scale, (b) transfer coverage >= 0.90; zero-signal cells
     # stay 'Unknown' downstream (standing has_marker mask).
     assert frac_signal >= 0.90, f"transfer coverage too low: {frac_signal:.4f}"
@@ -80,7 +80,7 @@ def main():
     keep_types = [t for t in types_needed if int((labels == t).sum()) >= MIN_CLASS_CELLS]
     dropped = sorted(set(types_needed) - set(keep_types))
     assert dropped == ["Myeloid"], f"unexpected class drops: {dropped}"
-    print(f"classes kept: {keep_types}; dropped (DEV amendment 007): {dropped}", flush=True)
+    print(f"classes kept: {keep_types}; dropped by the class floor: {dropped}", flush=True)
     # chunked centroid accumulation (no dense X)
     Mcsr = M.tocsr()
     n_ms = len(MS)

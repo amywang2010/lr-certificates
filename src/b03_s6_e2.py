@@ -1,9 +1,9 @@
-"""B03 Phase 7 (step B): E2 cross-segmentation coverage — Proseg replication on s6.
+"""B03 Phase 7 (step B): E2 cross-segmentation coverage, Proseg replication on s6.
 
 Faithful port of b03_phase5_e2.py (fixture-validated machinery) with:
   - crop paths (workspace xenium_breast_s6/crop/data, xenium_breast_s6/crop/proseg_out)
-  - 10 vendor-evaluable pairs / 30 rows; A3-frozen TYPE_MAP/RECV_MAP (imported)
-  - marker centroids from vendor_markers.npz (A1-h phase2-space targets)
+  - 10 vendor-evaluable pairs / 30 rows; frozen TYPE_MAP/RECV_MAP (imported)
+  - marker centroids from vendor_markers.npz (phase-2-space targets)
   - Endpoints: the certified-set primary endpoint is UNDEFINED at 0
     certified rows (reported as such); the replacements are (a) interval
     coverage on all 30 vendor-evaluable rows with the standing T0-in-interval
@@ -37,7 +37,7 @@ centroids = vm["centroids"].astype(np.float64)
 type_names = [str(t) for t in vm["type_names"]]
 marker_genes = [str(g) for g in vm["marker_genes"]]
 scale = float(vm["scale"])
-assert scale > 0, "A1-h violated: scale == 0"
+assert scale > 0, "marker-space scale is zero"
 vendor_xy = vm["vendor_centroids_xy"]
 regions_vendor = vm["regions_row"].astype(int)
 
@@ -84,9 +84,9 @@ else:
 
 need = marker_genes + [g for g in tested if g not in set(marker_genes)]
 gene_pos = {g: i for i, g in enumerate(gene_names_eff)}
-# A1-j: proseg dropped 4 ultra-rare custom probes (18/4.91M tx, 0.0004%) and the
-# A1-f fill added 3 codeword pseudo-genes. The marker space is intersected with
-# the proseg output (only A1-j probes may drop, counted); tested-gene completeness
+# Proseg dropped 4 ultra-rare custom probes (18/4.91M tx, 0.0004%) and the
+# The NULL fill added 3 codeword pseudo-genes. The marker space is intersected with
+# the proseg output (only ultra-rare probes may drop, counted); tested-gene completeness
 # and the alignment proof below remain binding.
 missing = [g for g in need if g not in gene_pos]
 assert set(missing) <= {"Human_CTNNB1_S33C_ALT:G", "Human_FGFR3_R248H_ALT:A",
@@ -96,7 +96,7 @@ n_dropped_probes = len(missing)
 need = [g for g in need if g in gene_pos]
 missing_tested = [g for g in tested if g not in gene_pos]
 assert not missing_tested, f"tested genes missing from proseg output: {missing_tested}"
-print(f"[{time.time()-t0:.0f}s] A1-j: {n_dropped_probes} ultra-rare probes dropped "
+print(f"[{time.time()-t0:.0f}s] ultra-rare probes: {n_dropped_probes} dropped "
       f"from marker space; all 17 tested genes present", flush=True)
 gene_totals = genes_p.set_index(genes_p["gene"].astype(str))["total_count"]
 cols = np.array([gene_pos[g] for g in need])
@@ -116,8 +116,8 @@ Mall = np.zeros((n_pc, len(need)), dtype=np.int32)
 np.add.at(Mall, (Sub.row.astype(np.int64), Sub.col.astype(np.int64)),
           np.rint(Sub.data).astype(np.int64))
 need_pos = {g: i for i, g in enumerate(need)}
-# M must carry ALL marker-space columns in centroid order (A1-h alignment);
-# the 4 A1-j probes are absent from proseg -> all-zero columns (they summed to
+# M must carry all marker-space columns in centroid order (alignment);
+# the 4 ultra-rare probes are absent from proseg -> all-zero columns (they summed to
 # 18 transcripts section-wide), so the transfer space is unchanged in effect.
 M = np.zeros((n_pc, len(marker_genes)), dtype=np.int32)
 for j, g in enumerate(marker_genes):
@@ -126,7 +126,7 @@ for j, g in enumerate(marker_genes):
 Gm = Mall[:, [need_pos[g] for g in tested]].astype(np.int64)
 assert (Gm.sum(axis=0) > 0).all()
 
-# ---------- label transfer (identical transform; A1-h target space) ----------
+# ---------- label transfer (identical transform, same marker space) ----------
 Ctot = M.sum(axis=1).astype(np.int64)
 has_marker = Ctot > 0
 Xp = np.log1p((M / np.maximum(Ctot, 1)[:, None]) * scale).astype(np.float64)

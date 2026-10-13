@@ -269,7 +269,7 @@ def main():
             conc.get("total_ratio", 0) >= 0.97)
     print(f"concordance gate (diagnosis-informed): per_cell={conc['concordance_per_cell']:.4f} "
           f"total_ratio={conc.get('total_ratio', 0):.4f} -> "
-          f"{'PASS' if gate else 'FAIL — investigate'}", flush=True)
+          f"{'PASS' if gate else 'FAIL, investigate'}", flush=True)
     cells_meta = pq.read_table(
         f"{DATA}/Xenium_FFPE_Human_Breast_Cancer_Rep1_cells.parquet").to_pandas()
     cells_meta.to_parquet(f"{DATA}/cells_meta.parquet", index=False)

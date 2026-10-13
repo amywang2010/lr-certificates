@@ -1,4 +1,4 @@
-"""A3-frozen lung configuration (single source of truth).
+"""Frozen configuration for the lung crop, shared by the lung and second-breast-section legs.
 
 Extracted verbatim from b03_lung_null.py (2026-09-08) so that the frozen Phase 5
 driver and the Phase 6 B=10,000 driver share the identical frozen pair list and

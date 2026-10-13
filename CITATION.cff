@@ -8,8 +8,8 @@ message: >-
 authors:
   - given-names: Amy
     family-names: Wang
-version: 1.0.0
-date-released: "2026-09-13"
+version: 1.0.1
+date-released: "2026-10-12"
 repository-code: "https://github.com/amywang2010/lr-certificates"
 abstract: >-
   Per-contrast intervals for ligand-receptor statistics in spatial

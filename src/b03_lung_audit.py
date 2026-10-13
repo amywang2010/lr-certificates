@@ -1,11 +1,11 @@
-"""B03 Phase 5 (step A): dataset arrival audit — frozen gates G1/G2.
+"""B03 Phase 5 (step A): dataset arrival audit against the frozen gates.
 
 Runs the moment the zip lands. Zero statistics, zero assumptions:
   1. Zip CRC integrity on all members.
-  2. G1 panel audit: which of the 25 pairs have BOTH genes in
+  2. Panel audit: which of the 25 pairs have BOTH genes in
      gene_panel.json -> the mechanical testable-pair subset (every exclusion
      printed with its missing gene).
-  3. G2 schema audit: file formats, parquet columns, transcript header — dumped
+  3. Schema audit: file formats, parquet columns, transcript header, dumped
      as facts.
 
 Importable (main(zip_path, out_path)); executable directly with defaults.
@@ -61,7 +61,7 @@ def main(zip_path=ZIP_DEFAULT, out_path=OUT_DEFAULT):
         sys.exit(1)
     print("zip CRC integrity: all members OK")
 
-    # ---- G1 panel audit ----
+    # ---- panel audit ----
     panel = json.loads(zf.read(needed_hits["gene_panel.json"]))
 
     def collect_genes(obj, out):
@@ -85,14 +85,14 @@ def main(zip_path=ZIP_DEFAULT, out_path=OUT_DEFAULT):
     testable_pairs = [f"{L}->{R}" for L, R in ALL_PAIRS if L in present and R in present]
     excluded_pairs = [(f"{L}->{R}", [g for g in (L, R) if g not in present])
                       for L, R in ALL_PAIRS if not (L in present and R in present)]
-    print(f"G1: tested genes present {len(present)}/{len(tested_genes)}; "
+    print(f"panel audit: tested genes present {len(present)}/{len(tested_genes)}; "
           f"testable pairs {len(testable_pairs)}/25")
     if absent:
         print("  absent genes:", absent)
     for p, miss in excluded_pairs:
         print(f"  excluded pair {p}: missing {miss}")
 
-    # ---- G2 schema audit ----
+    # ---- schema audit ----
     import pandas as pd
 
     audit = dict(n_members=len(names), needed=needed_hits,

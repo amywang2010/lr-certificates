@@ -1,4 +1,4 @@
-"""B03 Phase 5 (step C): E3 proseg-side matched null — phase3 machinery, re-pointed.
+"""B03 Phase 5 (step C): E3 proseg-side matched null, phase3 machinery, re-pointed.
 
 Drives b03_phase3_proseg_null by import with the tissue-2 configuration:
 env-driven DATA/RES/rows; b03_scout globals patched BEFORE phase3 import so its

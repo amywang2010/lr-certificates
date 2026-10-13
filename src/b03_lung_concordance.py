@@ -1,4 +1,4 @@
-"""B03 Phase 5 G3: vendor-assignment concordance — per the frozen cross-platform configuration gate G3.
+"""B03 Phase 5: vendor-assignment concordance against the frozen cross-platform configuration gate.
 
 Verifies that per-cell per-gene counts derived from transcripts.parquet (cell_id
 barcodes) match the vendor's cell_feature_matrix.h5 on a random 30-gene subset.
@@ -112,7 +112,7 @@ def main():
     mism = res[~((res.rel_diff.abs() < 0.01)
                  & (res.abs_diff <= np.maximum(3, 0.001 * res.h5_total)))]
     verdict = "PASS" if len(mism) == 0 else "CHECK: " + ",".join(mism.gene)
-    print(f"G3 CONCORDANCE VERDICT: {len(res)-len(mism)}/{N_TEST_GENES} genes "
+    print(f"concordance verdict: {len(res)-len(mism)}/{N_TEST_GENES} genes "
           f"concordant -> {verdict}", flush=True)
 
 

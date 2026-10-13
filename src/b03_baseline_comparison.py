@@ -137,13 +137,13 @@ def main() -> None:
         key = ["pair", "region"]
         if section == "breast_s6":
             # s6's coverage file has no verdict columns; merge from the final CSV and
-            # assert the certified set is empty (A1-g, frozen).
+            # assert the certified set is empty (frozen rule).
             f = pd.read_csv(p(sf))
             merged = e.merge(f[key + ["certified_pos_matched", "certified_neg_matched"]],
                              on=key, how="left")
             merged["certified"] = (merged["certified_pos_matched"].astype(bool)
                                    | merged["certified_neg_matched"].astype(bool))
-            assert merged["certified"].sum() == 0, "A1-g violation: s6 certified rows exist"
+            assert merged["certified"].sum() == 0, "frozen rule violated: s6 certified rows exist"
         elif section == "breast":
             merged = e.copy()
             merged["certified"] = (merged["certified_pos_matched"].astype(bool)

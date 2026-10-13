@@ -1,0 +1,44 @@
+{
+  "definition": "fraction of QV >= 20 transcripts in the section whose feature name is one of the genes in the ten evaluable pairs, computed from the vendor molecule file before any assignment is made",
+  "design": "tested-gene share of transcript mass on the two panel-density sections",
+  "genes": [
+    "CD274",
+    "CDH1",
+    "CTLA4",
+    "EGFR",
+    "ERBB2",
+    "ESR1",
+    "KDR",
+    "MS4A1",
+    "PDCD1",
+    "PECAM1",
+    "PGR"
+  ],
+  "n_genes": 11,
+  "pairs": [
+    "CDH1->EGFR",
+    "CDH1->ERBB2",
+    "ERBB2->EGFR",
+    "ERBB2->PDCD1",
+    "ESR1->PGR",
+    "MS4A1->CD274",
+    "PECAM1->CTLA4",
+    "PECAM1->KDR",
+    "PECAM1->PDCD1",
+    "PGR->ESR1"
+  ],
+  "rep1": {
+    "n_in_tested_genes": 2786297,
+    "n_transcripts_qv20": 34493510,
+    "section": "Xenium v1.0.1 FFPE Human Breast Cancer Rep1",
+    "share_pct": 8.0777,
+    "source": "tx.parquet"
+  },
+  "s6": {
+    "n_in_tested_genes": 20144,
+    "n_transcripts_qv20": 5648515,
+    "section": "second breast section, Xenium Prime 5K panel",
+    "share_pct": 0.3566,
+    "source": "transcripts.parquet"
+  }
+}

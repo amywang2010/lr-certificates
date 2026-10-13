@@ -12,9 +12,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
 CELLS = sys.argv[1] if len(sys.argv) > 1 else os.path.join(WORKSPACE, "xenium_lung", "extracted", "cells.parquet")
 OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "results", "lung_crop_window.json")
-WIN = 3500.0        # um (3.5 mm) — frozen
-GRID = 500.0        # um (0.5 mm) step — frozen
-PEAK_B_PER_TX = 270 # upper measured bytes/tx (breast empirics) — conservative
+WIN = 3500.0        # um (3.5 mm), frozen
+GRID = 500.0        # um (0.5 mm) step, frozen
+PEAK_B_PER_TX = 270 # upper measured bytes/tx (breast empirics), conservative
 MAX_PEAK_GB = 7.0   # launch gate (frozen envelope rule)
 
 c = pd.read_parquet(CELLS, columns=["x_centroid", "y_centroid"])

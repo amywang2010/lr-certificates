@@ -1,4 +1,4 @@
-"""B03 Phase 5: lung-crop vendor load — PIP, concordance, band geometry, labels, regions.
+"""B03 Phase 5: lung-crop vendor load, PIP, concordance, band geometry, labels, regions.
 
 Reuses tissue-1 machinery BY IMPORT (b03_load: assign_pip, boundary_and_band,
 donor_sets_for_band_tested; b03_certify: make_regions with frozen seed 20260907).
@@ -7,7 +7,7 @@ Lung-specific I/O:
   - polygons:    crop cell_boundaries.parquet (same polygon construction)
   - concordance: full-section h5 (<workspace>/xenium_lung/extracted/cell_feature_matrix.h5),
     restricted to crop-cell barcodes; gate = diagnosis-informed (per_cell >= 0.90,
-    total_ratio >= 0.97) — same gate class as tissue 1.
+    total_ratio >= 0.97), same gate class as tissue 1.
   - labels:      the frozen marker dictionary frozen marker dictionary, majority vote, tested-LR genes
     excluded (17 tested genes of the 18 testable pairs); classes <200 cells dropped
     (fixed for this leg).
@@ -37,7 +37,7 @@ EXTRACTED = os.path.join(WORKSPACE, "xenium_lung", "extracted")
 OUTD = f"{CROP}/data"
 os.makedirs(OUTD, exist_ok=True)
 
-# Frozen tested-gene set = unique genes of the 18 testable pairs (G1 verdict)
+# Frozen tested-gene set = the unique genes of the 18 testable pairs (panel audit)
 PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
  ("ERBB2","EGFR"),("ERBB2","PDCD1"),("ESR1","PGR"),("PGR","ESR1"),
  ("CD274","CTLA4"),("CD274","CD8A"),("CXCL12","CCR7"),("PECAM1","PDCD1"),
@@ -151,7 +151,7 @@ def label_cells(tx, n_cells):
     ann_map = {}
     for cls, genes in MARKERS.items():
         for g in genes:
-            assert g not in TESTED, f"marker {g} is a tested LR gene — dictionary leak"
+            assert g not in TESTED, f"marker {g} is a tested LR gene, dictionary leak"
             ann_map[g] = cls
     feat = tx.feature_name.to_numpy(); cells = tx.cell_idx.to_numpy()
     keep = cells >= 0
@@ -192,15 +192,15 @@ def main():
     if SMOKE:
         # Concordance is structurally invalid in smoke mode: PIP sees a small row
         # subset while h5 counts are full. Smoke validates mechanics only; the gate
-        # is evaluated in full mode (recorded, not hidden).
+        # is evaluated in full mode.
         conc["mode"] = "smoke"
-        conc["gate"] = "SKIPPED — smoke mode; full-mode gate required"
+        conc["gate"] = "SKIPPED, smoke mode; full-mode gate required"
         print(f"smoke concordance (NOT a gate): {conc}", flush=True)
     else:
         gate = conc["concordance_per_cell"] >= 0.90
         conc["mode"] = "full"
         conc["gate"] = "PASS" if gate else "FAIL"
-        print(f"G3-crop concordance: per_cell={conc['concordance_per_cell']:.4f} "
+        print(f"crop concordance: per_cell={conc['concordance_per_cell']:.4f} "
               f"total_ratio={conc['total_ratio']:.4f} "
               f"({conc['n_cells_tested']} cells) -> {'PASS' if gate else 'FAIL'}", flush=True)
         if not gate:

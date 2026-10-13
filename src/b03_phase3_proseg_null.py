@@ -21,12 +21,12 @@ Hard assertions (abort on failure; specified here):
      `T` column within 1e-9 for all 75 rows.
   C. Permutation invariance: per-region per-type cell counts preserved under
      permutation, checked on 10 permutations.
-  D. Pre-flight determinism: perm 0 computed twice (parent + worker) — bitwise
+  D. Pre-flight determinism: perm 0 computed twice (parent + worker), bitwise
      equality required before the sweep starts.
 
 Null scheme (frozen, identical structure to the scout's matched null):
   blocks = (region) x (decile of per-cell TOTAL foreground Proseg counts over ALL
-  named genes; per-entry rint then sum — the pipeline's count convention);
+  named genes; per-entry rint then sum, the pipeline's count convention);
   np.quantile linspace(0,1,11), digitize on q[1:-1], clip 0..9; blocks with >=2
   cells; labels permuted within blocks in fixed (region, decile) order;
   B = 1000; per-perm seed default_rng(20260907 + 100003 + p).
@@ -35,7 +35,7 @@ p-values: raw counts reported; inference on add-one p = (count+1)/(B+1); BH
 within region applied to add-one p (documented here; scout's watchdog used the
 same effective convention).
 
-Smoke mode (B03_P3_SMOKE=1): B=20, outputs to results/_phase3_dryrun/ — validates
+Smoke mode (B03_P3_SMOKE=1): B=20, outputs to results/_phase3_dryrun/, validates
 the full path end-to-end BEFORE the real run, without touching production paths.
 """
 
@@ -233,7 +233,7 @@ def main():
         N_L = int(Gm[mS, gidx[Lg]].sum())
         N_R = int(Gm[mR, gidx[Rg]].sum())
         T_obs = t_log2(N_L, N_R, nL, nR)
-        # NOTE: r["T"] not r.T — .T on a pandas row is the transpose property
+        # NOTE: r["T"] not r.T, .T on a pandas row is the transpose property
         assert abs(T_obs - float(r["T"])) <= 1e-9, \
             f"Assertion B FAILED at {r.pair} r{region_id}: {T_obs} vs {r['T']}"
         obs.append((gidx[Lg], gidx[Rg], tS, tR, nL, nR, T_obs))

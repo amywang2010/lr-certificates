@@ -1,10 +1,10 @@
-"""B03 Phase 5: lung-crop certified intervals — faithful port of b03_scout's core.
+"""B03 Phase 5: lung-crop certified intervals, faithful port of b03_scout's core.
 
 Reimplements the scout's vectorized interval machinery EXACTLY as read from
 b03_scout.py (gene_interval, row assembly, capacity feasibility, exactness
 verification, subcube check), parameterized to:
   - crop data dir xenium_lung/crop/data in the workspace (b03_lung_load outputs)
-  - 18 G1-testable pairs + the frozen marker dictionary TYPE_MAP/RECV_MAP (frozen)
+  - 18 testable pairs + the frozen marker dictionary TYPE_MAP/RECV_MAP
   - verification seed 20260907 (frozen seed base)
 The raw decile null of the scout is NOT ported: the frozen tissue-2 null is
 the matched robust permutation null (b03_matched_null scheme, driven by
@@ -79,7 +79,7 @@ def main():
     print(f"[{time.time()-t0:.0f}s] movable: {len(band_tested):,}; donor slots "
           f"{len(donor_flat):,}", flush=True)
 
-    # capacity feasibility (worst case) — scout's frozen check
+    # capacity feasibility (worst case), scout's frozen check
     base_tc = cells_meta.transcript_counts.to_numpy(np.int64)
     gain_cap = 0.5 * base_tc
     loss_cap = 0.6 * base_tc
@@ -99,8 +99,8 @@ def main():
                "capacity_rule": "capacity-capped dmax tightening applied; "
                             "intervals are certified supersets (sound upper bounds)"},
               open(f"{D}/capacity_check.json", "w"), indent=1)
-    # NOT asserted on tissue 2 (caps bind); soundness is preserved by the capped
-    # tightening inside gene_interval. Recorded, not hidden.
+    # Not asserted on this leg because the caps bind; soundness is preserved by the
+    # capped tightening inside gene_interval, recorded in capacity_check.json.
 
     types_needed = sorted(set(TYPE_MAP.values()) | set(RECV_MAP.values()))
     type_id = {t: i for i, t in enumerate(types_needed)}

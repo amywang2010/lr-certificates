@@ -1,14 +1,14 @@
-"""B03 Phase 7: breast_s6 certified intervals — faithful port of b03_lung_certify.
+"""B03 Phase 7: breast_s6 certified intervals, faithful port of b03_lung_certify.
 
 Identical interval machinery, verification battery, seeds (20260907), and constants;
 differences are I/O only:
   - data dir: workspace xenium_breast_s6/crop/data (b03_s6_load outputs)
-  - PAIRS/TYPE_MAP/RECV_MAP imported from b03_lung_config (A3 single source of
+  - PAIRS/TYPE_MAP/RECV_MAP imported from b03_lung_config, one shared
     truth), asserted equal to the lung driver's inline frozen copies.
 Type-absent pairs: the A3 sender/receiver map names Myeloid for 8 pairs; on this
-crop the frozen DEV amendment 007 rule (<200-cell classes dropped) removed Myeloid (133
-cells), so those rows are skipped by the standing n_cells==0 guard — recorded,
-not hidden (A1-c disclosure discipline).
+crop the frozen minimum-class-size rule (<200 cells) removed Myeloid (133
+cells), so those rows are skipped by the n_cells==0 guard and are listed in
+type_absent_skips.json.
 
 Outputs -> the s6 crop data dir: scout_bounds.csv, exactness_verification.csv,
 subcube_check.json, capacity_check.json
@@ -70,7 +70,7 @@ def main():
     print(f"[{time.time()-t0:.0f}s] movable: {len(band_tested):,}; donor slots "
           f"{len(donor_flat):,}", flush=True)
 
-    # capacity feasibility (worst case) — scout's frozen check
+    # capacity feasibility (worst case), scout's frozen check
     base_tc = cells_meta.transcript_counts.to_numpy(np.int64)
     gain_cap = 0.5 * base_tc
     loss_cap = 0.6 * base_tc
@@ -260,7 +260,7 @@ def main():
           f"{len(ver)*N_CFG_VERIFY} gene-level configs", flush=True)
     assert ver.violations.sum() == 0, "exactness verification FAILED"
 
-    # ---------- DEV amendment 016 cap cross-verification ----------
+    # ---------- capacity-cap cross-verification ----------
     rng_cap = np.random.default_rng(SEED + 7)
     cap_checks = 0; cap_mismatch = 0
     for _, r in res.iterrows():
@@ -290,7 +290,7 @@ def main():
                     scalar_min = min(int(pot[c]), int(cap_per_cell[c]))
                     if scalar_min != int(np.minimum(pot[in_t], cap_per_cell[in_t])[pos]):
                         cap_mismatch += 1
-    print(f"DEV amendment 016 cap cross-check: {cap_checks} capped (gene,region) instances; "
+    print(f"capacity-cap cross-check: {cap_checks} capped (gene,region) instances; "
           f"scalar mismatches {cap_mismatch}", flush=True)
     assert cap_mismatch == 0
 

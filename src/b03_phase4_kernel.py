@@ -1,4 +1,4 @@
-"""B03 Phase 4: leakage-kernel sensitivity — certification margins
+"""B03 Phase 4: leakage-kernel sensitivity, certification margins
 (fixed for this leg).
 
 Model: scalar kernel multiplier c >= 1 scales the scout's geometric worst-case
@@ -89,8 +89,8 @@ def main():
                ((T_hi_1 < 0) == m.certified_neg.to_numpy()).all())
     assert sign_ok, "Assertion B1 FAILED: interval-sign mismatch at c=1"
     # B2: matched-null certifications are a SUBSET of interval certifications
-    # (history: 37/9 matched vs 39/12 interval; the 5 dropped rows are
-    # matched-null-insignificant, not sign-flipped).
+    # 37/9 matched against 39/12 interval; the 5 dropped rows fail the matched
+    # null rather than flipping sign.
     subset_ok = ((~m.certified_pos_matched | m.certified_pos).all() and
                  (~m.certified_neg_matched | m.certified_neg).all())
     assert subset_ok, "Assertion B2 FAILED: matched flags not a subset of interval flags"

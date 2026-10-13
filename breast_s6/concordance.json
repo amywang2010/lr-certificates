@@ -1,5 +1,5 @@
 {
- "gate_form": "A1-c totals-level",
+ "gate_form": "totals-level",
  "pearson_r": 0.9991127223253885,
  "spearman_rho": 0.9987276227575497,
  "median_abs_diff": 1.0,

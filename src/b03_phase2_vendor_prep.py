@@ -31,7 +31,7 @@ import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
-from b03_scout import ALL_PAIRS  # frozen pair list (single source of truth)
+from b03_scout import ALL_PAIRS  # the 25-pair family, frozen
 
 DATA = os.path.join(ROOT, "data")
 OUT = os.path.join(ROOT, "data", "vendor_markers.npz")

@@ -79,9 +79,9 @@ def region_T_and_counts(tx, labels, region_of_cell, region_id, pair, genes_idx):
     cl = tx.cell_idx.to_numpy()
     cells_in = np.flatnonzero(region_of_cell == region_id)
     cellset = set(cells_in.tolist())
-    # sender type = type of ligand-expressing cells; we use pre-typed classes:
+    # sender type = type of ligand-expressing cells, from the pre-typed classes:
     # sender type S for L, receiver type R for R (fixed before analysis mapping from panel
-    # annotation of the pair — implemented via ligand/receiver type tables below)
+    # annotation of the pair, implemented via ligand/receiver type tables below)
     nL = sum(1 for c in cl[L] if c in cellset)
     nR = sum(1 for c in cl[R] if c in cellset)
     return nL, nR
@@ -103,7 +103,7 @@ def interval_bounds_region(tx, dm, labels, region_of_cell, region_id, pair,
     Greedy per-transcript optimization: each movable transcript contributes an independent
     delta in {its achievable deltas}; total count interval = sum of achievable delta ranges
     (interval arithmetic; each delta range is a contiguous integer interval because
-    destinations are independent per transcript — capacities couple only repeats of the
+    destinations are independent per transcript, capacities couple only repeats of the
     same cell pair, handled by counting multiplicities).
     Returns (delta_min, delta_max) for each gene.
     """

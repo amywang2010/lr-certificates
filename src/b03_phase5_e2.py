@@ -1,8 +1,8 @@
-"""B03 Phase 5 (step B): E2 cross-platform coverage — Proseg replication on the crop.
+"""B03 Phase 5 (step B): E2 cross-platform coverage, Proseg replication on the crop.
 
 Faithful port of b03_phase2_analysis.py (fixture-validated tissue-1 machinery) with:
   - crop paths (workspace xenium_lung/crop/data, xenium_lung/crop/proseg_out)
-  - 18 G1-testable pairs / 54 rows; A3-frozen TYPE_MAP/RECV_MAP
+  - 18 testable pairs / 54 rows; frozen TYPE_MAP/RECV_MAP
   - certified set from scout_final_lung.csv (cert_pos_final / cert_neg_final)
 All schema assertions from tissue 1 retained (type-naming, noise-slot handling,
 gene-alignment proof, cell-id/mtx mapping, non-evaluable cap).

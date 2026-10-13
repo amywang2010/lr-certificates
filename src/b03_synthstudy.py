@@ -287,7 +287,7 @@ def remove_tested(codes, uniq, tested_codes, target_pct, seed):
 def inject(codes, uniq, name_code, inj):
     """Known-positive: relabel same-class tested transcripts inside the anchor
     ring (nearest-neighbour ring around seeded anchors; ring radius scales
-    with f so injected MASS is the dose axis — f <= 1 saturates the fixed
+    with f so injected MASS is the dose axis, f <= 1 saturates the fixed
     anchor pool, so dose must grow the ring) to the pair names, taking the
     full borrowable mass of the ring's sender/receiver cells."""
     rng = np.random.default_rng(inj["rng_seed"])
@@ -491,10 +491,10 @@ def run_intervals(codes, uniq, run_dir: Path):
             viol = 0
             CH = 100
             # 200 configs per gene-row (spec S7.9): this check catches range-
-            # computation bugs; it is arithmetically incapable of failing for
+            # computation defects; it cannot fail for
             # a correct [lo, hi] (deltas drawn within per-transcript ranges
             # sum into the aggregate range), so 200 draws retain the full
-            # bug-catch value at a fifth of the cost. Attainability evidence
+            # detection value at a fifth of the cost. Attainability evidence
             # remains the shipped subcube enumeration and independent
             # re-derivation artifacts.
             for _s in range(0, 200, CH):
@@ -694,7 +694,7 @@ def build_null_state(codes, uniq, labels, region_of_cell, res):
         keys.append((r.pair, region_id))
         obs_arr.append((gidx[Lg], gidx[Rg], tS, tR, nLc, nRc,
                         float(r.T_lo), float(r.T_hi)))
-    # dtype diet (spec S7.1b): donor indices int32, labels int16 — the gather
+    # dtype diet (spec S7.1b): donor indices int32, labels int16, the gather
     # is bandwidth-bound, this halves/quarters its traffic; values bounded
     # (slot indices < 2^31; cid < 3*n_slots+1 << 2^15). Slice form for the
     # worker: (gi, mv, absolute start offsets, [span_end]).

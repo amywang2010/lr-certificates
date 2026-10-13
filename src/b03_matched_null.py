@@ -17,7 +17,7 @@ bounds (cross-checked against scout_bounds at 8.9e-16).
      equality required before the full run starts.
 
 Outputs:
-  results/null_robust_matched.csv      (p_pos/p_neg as raw count/B — watchdog applies
+  results/null_robust_matched.csv      (p_pos/p_neg as raw count/B, watchdog applies
                                         the add-one convention)
   results/scout_summary_matched.json
 """
@@ -317,9 +317,9 @@ def main():
     Thi_all[0] = ref[2]
     done = {0}
     ckpt_path = f"{OUT}/null_checkpoint.npz"
-    # resume: np.savez auto-appends '.npz' to a requested filename, so the crash
-    # left the first checkpoint at '*.tmp.npz'; its rows carry per-perm seeds and
-    # are bitwise reproducible, hence valid to reuse.
+    # resume: np.savez appends '.npz' to a requested filename, so a first checkpoint
+    # can sit at '*.tmp.npz'; its rows carry per-permutation seeds and are bitwise
+    # reproducible, hence valid to reuse.
     legacy = ckpt_path + ".tmp.npz"
     if os.path.exists(ckpt_path):
         d0 = np.load(ckpt_path)

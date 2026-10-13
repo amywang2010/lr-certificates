@@ -4,8 +4,8 @@ Drives b03_matched_null by import with the frozen s6 configuration:
   - DATA/OUT -> the workspace xenium_breast_s6/crop/data dir (env B03_NULL_DATA/B03_NULL_OUT; env so
     the spawned workers inherit the same module configuration)
   - seed 20260907 -> per-perm seeds 20260907+100003+p (frozen)
-  - frozen TYPE_MAP/RECV_MAP and the 18 G1-testable pairs (b03_lung_config as
-    single source of truth; asserted equal to the lung driver's inline constants
+  - frozen TYPE_MAP/RECV_MAP and the 18 testable pairs (b03_lung_config as
+    shared by both legs; asserted equal to the lung driver's inline constants
     by b03_s6_certify at certify time)
   - B03_NULL_CAP=1: capacity-capped dmax, ONE formula with the certify step
   - observed intervals are re-verified against scout_bounds.csv (1e-6) before any

@@ -378,7 +378,7 @@ def main():
     files = ["sigma_audit.csv", "slot_identity.csv", "fcr_table.csv",
              "dose_curve.csv", "power_curve.csv"]
     receipt = "\n".join(f"{sha256_of(STUDY / f)}  {f}" for f in files) + "\n"
-    (STUDY / "synthstudy_analysis.sha256").write_text(receipt)
+    (STUDY / "synthstudy_analysis.sha256").write_text(receipt, newline="\n")
     print("\nreceipt written: synthstudy_analysis.sha256")
 
 

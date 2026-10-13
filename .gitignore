@@ -1,3 +1,7 @@
+data/
+logs/
+finalize_checks.md
+*.log
 __pycache__/
 *.pyc
 *.npz

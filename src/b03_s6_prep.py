@@ -39,7 +39,7 @@ def registered_scale():
     """Parse and validate the transform, but do not apply it to the
     analysis frame. The zarr stores points and shapes in MICROMETERS; the stored
     scale 1/0.2125 = 4.7059 maps um -> IMAGE PIXELS for H&E alignment. Applying it
-    to the analysis frame inflated polygon area 22.1x (956 mm^2 vs 43.2 mm^2 raw) —
+    to the analysis frame inflated polygon area 22.1x (956 mm^2 against 43.2 mm^2 raw),
     caught by the A1 frame assertion before any data was written. Analysis uses the
     stored um coordinates (the same convention as tissues 1 and 2)."""
     z = zipfile.ZipFile(ZIP)
@@ -99,8 +99,8 @@ def main():
         x = t.column("x").to_numpy() * scale; y = t.column("y").to_numpy() * scale
         xmin_t = min(xmin_t, float(x.min())); xmax_t = max(xmax_t, float(x.max()))
         ymin_t = min(ymin_t, float(y.min())); ymax_t = max(ymax_t, float(y.max()))
-    # A1 frame check (direction corrected pre-crop, see A1-b.2): cell polygons lie
-    # where molecules are, not vice versa — polygons cover only tissue while the
+    # Axis-orientation check (direction corrected pre-crop): cell polygons lie
+    # where molecules are, not the reverse: polygons cover only tissue while the
     # capture area includes acellular space. Tolerance 5 um: catches frame errors
     # (systematic, pixel-scale ~4.7 um) while permitting capture-edge rounding
     # (measured 1.6 um on y_min; a polygon touches the capture edge where no

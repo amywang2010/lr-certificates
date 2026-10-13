@@ -1,16 +1,16 @@
-"""B03 Phase 7: breast_s6 crop vendor load — PIP, concordance, band geometry, labels, regions.
+"""B03 Phase 7: breast_s6 crop vendor load, PIP, concordance, band geometry, labels, regions.
 
 Reuses certified machinery BY IMPORT (b03_load: assign_pip, boundary_and_band,
 donor_sets_for_band_tested, BAND_UM; b03_certify: make_regions, seed 20260907).
-s6-specific I/O per the frozen second-section configuration and A1-b:
+s6-specific I/O per the frozen second-section configuration:
   - transcripts: <workspace>/xenium_breast_s6/crop/transcripts.parquet (frozen window
     x[7500,11000] x y[6500,10000], frozen crop rule verbatim on centroid density).
   - polygons:    crop cell_boundaries.parquet as per-cell WKB (simpler than the 10x
     exploded format; same validity filter: area > 1e-6, buffer(0) repair, largest part).
-  - concordance: A1-c totals-level gate — vendor obs/transcript_counts (polygon id
+  - concordance: totals-level gate, vendor obs/transcript_counts (polygon-id
     space, raw int64) vs our PIP over is_gene & QV>=20 transcripts; gates r >= 0.99,
     rho >= 0.99, median |diff| <= 5, ratio in [0.90, 1.10]. The packaging ships no
-    raw count matrix on the polygon id space (A1-c), so the per-gene gate form of
+    raw count matrix on the polygon-id space, so the per-gene gate form of
     tissues 1/2 is structurally unavailable here, so this gate reads
     gene-level computation.
   - labels:      A3 frozen marker dictionary, majority vote, tested-LR genes excluded;
@@ -143,13 +143,13 @@ def load_polygons_s6():
     return polys, cid_map, cells_meta
 
 def verify_totals_s6(tx, owner, cid_map, cm):
-    """A1-c totals-level G3 gate.
+    """Totals-level concordance gate.
 
     Reference: vendor obs/transcript_counts per crop cell (polygon id space).
     Candidate: our PIP over is_gene & QV>=20 crop transcripts.
     Gates: Pearson r >= 0.99 AND Spearman rho >= 0.99 AND median |diff| <= 5
            AND total ratio in [0.90, 1.10].
-    Rationale (A1-c): this packaging ships no raw count matrix on the polygon id
+    Rationale: this packaging ships no raw count matrix on the polygon-id
     space (table_cells.X is processed; points cell_id is a different segmentation
     layer), so the per-gene gate form of tissues 1/2 is structurally unavailable.
     """
@@ -167,7 +167,7 @@ def verify_totals_s6(tx, owner, cid_map, cm):
     med_abs = float(np.median(np.abs(pip_totals - obs_totals)))
     ratio = float(pip_totals.sum()) / float(obs_totals.sum())
     gate = (r >= 0.99) and (rs >= 0.99) and (med_abs <= 5) and (0.90 <= ratio <= 1.10)
-    return {"gate_form": "A1-c totals-level", "pearson_r": r, "spearman_rho": rs,
+    return {"gate_form": "totals-level", "pearson_r": r, "spearman_rho": rs,
             "median_abs_diff": med_abs, "total_ratio": ratio,
             "n_cells": int(len(cm)), "pip_assigned_total": int(pip_totals.sum()),
             "vendor_total": int(obs_totals.sum()),
@@ -214,7 +214,7 @@ def main():
         conc["gate"] = "SKIPPED - smoke mode; full-mode gate required"
         print(f"smoke totals-gate (NOT a gate): {conc}", flush=True)
     else:
-        print(f"G3 totals-gate (A1-c): r={conc['pearson_r']:.5f} "
+        print(f"totals-level concordance gate: r={conc['pearson_r']:.5f} "
               f"rho={conc['spearman_rho']:.5f} med|d|={conc['median_abs_diff']:.1f} "
               f"ratio={conc['total_ratio']:.5f} -> {conc['gate']}", flush=True)
         json.dump(conc, open(f"{OUTD}/concordance.json", "w"), indent=1)
