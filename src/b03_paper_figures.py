@@ -221,7 +221,7 @@ ax.legend(handles=[Line2D([], [], color=C_PRO, marker="D", ls="none", ms=3.4,
 plabel(ax, "b")
 check_layout(fig, "fig1_main")
 fig.savefig(f"{OUT}/fig1_main.png", dpi=600)
-fig.savefig(f"{OUT}/fig1_main.pdf")
+fig.savefig(f"{OUT}/fig1_main.pdf", metadata={"CreationDate": None})
 plt.close(fig)
 
 # ================================================================ fig2_support
@@ -275,7 +275,7 @@ ax.tick_params(axis="x", length=0)
 plabel(ax, "b")
 check_layout(fig, "fig2_support")
 fig.savefig(f"{OUT}/fig2_support.png", dpi=600)
-fig.savefig(f"{OUT}/fig2_support.pdf")
+fig.savefig(f"{OUT}/fig2_support.pdf", metadata={"CreationDate": None})
 plt.close(fig)
 
 print("figures written:", sorted(f for f in os.listdir(OUT) if f.endswith(".pdf")))

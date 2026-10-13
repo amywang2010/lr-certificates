@@ -229,7 +229,8 @@ def build(outdir):
     png = os.path.join(outdir, "fig0_workflow.png")
     pdf = os.path.join(outdir, "fig0_workflow.pdf")
     fig.savefig(png, dpi=600, bbox_inches="tight", pad_inches=0.02)
-    fig.savefig(pdf, bbox_inches="tight", pad_inches=0.02)
+    fig.savefig(pdf, bbox_inches="tight", pad_inches=0.02,
+                metadata={"CreationDate": None})
     plt.close(fig)
     return f"{len(_shapes)} shapes, all labels contained, no shape overlaps"
 
