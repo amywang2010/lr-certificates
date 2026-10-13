@@ -60,6 +60,29 @@ def plabel(ax, letter, size=9):
             fontweight="bold", fontsize=size)
 
 
+def check_legend(ax, leg, name, segments, pad=1.0):
+    """Assert that a legend box covers no drawn interval.
+
+    A legend is placed in the empty part of the panel, and the empty part is a
+    property of the data, not of the corner. Sampling each interval along its
+    length and testing the points against the rendered legend box catches a
+    legend that sits on top of a bar, which no corner choice can be trusted to
+    avoid.
+    """
+    ax.figure.canvas.draw()
+    eb = leg.get_window_extent()
+    hits = []
+    for x0, x1, y in segments:
+        for t in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0):
+            px, py = ax.transData.transform((x0 + (x1 - x0) * t, y))
+            if eb.x0 - pad <= px <= eb.x1 + pad and eb.y0 - pad <= py <= eb.y1 + pad:
+                hits.append((round(x0, 2), round(x1, 2), y))
+                break
+    if hits:
+        raise AssertionError(f"{name} legend overlaps {len(hits)} drawn intervals, "
+                             f"e.g. {hits[:3]}")
+
+
 def check_layout(fig, name, pad=1.5):
     """Assert that no drawn text leaves the canvas or collides with other text.
 
@@ -140,12 +163,14 @@ ax = fig.add_subplot(gs[0])
 for i in range(len(pairs)):
     if i % 2:
         ax.axhspan(i - 0.5, i + 0.5, color=GREY, zorder=0)
+segs_a = []
 for _, r in fin.iterrows():
     y = ypos[r.pair] + (r.region - 1) * 0.30
     ax.plot([r.T_lo, r.T_hi], [y, y], color=verdict_color(r.certified_pos_matched,
             r.certified_neg_matched), lw=1.5, solid_capstyle="butt", zorder=3)
     ax.plot(r.T0, y, marker=REGION_MARK[int(r.region)], ms=2.4, mfc="white",
             mec="black", mew=0.5, ls="none", zorder=4)
+    segs_a.append((float(r.T_lo), float(r.T_hi), float(y)))
 
 tr = blended_transform_factory(ax.transAxes, ax.transData)
 for p, y in ypos.items():
@@ -166,14 +191,17 @@ for r in (0, 1, 2):
     handles.append(Line2D([], [], color="black", marker=REGION_MARK[r], ls="none",
                           ms=3.4, mfc="white", mec="black", mew=0.6,
                           label=f"region {r}"))
-ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=6.4,
-          ncol=2, columnspacing=1.0, handletextpad=0.5, borderaxespad=0.2)
+# A single narrow column sits in the free right band; two columns are wide enough
+# to reach the control intervals near the right.
+leg_a = ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=6.4,
+                  ncol=1, handletextpad=0.5, borderaxespad=0.2)
 
 # ---- (b) cross-tissue certificates
 ax = fig.add_subplot(gs[1])
 rows = [("Breast", ["PECAM1->KDR", "CDH1->ERBB2", "ESR1->PGR"], "breast"),
         ("Lung", ["PECAM1->KDR", "CDH1->EGFR", "ESR1->PGR"], "lung")]
 ylabels, ypos_b, group_y = [], [], {}
+segs_b = []
 y = 0
 excursion_xy = None
 for tname, tlist, tkey in rows:
@@ -194,6 +222,7 @@ for tname, tlist, tkey in rows:
         ylabels.append(f"{pair.split('->')[0]} \u2192 {pair.split('->')[1]}")
         ypos_b.append(y)
         group_y[tname].append(y)
+        segs_b.append((float(sub.T_lo.min()), float(sub.T_hi.max()), float(y)))
         y += 1
     y += 1.8
 ax.set_yticks(ypos_b)
@@ -214,11 +243,13 @@ if excursion_xy is not None:
                                 shrinkA=2, shrinkB=3))
 ax.set_xlabel("$T$ (log$_2$ expression-product ratio)", fontsize=7.8)
 ax.set_ylim(-1.2, y - 0.5)
-ax.legend(handles=[Line2D([], [], color=C_PRO, marker="D", ls="none", ms=3.4,
-                          mec="white", mew=0.35, label="Proseg $T$ (point estimate)")],
-          loc="lower left", frameon=False, fontsize=6.2, handletextpad=0.5,
-          borderaxespad=0.3)
+leg_b = ax.legend(handles=[Line2D([], [], color=C_PRO, marker="D", ls="none", ms=3.4,
+                                 mec="white", mew=0.35, label="Proseg $T$ (point estimate)")],
+                  loc="center right", frameon=False, fontsize=6.2, handletextpad=0.5,
+                  borderaxespad=0.3)
 plabel(ax, "b")
+check_legend(fig.axes[0], leg_a, "fig1_main(a)", segs_a)
+check_legend(fig.axes[1], leg_b, "fig1_main(b)", segs_b)
 check_layout(fig, "fig1_main")
 fig.savefig(f"{OUT}/fig1_main.png", dpi=600)
 fig.savefig(f"{OUT}/fig1_main.pdf", metadata={"CreationDate": None})
