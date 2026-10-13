@@ -17,7 +17,7 @@ bounds (cross-checked against scout_bounds at 8.9e-16).
      equality required before the full run starts.
 
 Outputs:
-  results/null_robust_matched.csv      (p_pos/p_neg as raw count/B, watchdog applies
+  results/null_robust_matched.csv      (p_pos/p_neg as raw count/B, finalization applies
                                         the add-one convention)
   results/scout_summary_matched.json
 """
@@ -369,7 +369,7 @@ def main():
     assert not np.isnan(Tlo_all).any(), "missing permutations"
     print(f"[{time.time()-t0:.0f}s] all {B_PERM} permutations complete", flush=True)
 
-    # ---- p-values (the watchdog applies the add-one convention) ----
+    # ---- p-values (the finalization step applies the add-one convention) ----
     p_pos_acc = (Tlo_all >= T_lo_obs[None, :] - 1e-9).sum(axis=0)
     p_neg_acc = (Thi_all <= T_hi_obs[None, :] + 1e-9).sum(axis=0)
     rows = []

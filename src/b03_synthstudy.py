@@ -813,7 +813,7 @@ def run_null_inproc(run_dir: Path, B: int, codes, uniq):
 
 
 # ---------------------------------------------------------------------------
-# adjudication (shipped watchdog convention: add-one + BH within region)
+# adjudication (shipped finalization convention: add-one + BH within region)
 # ---------------------------------------------------------------------------
 
 def bh(p):

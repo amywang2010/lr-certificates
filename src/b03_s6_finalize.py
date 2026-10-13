@@ -1,6 +1,6 @@
 """B03 Phase 7: s6 finalization, scout_final_s6.csv + corrected summary JSON.
 
-Mirrors the scout watchdog merge exactly:
+Mirrors the scout finalization merge exactly:
   - the stored p_* are acc/B; raw add-one p = (1+acc)/(B+1), round-trip asserted;
   - BH within region over the pair family, q <= 0.10;
   - certified_pos_matched = (T_lo > 0) & (q_pos <= 0.10);

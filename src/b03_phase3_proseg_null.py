@@ -32,8 +32,8 @@ Null scheme (frozen, identical structure to the scout's matched null):
   B = 1000; per-perm seed default_rng(20260907 + 100003 + p).
 
 p-values: raw counts reported; inference on add-one p = (count+1)/(B+1); BH
-within region applied to add-one p (documented here; scout's watchdog used the
-same effective convention).
+within region applied to add-one p (documented here; the scout finalization used
+the same effective convention).
 
 Smoke mode (B03_P3_SMOKE=1): B=20, outputs to results/_phase3_dryrun/, validates
 the full path end-to-end BEFORE the real run, without touching production paths.

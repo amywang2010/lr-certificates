@@ -62,7 +62,8 @@ and in this README.
 ## Figures
 
 `python src/b03_paper_figures.py` writes all three figures into `figures/` from released
-artifacts only, asserting row counts before plotting.
+artifacts only, asserting row counts before plotting and checking the rendered layout
+(no text leaves the canvas, no two labels collide) before any file is written.
 
 | Figure | File | Panels | Source artifacts |
 |---|---|---|---|
@@ -104,7 +105,7 @@ reported number depends on is released under `results/`, `lung/` and `breast_s6/
    `src/b03_lung_crop_extract.py` → `src/b03_lung_load.py` → `src/b03_lung_certify.py` →
    `src/b03_lung_null.py` → `src/b03_lung_concordance.py` → `src/b03_phase5_vendor_prep.py` →
    `src/b03_phase5_e2.py` → `src/b03_phase5_e3.py`. The configuration shared with the
-   second-section leg lives in `src/b03_lung_config.py`.
+   second-section leg is defined in `src/b03_lung_config.py`.
 6. High-permutation reruns and the determinism gate: `src/b03_phase6_lung.py`,
    `src/b03_phase6_breast.py`, then `src/b03_phase6_analysis.py`.
 7. Second section on the 5,000-plex panel: `src/b03_s6_extract.py` → `src/b03_s6_prep.py` →

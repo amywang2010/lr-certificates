@@ -13,7 +13,7 @@ s6-specific I/O per the frozen second-section configuration:
     raw count matrix on the polygon-id space, so the per-gene gate form of
     tissues 1/2 is structurally unavailable here, so this gate reads
     gene-level computation.
-  - labels:      A3 frozen marker dictionary, majority vote, tested-LR genes excluded;
+  - labels:      frozen marker dictionary, majority vote, tested-LR genes excluded;
     classes < 200 cells dropped (frozen minimum-class rule).
   - regions:     k-means k=3 on (log10(1+transcript_counts), x/1000, y/1000), seed
     20260907. transcript_counts joined from the zip obs (vendor per-cell total),
@@ -51,7 +51,7 @@ def log(d):
     with open(LOG, "a", encoding="utf-8") as f:
         f.write(json.dumps(d) + "\n")
 
-# Frozen tested-gene set = unique genes of the 18 testable pairs (A3 config)
+# Frozen tested-gene set = unique genes of the 18 testable pairs
 PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
  ("ERBB2","EGFR"),("ERBB2","PDCD1"),("ESR1","PGR"),("PGR","ESR1"),
  ("CD274","CTLA4"),("CD274","CD8A"),("CXCL12","CCR7"),("PECAM1","PDCD1"),
@@ -60,7 +60,7 @@ PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
 TESTED = sorted({g for p in PAIRS for g in p})
 assert len(TESTED) == 17, TESTED
 
-# A3 frozen marker dictionary; tested-LR genes removed HERE (assertion verifies
+# frozen marker dictionary; tested-LR genes removed HERE (assertion verifies
 # so the filter does not leak a marker into the vote).
 MARKERS_RAW = {
  "Epithelial": ["EPCAM", "MUC1"],
@@ -174,7 +174,7 @@ def verify_totals_s6(tx, owner, cid_map, cm):
             "gate": "PASS" if gate else "FAIL"}
 
 def label_cells(tx, n_cells):
-    """A3: majority marker vote, tested-LR genes excluded, <200-cell classes dropped."""
+    """Majority marker vote, tested-LR genes excluded, <200-cell classes dropped."""
     ann_map = {}
     for cls, genes in MARKERS.items():
         for g in genes:
@@ -240,7 +240,7 @@ def main():
     dist, band, tree, edge_cell = boundary_and_band(tx, polys)
     tx["dist_boundary"] = dist
     tx["in_band"] = band
-    # A3 registered mover filter: donor sets cover band transcripts of the 17
+    # registered mover filter: donor sets cover band transcripts of the 17
     # tested genes ONLY. b03_load's module default is tissue-1's 25-pair superset;
     # the lung leg was unaffected because its panel lacks every superset-only gene
     # (verified), but s6's panel carries CCL5/CD3D. Override explicitly and assert.

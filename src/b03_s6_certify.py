@@ -5,7 +5,7 @@ differences are I/O only:
   - data dir: workspace xenium_breast_s6/crop/data (b03_s6_load outputs)
   - PAIRS/TYPE_MAP/RECV_MAP imported from b03_lung_config, one shared
     truth), asserted equal to the lung driver's inline frozen copies.
-Type-absent pairs: the A3 sender/receiver map names Myeloid for 8 pairs; on this
+Type-absent pairs: the frozen sender/receiver map names Myeloid for 8 pairs; on this
 crop the frozen minimum-class-size rule (<200 cells) removed Myeloid (133
 cells), so those rows are skipped by the n_cells==0 guard and are listed in
 type_absent_skips.json.
@@ -22,7 +22,7 @@ from b03_scout import t_log2, EPS
 from b03_lung_config import PAIRS, TYPE_MAP, RECV_MAP
 import b03_lung_certify as lung_ref
 
-# mechanical cross-check: the imported A3 config must equal the lung driver's
+# mechanical cross-check: the imported config must equal the lung driver's
 # inline frozen constants (byte-identical design across legs)
 assert PAIRS == lung_ref.PAIRS, "PAIRS diverge from lung driver"
 assert TYPE_MAP == lung_ref.TYPE_MAP, "TYPE_MAP diverge from lung driver"

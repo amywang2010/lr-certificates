@@ -40,7 +40,7 @@ def registered_scale():
     analysis frame. The zarr stores points and shapes in MICROMETERS; the stored
     scale 1/0.2125 = 4.7059 maps um -> IMAGE PIXELS for H&E alignment. Applying it
     to the analysis frame inflated polygon area 22.1x (956 mm^2 against 43.2 mm^2 raw),
-    caught by the A1 frame assertion before any data was written. Analysis uses the
+    caught by the frame assertion before any data was written. Analysis uses the
     stored um coordinates (the same convention as tissues 1 and 2)."""
     z = zipfile.ZipFile(ZIP)
     with z.open("sdata_breast_s6.zarr/points/st/.zattrs") as f:

@@ -69,7 +69,7 @@ genes_p = pd.read_parquet(f"{DATA}/proseg_out/genes")
 print(f"[{time.time()-t0:.0f}s] mtx {Coo.shape} nnz={Coo.nnz:,}; cells "
       f"{cells_meta_p.shape}; genes {genes_p.shape}", flush=True)
 assert Coo.shape[0] == len(cells_meta_p), "mtx rows != cells rows"
-# A2b: gene columns may be n_named (all named) or n_named-1 (internal noise slot,
+# Gene columns may be n_named (all named) or n_named-1 (internal noise slot,
 # handled below); anything else is an unrecognized schema change -> abort.
 assert Coo.shape[1] in (len(genes_p), len(genes_p) - 1), \
     f"mtx cols {Coo.shape[1]} vs genes metadata {len(genes_p)} - schema changed"
@@ -88,7 +88,7 @@ if n_bg_cells:
     Coo = Coo.tocsr()[keep].tocoo()
     pc = pc[~is_bg].reset_index(drop=True)
 n_pc = len(pc)
-print(f"[{time.time()-t0:.0f}s] background-cell rows dropped (A2a): {n_bg_cells} "
+print(f"[{time.time()-t0:.0f}s] background-cell rows dropped: {n_bg_cells} "
       f"(expected 0); universe {n_pc} cells", flush=True)
 ids_kept = pc["cell"].to_numpy(np.int64)
 assert (np.diff(ids_kept) > 0).all(), "kept cell ids not strictly increasing"

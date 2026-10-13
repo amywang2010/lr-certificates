@@ -26,7 +26,7 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Polygon
 TEXT_W = 4.8          # inches; LNCS text width, so no scaling at include time
 LW = 0.6              # thin black outlines
 BLACK = "#1A1A1A"
-FS = 5.4              # label font size, points
+FS = 5.8              # label font size, points
 LEAD = 1.30           # label line spacing
 
 # _shapes holds (patch, text, label) triples so the containment check can run.
@@ -166,6 +166,12 @@ def build(outdir):
     global _shapes
     _shapes = []
 
+    plt.rcParams.update({
+        "pdf.fonttype": 42, "ps.fonttype": 42,
+        "font.family": "serif",
+        "font.serif": ["STIXGeneral", "DejaVu Serif"],
+        "mathtext.fontset": "stix",
+    })
     fig, ax = plt.subplots(figsize=(TEXT_W, 2.30))
     # Axes must span the whole figure, otherwise grid units are not the layout
     # units, and the containment arithmetic below misbehaves.
@@ -201,8 +207,8 @@ def build(outdir):
               "Interval sign\nand matched\nnull agree?")
     # ---- reported output
     stadium(ax, 55, 14, 41, 15,
-            r"Certificate" "\n" r"certified $+$ or $-\$$," "\n"
-            r"or non-identifiable")
+            "Certificate" "\n" "certified $+$ or $-$, or" "\n"
+            "non-identifiable")
 
     # ---- orthogonal connectors
     arrow(ax, [(30, 70), (33, 70)])                      # observed: A0 -> U
