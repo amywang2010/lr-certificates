@@ -2,7 +2,7 @@
 
 Mirrors b03_phase2_vendor_prep.py exactly (transform x = log1p((M/Ctot)*scale),
 scale = median vendor cell marker total; per-class centroids from vendor cells),
-with the the frozen marker dictionary marker dictionary (tested-LR genes excluded mechanically).
+with the frozen marker dictionary (tested-LR genes excluded mechanically).
 Outputs the crop data dir's vendor_markers.npz: centroids, type_names,
 marker_genes, scale, vendor_centroids_xy, regions_row.
 """

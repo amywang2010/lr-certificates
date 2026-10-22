@@ -11,8 +11,8 @@ s6-specific I/O per the frozen second-section configuration:
     space, raw int64) vs our PIP over is_gene & QV>=20 transcripts; gates r >= 0.99,
     rho >= 0.99, median |diff| <= 5, ratio in [0.90, 1.10]. The packaging ships no
     raw count matrix on the polygon-id space, so the per-gene gate form of
-    tissues 1/2 is structurally unavailable here, so this gate reads
-    gene-level computation.
+    tissues 1/2 is structurally unavailable here, and this gate is the
+    totals-level form.
   - labels:      frozen marker dictionary, majority vote, tested-LR genes excluded;
     classes < 200 cells dropped (frozen minimum-class rule).
   - regions:     k-means k=3 on (log10(1+transcript_counts), x/1000, y/1000), seed

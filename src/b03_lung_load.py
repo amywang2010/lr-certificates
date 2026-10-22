@@ -46,7 +46,7 @@ PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
 TESTED = sorted({g for p in PAIRS for g in p})
 assert len(TESTED) == 17, TESTED
 
-# the frozen marker dictionary marker dictionary as frozen; tested-LR genes are removed HERE,
+# the frozen marker dictionary; tested-LR genes are removed HERE,
 # explicitly, so the exclusion discipline is mechanical (assertion below verifies
 # so the filter does not leak a marker into the vote).
 MARKERS_RAW = {

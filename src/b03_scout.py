@@ -21,7 +21,7 @@ Correctness notes:
 - EXACTNESS VERIFICATION: (a) vectorized random feasible configs must lie in bounds;
   (b) exhaustive enumeration on a 12-transcript subcube must match greedy extremes.
 - NULL: within-(region, transcript-count decile) label permutations, B=1000 (fixed before analysis),
-  one random ranking per block; cumsum trick gives subset sums for ALL types/genes at once.
+  one random ranking per block; a cumulative-sum step gives subset sums for ALL types/genes at once.
 - COVERAGE: full-band erosion (all band+tested -> extracellular) lies in bounds by
   construction; d=2 sub-band erosion is the held-out check (fixed before analysis).
 """

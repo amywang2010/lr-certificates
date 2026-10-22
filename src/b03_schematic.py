@@ -2,7 +2,7 @@
 outlines, orthogonal connectors, horizontal group bars over the column groups and
 side labels naming the row groups.
 
-Two failure modes are made impossible by construction rather than by eyeballing:
+Two failure modes are excluded by construction:
 
   1. Every label is short enough to fit its shape. After drawing, each text
      object's RENDERED bounding box is measured with matplotlib's renderer and
@@ -207,8 +207,8 @@ def build(outdir):
               "Interval sign\nand matched\nnull agree?")
     # ---- reported output
     stadium(ax, 55, 14, 41, 15,
-            "Certificate" "\n" "certified $+$ or $-$, or" "\n"
-            "non-identifiable")
+            "Claim" "\n" "claim-certified $+$ or $-$, or" "\n"
+            "no claim")
 
     # ---- orthogonal connectors
     arrow(ax, [(30, 70), (33, 70)])                      # observed: A0 -> U

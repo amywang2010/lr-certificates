@@ -7,8 +7,8 @@ Implements the baseline-comparison protocol exactly:
     two-layer certificates at the same screen resolution (scout_final_matched.csv).
   Comparison 2 (all sections): certified vs not x Proseg-T inside vs outside the
     certified interval, per section and pooled; Fisher exact p, odds ratio with
-    95% profile likelihood CI (closed-form Woolf logit CI on the OR, reported as
-    such; zero cells handled by the Haldane-Anscombe 0.5 correction, recorded).
+    95% profile likelihood CI (closed-form Woolf logit CI on the OR, with zero
+    cells handled by the Haldane-Anscombe 0.5 correction, recorded).
 
 Descriptive only: no verdict changes, no certified-set modification. Every output
 row names its source artifact. Writes:

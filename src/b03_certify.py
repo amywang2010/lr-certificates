@@ -183,7 +183,6 @@ def brute_force_check(tx, dm, labels, region_of_cell, region_id, pair, band_tx_i
             elif feat[ti] == Rg and c in counted[Rg]:
                 nR += 1
         return nL, nR
-    base_L = sum(1 for c in cell if False)  # computed below properly
     # full-count approach: count all transcripts of gene in set (not just movable)
     def full_counts(assign_override):
         nL = nR = 0

@@ -1,10 +1,10 @@
 """B03 Phase 3: Proseg-side matched permutation null
 (fixed for this leg).
 
-Question closed: are the 46 matched-certified directional signs ALSO significant
-under the independent segmentation's own null (within-region decile-matched label
-permutation of Proseg labels)? Gate: >= 85% of certified rows significant at
-within-region BH q <= 0.10 in the certified direction.
+Are the 46 matched-certified directional signs significant under the independent
+segmentation's own null (within-region decile-matched label permutation of Proseg
+labels)? Gate: >= 85% of certified rows significant at within-region BH q <= 0.10 in
+the certified direction.
 
 Machinery reuse (frozen):
   - EPS, t_log2, ALL_PAIRS, TYPE_MAP, RECV_MAP: IMPORTED from b03_scout.py.
