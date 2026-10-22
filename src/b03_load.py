@@ -127,8 +127,8 @@ def verify_concordance(tx, owner, cid_map):
     Diagnostic notes:
     - Per-cell concordance counts CELLS whose PIP count equals the h5 count. Systematic
       per-cell small deviations (e.g., off-by-one on shared boundaries) depress this even
-      when the total molecule count matches closely. We therefore ALSO report the
-      dataset-level ratio of assigned molecules (PIP total vs h5 total).
+      when the total molecule count matches closely, so the dataset-level ratio of
+      assigned molecules (PIP total vs h5 total) is reported alongside it.
     """
     t0 = time.time()
     with h5py.File(f"{DATA}/Xenium_FFPE_Human_Breast_Cancer_Rep1_cell_feature_matrix.h5",

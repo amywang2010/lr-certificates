@@ -47,9 +47,9 @@ plt.rcParams.update({
 
 TEXT_W = 4.8
 
-C_POS = "#D55E00"    # certified positive
-C_NEG = "#0072B2"    # certified negative
-C_NON = "#B3B3B3"    # non-identifiable
+C_POS = "#D55E00"    # claim-certified positive
+C_NEG = "#0072B2"    # claim-certified negative
+C_NON = "#B3B3B3"    # interval sign only, no claim
 C_PRO = "#1A1A1A"    # Proseg point estimate
 GREY = "#ECECEC"     # alternating pair band
 REGION_MARK = {0: "o", 1: "s", 2: "^"}
@@ -127,8 +127,8 @@ def check_layout(fig, name, pad=1.5):
     """Assert that no drawn text leaves the canvas or collides with other text.
 
     Overflow and collision are the two ways a crowded figure fails. Both are
-    measured from rendered bounding boxes rather than judged by eye, so the
-    check aborts instead of writing a figure that cannot be read.
+    measured from rendered bounding boxes, so the check aborts instead of
+    writing a figure that cannot be read.
     """
     fig.canvas.draw()
     rend = fig.canvas.get_renderer()
@@ -222,14 +222,14 @@ ax.set_ylim(-0.7, len(pairs) - 0.3)
 ax.axvline(0, color="black", lw=0.7, ls=(0, (3, 2)), zorder=2)
 ax.set_xlabel("$T$ (log$_2$ expression-product ratio)", fontsize=7.8)
 plabel(ax, "a")
-handles = [Line2D([], [], color=C_POS, lw=2.2, label="certified positive"),
-           Line2D([], [], color=C_NEG, lw=2.2, label="certified negative"),
-           Line2D([], [], color=C_NON, lw=2.2, label="non-identifiable")]
+handles = [Line2D([], [], color=C_POS, lw=2.2, label="claim-certified $+$"),
+           Line2D([], [], color=C_NEG, lw=2.2, label="claim-certified $-"),
+           Line2D([], [], color=C_NON, lw=2.2, label="no claim")]
 for r in (0, 1, 2):
     handles.append(Line2D([], [], color="black", marker=REGION_MARK[r], ls="none",
                           ms=3.4, mfc="white", mec="black", mew=0.6,
                           label=f"region {r}"))
-# Placement is measured, not chosen by corner reputation. In this panel the
+# Placement is measured with the same metric the build gate uses. In this panel the
 # lower-right corner is the worst place for a legend: the widest intervals, which
 # are the most negative pairs, sit in the bottom rows and reach furthest right,
 # leaving 0.2 mm between the longest bar and the legend edge. Sweeping the anchor
@@ -307,14 +307,27 @@ kb = pd.read_csv(f"{RES}/phase4_kernel_margins.csv")
 kl = pd.read_csv(f"{LUN}/phase4_kernel_margins.csv")
 assert len(kb) == 46 and len(kl) == 7
 
+# E2 coverage over the certified rows of each leg, the rows that carry a claim. The breast
+# summary stores its primary over all evaluable rows (72/75); the certified-row count is
+# 43/46 in the same coverage table, and both are asserted here.
+cb = pd.read_csv(f"{RES}/phase2_proseg_coverage.csv")
+cl = pd.read_csv(f"{LUN}/phase5_e2_coverage.csv")
+cert_b = cb.certified_pos_matched | cb.certified_neg_matched
+cert_l = cl.cert_pos_final | cl.cert_neg_final
+n_in = [int(cb.inside[cert_b].sum()), int(cl.inside[cert_l].sum())]
+n_cert = [int(cert_b.sum()), int(cert_l.sum())]
+assert n_cert == [s2["certified_rows"], s2l["certified_rows"]] == [46, 7]
+assert n_in == [43, 6]
+assert int(cb.inside.sum()) == 72 and len(cb) == 75 and len(cl) == 54
+
 fig, axes = plt.subplots(1, 2, figsize=(TEXT_W, 1.70))
 fig.subplots_adjust(left=0.175, right=0.975, top=0.89, bottom=0.255, wspace=0.42)
 
 ax = axes[0]
-vals = [s2["primary"]["fraction"] * 100, s2l["primary"]["fraction"] * 100]
+vals = [100 * a / b for a, b in zip(n_in, n_cert)]
 bars = ax.bar([0, 1], vals, width=0.5, color=["#6A3D9A", "#6A3D9A"], alpha=0.9,
               edgecolor="#1A1A1A", linewidth=0.5, zorder=3)
-for x, v, n in zip([0, 1], vals, ["72/75", "6/7"]):
+for x, v, n in zip([0, 1], vals, [f"{a}/{b}" for a, b in zip(n_in, n_cert)]):
     ax.text(x, v + 2.2, f"{v:.1f}%", ha="center", va="bottom", fontsize=7)
     ax.text(x, 3, n, ha="center", va="bottom", fontsize=6.4, color="white")
 ax.axhline(90, color="#D55E00", lw=0.9, ls=(0, (4, 2)), zorder=4)

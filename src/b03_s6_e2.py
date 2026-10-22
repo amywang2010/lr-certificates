@@ -5,9 +5,9 @@ Faithful port of b03_phase5_e2.py (fixture-validated machinery) with:
   - 10 vendor-evaluable pairs / 30 rows; frozen TYPE_MAP/RECV_MAP (imported)
   - marker centroids from vendor_markers.npz (phase-2-space targets)
   - Endpoints: the certified-set primary endpoint is UNDEFINED at 0
-    certified rows (reported as such); the replacements are (a) interval
-    coverage on all 30 vendor-evaluable rows with the standing T0-in-interval
-    assertion, (b) sign agreement on all 30 rows.
+    certified rows, so the replacements are (a) interval coverage on all 30
+    vendor-evaluable rows with the standing T0-in-interval assertion, and
+    (b) sign agreement on all 30 rows.
 All schema assertions from tissues 1/2 retained (type-naming, noise-slot
 handling, gene-alignment proof, cell-id/mtx mapping).
 

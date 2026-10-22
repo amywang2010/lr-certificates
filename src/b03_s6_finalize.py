@@ -78,9 +78,10 @@ def main():
         "certified_pos": n_pos,
         "certified_neg": n_neg,
         "non_identifiable": 30 - n_pos - n_neg,
-        "verdict": "all 30 rows non-identifiable: no interval-positive exists and "
-                   "every interval-negative upper bound is reached or exceeded "
-                   "under the density-matched null (p_neg_raw = 1.0)",
+        "verdict": "no row carries a claim: no row is interval-positive, and every "
+                   "interval-negative upper bound is reached or exceeded under the "
+                   "density-matched null (p_neg_raw = 1.0), so the 17 "
+                   "interval-negative rows carry an interval sign and no claim",
     }
     with open(f"{D}/scout_summary_matched.json", "w") as f:
         json.dump(summary, f, indent=1)
