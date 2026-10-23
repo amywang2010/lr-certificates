@@ -1,27 +1,32 @@
 cff-version: 1.2.0
 title: >-
-  Certified worst-case intervals with a matched permutation null for spatial
-  co-expression contrasts under molecule reassignment
+  Certified worst-case intervals with a matched permutation null for
+  spatial co-expression contrasts under molecule reassignment
 message: >-
   If you use this code or the certified-interval construction, please cite the
   accompanying manuscript and this repository.
 authors:
   - given-names: Amy
     family-names: Wang
-version: 1.1.0
+version: 1.0.3
 date-released: "2026-10-22"
 repository-code: "https://github.com/amywang2010/lr-certificates"
+license: MIT
 abstract: >-
-  Per-contrast intervals for co-expression scores in spatial transcriptomics,
+  Per-contrast intervals for a co-expression score in spatial transcriptomics,
   valid over a declared set of molecule-to-cell reassignments (boundary-local
-  reassignment with capacity constraints, mask erosion/dilation, and a
-  parameterised donor radius), with a permutation null that recomputes the
-  worst-case object under each label permutation. Certification is reported in
-  two layers, interval sign and claim status. Evaluated on three public Xenium
-  sections spanning two panel densities and two tumor types.
+  reassignment with per-cell capacity constraints, mask erosion and dilation,
+  and a parameterised donor radius). The reported interval is a sound superset
+  of the attainable range. Certification has two layers: the interval sign, and
+  a claim status that additionally requires a permutation null which recomputes
+  the same worst-case object under every label permutation, with within-region
+  false-discovery control. The sign refers to a declared reference level of the
+  score, not to a biological direction. Evaluated on three public Xenium
+  sections spanning two tissues, two panel densities and two tumour types.
 keywords:
   - spatial transcriptomics
-  - co-expression
   - molecule reassignment
-  - certified intervals
+  - robust bounds
   - matched permutation null
+  - co-expression
+  - uncertainty quantification

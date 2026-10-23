@@ -1,0 +1,12 @@
+# Environment in which the release checks were last run: CPython 3.14.6 on
+# Windows, 8 physical cores, 15.7 GB RAM. Pin with
+#   python -m pip install -r requirements.txt
+# The analysis is pure CPU and does not depend on a GPU. Proseg is a separate
+# tool (v3.2.0) invoked on the molecule files; it is not a Python dependency.
+numpy==2.5.2
+pandas==3.0.5
+pyarrow==25.0.1
+scipy==1.18.1
+matplotlib==3.11.1
+h5py==3.16.0
+shapely==2.1.2

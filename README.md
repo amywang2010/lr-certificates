@@ -22,9 +22,10 @@ the hashed artifact behind every reported number.
 | Lung (crop) | Xenium Prime 5K FFPE Human Lung Cancer (10x Genomics, expression-blind crop) | 5,001 genes | interval sign 1 positive / 32 negative / 21 straddling; 1 claim-certified positive (CDH1→EGFR) and 6 negative (ESR1↔PGR), of 54 contrasts |
 | Breast (second section) | FFPE breast cancer on the Xenium Prime 5K panel (public EBI repackage, BioStudies S-BIAD2146, expression-blind crop) | 5,000 genes | interval sign 0 positive / 17 negative / 13 straddling, 0 claims of 30 evaluable contrasts |
 
-The third section isolates the mechanism behind that difference. On the same tissue and
-the same ten pairs, claims collapse from 22 of 30 rows to 0 of 30 while the intervals get
-narrower, with median width falling from 2.60 to 1.60 log2 units. The tested genes
+The third section is consistent with a tested-gene mass-share mechanism, which the
+intervention study then tests directly. On the same tissue and the same ten pairs, claims
+collapse from 22 of 30 rows to 0 of 30 while the intervals get narrower, with median width
+falling from 2.60 to 1.60 log2 units. The tested genes
 carry 8.08% of the 313-plex section's transcripts and 0.36% of the 5,000-plex section's, and at
 0.36% the permutation null reaches the observed bound on every row. The released computation is
 `results/tested_mass_share.json`, written by `src/b03_mass_share.py` from the vendor molecule
@@ -45,9 +46,14 @@ disagree with 6, which are claim-certified negative while conventionally enriche
 ESR1–PGR rows. That call is an enrichment statement rather than the sign of the score, so the
 six are not sign reversals (`results/baseline_comparison/`).
 
-Cross-segmentation validation uses Proseg as an independent probe on all three sections:
-interval coverage of claim-certified rows (`E2`), certified-direction significance under a Proseg-side
-matched null (`E3`), and per-certificate kernel margins (`E4`). Regions, crop windows, gates and
+Cross-segmentation stress testing uses Proseg as an independent probe on all three sections.
+Proseg merges and splits cells, so its assignment lies outside the declared set: the battery is
+an external calibration check, not a validation of the claims. It reports interval coverage of
+claim-certified rows (`E2`), certified-direction significance under a Proseg-side matched null
+(`E3`), and per-certificate kernel margins (`E4`). Two results are reported as failures rather
+than as support: on the breast section all six negative claims lose certified-direction
+significance under the Proseg-side null, and on the lung crop coverage is 6 of 7 (85.7%), below
+the 90% gate, with the CDH1→EGFR claim the single excursion. Regions, crop windows, gates and
 thresholds sit in the released configuration files, and the paper lists them.
 
 ## Repository map
@@ -59,7 +65,9 @@ thresholds sit in the released configuration files, and the paper lists them.
 | `lung/` | Lung-crop artifacts under the same schema: the 54-row table, its matched null, the feasibility, subcube and capacity receipts, and the E2/E3/E4 summaries |
 | `breast_s6/` | Second-section artifacts under the same schema: the 30-row table, its matched null at B=10,000, the feasibility, subcube and capacity receipts, the E2 coverage summary, and the corrected-rule re-derivation |
 | `figures/` | The three figures in PNG and PDF, drawn at the LNCS text width |
-| `RELEASE_MANIFEST.sha256` | SHA-256 of every other file in the repository, LF-terminated and sorted by path. Verify with `sha256sum -c RELEASE_MANIFEST.sha256` on Linux, or `shasum -a 256 -c RELEASE_MANIFEST.sha256` where available |
+| `requirements.txt` | Pinned Python environment of the release checks |
+| `LICENSE` | MIT |
+| `RELEASE_MANIFEST.sha256` | SHA-256 of every other file in the repository, CRLF-terminated and sorted by path. Verify with `sha256sum -c RELEASE_MANIFEST.sha256` on Linux, or `shasum -a 256 -c RELEASE_MANIFEST.sha256` where available |
 
 ## Figures
 
@@ -71,7 +79,7 @@ a printed margin) before any file is written.
 | Figure | File | Panels | Source artifacts |
 |---|---|---|---|
 | 1 | `fig1_main.pdf` | (a) interval sign and claim status for the 25 breast pairs across three regions, (b) cross-tissue certificates for the shared pairs | the 75-row matched table, and the 18-row cross-tissue table `results/paper_fig3_data.csv` |
-| 2 | `fig2_support.pdf` | (a) cross-segmentation coverage of the claim-certified rows against the gate, (b) kernel margins c* per claim-certified row | the coverage tables and summaries of the breast and lung legs, and the two kernel-margin tables (46 and 7 rows) |
+| S2 | `fig2_support.pdf` | (a) cross-segmentation coverage of the claim-certified rows against the gate, (b) kernel margins c* per claim-certified row | the coverage tables and summaries of the breast and lung legs, and the two kernel-margin tables (46 and 7 rows) |
 | S1 | `fig0_workflow.pdf` | the construction: both inputs enter one interval machinery | structure only, drawn by `src/b03_schematic.py` |
 
 The schematic script measures every label's rendered bounding box against its shape and checks
@@ -172,8 +180,10 @@ floor are reported there.
   under arbitrary dependence, changes 1 of 159 verdicts.
 - The pseudocount is 0.5 throughout. It sets the zero of the score, since T ≥ 0 is equivalent
   to (E_S + 0.5)(E_R + 0.5) ≥ 1, so the interval-level sensitivity to it is tabulated in the
-  appendix and the sign is never read as a biological direction. The matched-null layer is
-  computed at 0.5 only.
+  appendix and the sign is never read as a biological direction. That table is recomputable
+  from the count and delta columns of the three row tables. The matched-null layer is computed
+  at 0.5 only; because every row is interval-positive at 1.0, no negative claim is attainable
+  at that reference.
 - The null recomputes the same worst-case objects as the observed statistic under each
   permutation. Testing worst-case bounds against a null of point statistics would be trivially
   conservative, since every permutation's worst-case minimum is at most its point value.
