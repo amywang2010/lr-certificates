@@ -1,16 +1,19 @@
-# Matched permutation nulls for certified worst-case intervals
+# Exact capacitated-flow bounds with matched permutation nulls
 
 Code and SHA-256-hashed result artifacts for the study:
 
-> **Matched permutation nulls for certified worst-case intervals in spatial co-expression**
+> **Exact capacitated-flow bounds with matched permutation nulls for reassignment-robust claims**
 
 For each co-expression contrast in a spatial transcriptomics section the study computes an
 interval valid over a declared uncertainty set of molecule-to-cell assignments (boundary-local
 reassignment with per-cell capacity constraints, mask erosion and dilation, and a parameterised
 donor radius), together with a permutation null that recomputes the same worst-case object under
-every label permutation. Each interval end is the optimum of a capacitated matching between
-boundary transcripts and cells, which the code relaxes to a linear-time count; the paper proves
-that any null holding the assignment fixed is dominated by the matched null, and that the
+every label permutation. Each interval end is a maximum flow on a cell-level network in which
+transcripts are collapsed by source cell and destination set, computed exactly by
+`src/b03_exact_end.py` and witnessed by reading the flow back into an assignment; the linear-time
+count the null layer uses is exact exactly when a Hall condition on the counted cells holds, and
+the shortfall is a maximum deficiency that the paper characterises. The paper also proves that any
+null holding the assignment fixed is dominated by the matched null, and that the
 Benjamini-Yekutieli factor absorbs the direction read from the interval. Certification has two layers:
 the interval sign, and a claim status that additionally requires the matched null with
 within-region Benjamini–Hochberg control. The
@@ -58,6 +61,16 @@ than as support: on the breast section all six negative claims lose certified-di
 significance under the Proseg-side null, and on the lung crop coverage is 6 of 7 (85.7%), below
 the 90% gate, with the CDH1→EGFR claim the single excursion. Regions, crop windows, gates and
 thresholds sit in the released configuration files, and the paper lists them.
+
+**Exact interval ends.** `src/b03_exact_end.py` solves both ends of every breast interval as a
+maximum flow and witnesses each one by reading the integral flow back into an assignment:
+150 gene-ends, median 4,576 nodes and 2,632 arcs against 3.14 million movable transcripts, and
+150 of 150 witnessed with zero budget violations. The linear-time count the null layer uses is
+exact on 90 of the 150 ends; of the 60 failures, 58 violate the Hall condition on the destination
+side and 2 are source side, with a maximum shortfall of 361 transcripts. Holding the counting rule
+fixed, capacity moves 46 of the 75 rows by at most 0.027 log2 and changes no sign; the counting
+rule itself is what adds the two interval-negative rows. Artifacts: `results/exact_end.csv`,
+`results/exact_end_rows.csv`, `results/exact_end_summary.json`.
 
 ## Repository map
 
@@ -110,7 +123,9 @@ reported number depends on is released under `results/`, `lung/` and `breast_s6/
 3. Verification and sensitivity on the breast leg: `src/b03_coverage.py` (held-out coverage on a
    second assignment path, and the nucleus-only sensitivity), and `src/b03_phase9_neighbor.py`
    (the independent re-derivation of all 159 intervals under the corrected per-gene-slot rule,
-   writing `results/sensitivity/`, plus the neighbour-effect check).
+   writing `results/sensitivity/`, plus the neighbour-effect check). `src/b03_exact_end.py` then
+   solves the exact ends by max flow (`results/exact_end*.{csv,json}`), which needs only the
+   breast `data/` bundle.
 4. Cross-segmentation on the breast leg: install Proseg 3.2.0 and run
    `proseg transcripts.parquet` on the identical molecule file, then
    `src/b03_phase2_vendor_prep.py`, `src/b03_phase2_label_validation.py`,

@@ -1,14 +1,14 @@
 cff-version: 1.2.0
 title: >-
-  Matched permutation nulls for certified worst-case intervals in spatial
-  co-expression
+  Exact capacitated-flow bounds with matched permutation nulls for
+  reassignment-robust claims
 message: >-
   If you use this code or the certified-interval construction, please cite the
   accompanying manuscript and this repository.
 authors:
   - given-names: Amy
     family-names: Wang
-version: 1.0.4
+version: 1.0.5
 date-released: "2026-10-23"
 repository-code: "https://github.com/amywang2010/lr-certificates"
 license: MIT
@@ -16,9 +16,10 @@ abstract: >-
   Per-contrast intervals for a co-expression score in spatial transcriptomics,
   valid over a declared set of molecule-to-cell reassignments (boundary-local
   reassignment with per-cell gain and loss capacity constraints, mask erosion
-  and dilation, and a parameterised donor radius). Each interval end is the
-  optimum of a capacitated matching between boundary transcripts and cells,
-  relaxed in the released code to a linear-time count. A permutation null that
+  and dilation, and a parameterised donor radius). Each interval end is computed
+  exactly as a maximum flow on a signature-contracted cell network, with a
+  Hall/deficiency criterion for when the linear-time count is already exact and
+  a witness certificate for every solved end. A permutation null that
   recomputes the same worst-case object under every label permutation yields
   exact finite-B p-values, and any null that holds the assignment fixed is
   proved dominated. A claim requires the interval to exclude zero and the
@@ -30,5 +31,6 @@ keywords:
   - molecule reassignment
   - matched permutation null
   - worst-case intervals
-  - capacitated matching
+  - capacitated flow
+  - Hall deficiency
   - selective inference
