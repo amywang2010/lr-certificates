@@ -1,15 +1,19 @@
-# Certified worst-case intervals with a matched permutation null
+# Matched permutation nulls for certified worst-case intervals
 
 Code and SHA-256-hashed result artifacts for the study:
 
-> **Certified worst-case intervals with a matched permutation null for spatial co-expression contrasts under molecule reassignment**
+> **Matched permutation nulls for certified worst-case intervals in spatial co-expression**
 
 For each co-expression contrast in a spatial transcriptomics section the study computes an
 interval valid over a declared uncertainty set of molecule-to-cell assignments (boundary-local
 reassignment with per-cell capacity constraints, mask erosion and dilation, and a parameterised
 donor radius), together with a permutation null that recomputes the same worst-case object under
-every label permutation. Certification has two layers: the interval sign, and a claim status
-that additionally requires the matched null with within-region Benjamini–Hochberg control. The
+every label permutation. Each interval end is the optimum of a capacitated matching between
+boundary transcripts and cells, which the code relaxes to a linear-time count; the paper proves
+that any null holding the assignment fixed is dominated by the matched null, and that the
+Benjamini-Yekutieli factor absorbs the direction read from the interval. Certification has two layers:
+the interval sign, and a claim status that additionally requires the matched null with
+within-region Benjamini–Hochberg control. The
 sign refers to a declared reference level of the score, not to a biological direction. This
 repository holds the reproduction materials: the analysis code, the frozen configuration, and
 the hashed artifact behind every reported number.
@@ -31,19 +35,18 @@ carry 8.08% of the 313-plex section's transcripts and 0.36% of the 5,000-plex se
 `results/tested_mass_share.json`, written by `src/b03_mass_share.py` from the vendor molecule
 files.
 
-A 20-run controlled intervention study on the first section (paper Section 5.6) tests that
+A 20-run controlled intervention study on the first section (paper Section 5.5) tests that
 mechanism by direct intervention. Injected-pair certification transitions between 1% and 4% ambient
 tested-gene mass share and is seed-replicable. The smallest injection that certifies is 5.3
 thousand transcripts on a 4%-mass substrate against 87.6 thousand on the full 13.84%-mass
 section. Per-run artifacts and the fleet summary are under `results/synthstudy/`, and
-`src/b03_synthstudy_analysis.py` recomputes every Section 5.6 number from them, including the
+`src/b03_synthstudy_analysis.py` recomputes every Section 5.5 number from them, including the
 dose and power curves (`results/synthstudy/dose_curve.csv`, `power_curve.csv`, `fcr_table.csv`).
 
 The conventional co-expression permutation pipeline of the CellChat/CellPhoneDB family, run on
 the same breast section, calls 71 contrasts enriched and 2 depleted above its own label null.
 The certificates confirm 39 of those calls in the same direction, leave 28 without a claim, and
-disagree with 6, which are claim-certified negative while conventionally enriched, all of them
-ESR1–PGR rows. That call is an enrichment statement rather than the sign of the score, so the
+certify 6 as negative while they are conventionally enriched, all of them ESR1–PGR rows. That call is an enrichment statement rather than the sign of the score, so the
 six are not sign reversals (`results/baseline_comparison/`).
 
 Cross-segmentation stress testing uses Proseg as an independent probe on all three sections.
@@ -164,7 +167,7 @@ receipts for the verification claims made in the paper.
 | All 159 intervals re-derive under the corrected rule | `results/sensitivity/` (75 breast and 54 lung rows, each with a `.sha256`), `breast_s6/s6_tight_bounds_sensitivity.csv` and `s6_tight_bounds_summary.json`: 0 verdict flips, median width tightening 9.2%, 14.1% and 10.4%. `src/b03_phase9_neighbor.py` recomputes the corrected bounds on the breast and lung legs with its own aggregation path and asserts bit-exact agreement with the released tables on every row and gene, and `src/b03_s6_tight.py` writes the second-section tables |
 | The capacity rule binds where the paper says it does | `lung/capacity_check.json` (197 cells flagged) and `breast_s6/capacity_check.json` (1,350 cells flagged), with the capped formula applied inside the interval construction |
 | The higher-permutation rerun changes no verdict | `results/phase6/phase6_summary.json` and `results/phase6/determinism_gate.json`: 0 flips across 75 breast and 54 lung rows at B=10,000 |
-| Section 5.6 numbers | the 20 `results/synthstudy/*/run_manifest.json` files and the five tables written by `src/b03_synthstudy_analysis.py`, receipted by `results/synthstudy/synthstudy_analysis.sha256` |
+| Section 5.5 numbers | the 20 `results/synthstudy/*/run_manifest.json` files and the five tables written by `src/b03_synthstudy_analysis.py`, receipted by `results/synthstudy/synthstudy_analysis.sha256` |
 | The tested-gene mass share | `results/tested_mass_share.json`, written by `src/b03_mass_share.py` from the vendor molecule files |
 
 Two conventions are visible in the released tables. First, the interval
