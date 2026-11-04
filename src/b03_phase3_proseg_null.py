@@ -319,13 +319,23 @@ def main():
     nul["q_pos"] = bh_within_region(nul, "p_pos")
     nul["q_neg"] = bh_within_region(nul, "p_neg")
 
-    cert_pos = cov.certified_pos_matched.to_numpy(bool)
-    cert_neg = cov.certified_neg_matched.to_numpy(bool)
+    # The reported certificate is the selection-adjusted claim in the matched-null
+    # table. The pre-correction BH set is reported separately for reference.
+    fin = pd.read_csv(f"{RES}/scout_final_matched.csv")
+    cov = cov.merge(fin[["pair", "region", "claim_pos", "claim_neg"]],
+                    on=["pair", "region"], validate="1:1")
+    cert_pos = cov.claim_pos.to_numpy(bool)
+    cert_neg = cov.claim_neg.to_numpy(bool)
+    bh_pos = cov.certified_pos_matched.to_numpy(bool)
+    bh_neg = cov.certified_neg_matched.to_numpy(bool)
     sig_pos = cert_pos & (nul.q_pos.to_numpy() <= 0.10)
     sig_neg = cert_neg & (nul.q_neg.to_numpy() <= 0.10)
     n_cert = int(cert_pos.sum() + cert_neg.sum())
     n_sig = int(sig_pos.sum() + sig_neg.sum())
     frac = n_sig / n_cert
+    n_bh = int(bh_pos.sum() + bh_neg.sum())
+    n_bh_sig = int((bh_pos & (nul.q_pos.to_numpy() <= 0.10)).sum() +
+                   (bh_neg & (nul.q_neg.to_numpy() <= 0.10)).sum())
     gate = "PASS" if frac >= 0.85 else ("PARTIAL" if frac >= 0.60 else "FAIL")
 
     nul.to_csv(f"{OUT}/phase3_proseg_null.csv", index=False)
@@ -341,6 +351,8 @@ def main():
         certified_rows=n_cert,
         significant_in_certified_direction=n_sig,
         fraction=frac, gate=gate,
+        undoubled_bh_rows=n_bh,
+        undoubled_bh_significant=n_bh_sig,
         p_convention="add-one (count+1)/(B+1); BH within region on add-one p",
     )
     with open(f"{OUT}/phase3_summary.json", "w") as f:

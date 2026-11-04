@@ -42,6 +42,12 @@ The joint-attainment test covers 157 of the 159 tests. Two lung tests have no mo
 transcript for either gene and no joint-flow instance. The lower end is attained on all
 157, the upper end on 149.
 
+Two layers are reported: the interval layer (worst-case bounds over the declared
+assignment set) and the claim layer (interval sign plus the matched null at q ≤ 0.10).
+Against the 90% gate fixed in S2, Proseg keeps 42/45 breast claims inside their
+intervals (93.3%) but only 4/5 lung claims (80.0%), so the lung gate fails and is
+reported as such.
+
 ## Contents
 
 | Path | Content |
@@ -97,10 +103,12 @@ subdirectory and a `crop/` subdirectory.
 1. Breast intervals and matched null: `src/b03_load.py`, `src/b03_scout.py`,
    `src/b03_certify.py`, `src/b03_matched_null.py`, `src/b03_finalize.py`.
 2. Interval verification and sensitivity: `src/b03_coverage.py`,
-   `src/b03_phase9_neighbor.py`, `src/b03_exact_end.py`. The exhaustive check of the
-   flow ends and the attainment criteria on 3,000 small instances is
-   `src/b03_enumerate_check.py`, which writes `results/enumeration_check.json`.
-3. Claim layer: `src/b03_claim_layer.py`.
+   exhaustive check of the flow ends and the attainment criteria on 3,000 small
+   instances is `src/b03_enumerate_check.py`, which writes
+   `results/enumeration_check.json`.
+3. Claim layer: `src/b03_claim_layer.py`. The downstream summaries are then aligned
+   with the claim set by `src/b03_finalize_summaries.py`, which reads only the shipped
+   per-row tables.
 4. Cross-segmentation on breast: run Proseg 3.2.0 on the molecule file, then
    `src/b03_phase2_vendor_prep.py`, `src/b03_phase2_label_validation.py`,
    `src/b03_phase2_analysis.py`, `src/b03_phase3_proseg_null.py`,

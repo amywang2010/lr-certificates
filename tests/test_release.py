@@ -130,6 +130,60 @@ class TestExactEnds(unittest.TestCase):
         self.assertEqual(self.summary["cap_rows_moved"], 46)
 
 
+class TestPostClaimSummaries(unittest.TestCase):
+    """Every downstream summary reports the selection-adjusted claim set."""
+
+    def load(self, *parts):
+        with open(os.path.join(ROOT, *parts)) as fh:
+            return json.load(fh)
+
+    def test_breast_coverage(self):
+        s = self.load("results", "phase2_proseg_summary.json")
+        self.assertEqual(s["certified_rows"], 45)
+        self.assertEqual(s["certified_inside"], 42)
+        self.assertEqual(s["undoubled_bh_rows"], 46)
+        self.assertEqual(s["sign_agreement_on_certified"], "45/45")
+
+    def test_breast_proseg_null(self):
+        s = self.load("results", "phase3_summary.json")
+        self.assertEqual(s["certified_rows"], 45)
+        self.assertEqual(s["significant_in_certified_direction"], 39)
+        self.assertAlmostEqual(s["fraction"], 39 / 45)
+
+    def test_margins_use_claims(self):
+        b = self.load("results", "phase4_summary.json")
+        self.assertEqual(b["n_certified"], 45)
+        self.assertEqual(b["undoubled_bh_rows"], 46)
+        self.assertAlmostEqual(b["frac_ge"]["1.25"], 0.6889, places=4)
+        self.assertAlmostEqual(b["frac_ge"]["2.0"], 0.1556, places=4)
+        self.assertEqual(int(b["c_star_min"] * 1000), 1048)
+        lu = self.load("lung", "phase4_summary.json")
+        self.assertEqual(lu["n_certified"], 5)
+        self.assertEqual(lu["undoubled_bh_rows"], 7)
+        self.assertAlmostEqual(lu["c_star_median"], 20.4, places=1)
+        self.assertAlmostEqual(lu["frac_ge"]["3.0"], 0.8)
+
+    def test_lung_coverage(self):
+        s = self.load("lung", "phase5_e2_summary.json")
+        self.assertEqual(s["certified_rows"], 5)
+        self.assertEqual(s["primary"]["n_inside"], 4)
+        self.assertEqual(s["undoubled_bh_inside"], 6)
+
+    def test_joint_sign_changes_are_not_coupling(self):
+        s = self.load("results", "coupled_end_summary.json")
+        self.assertEqual(s["n_joint_sign_changes_from_coupling"], 0)
+        self.assertEqual(s["n_joint_sign_changes_vs_sealed"], 9)
+        self.assertEqual(s["n_lo_attained"], 157)
+        self.assertEqual(s["n_hi_attained"], 149)
+
+    def test_capped_builders_report_sound_bounds(self):
+        for path in (("lung", "capacity_check.json"),
+                     ("breast_s6", "capacity_check.json")):
+            s = self.load(*path)
+            self.assertTrue(s["capped_formula_applied"], path)
+            self.assertTrue(s["sound_upper_bound"], path)
+
+
 class TestAttainmentCounts(unittest.TestCase):
     def test_three_section_totals(self):
         parts = [

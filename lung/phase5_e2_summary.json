@@ -5,11 +5,13 @@
   "cells_with_marker_signal": 30693,
   "noise_gene_slot": null,
   "primary": {
-    "n_inside": 6,
-    "n_certified_evaluable": 7,
-    "fraction": 0.8571428571428571,
+    "n_inside": 4,
+    "n_certified_evaluable": 5,
+    "fraction": 0.8,
     "gate": "PARTIAL"
   },
-  "certified_rows": 7,
-  "sign_agreement_on_certified": "7/7"
+  "certified_rows": 5,
+  "sign_agreement_on_certified": "5/5",
+  "undoubled_bh_rows": 7,
+  "undoubled_bh_inside": 6
 }

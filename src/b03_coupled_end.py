@@ -277,14 +277,20 @@ def _best_split(N0L, N0R, nL, nR, total, lo, hi):
 
 
 def _best_dep_split(N0L, N0R, nL, nR, total, lo, hi):
-    """Integer departure split in [lo, hi] maximising f(N0L-x) + g(N0R-total+x)."""
+    """Integer departure split minimising the joint lower score.
+
+    Both score terms decrease in their departure count, so the worst case over the
+    feasible departure simplex is the split that loses the most score, not the one
+    that loses the least. Each candidate split in [lo, hi] is feasible for the
+    merged loss budget and the two per-gene budgets.
+    """
     lo = int(max(lo, 0))
     hi = int(min(hi, total))
     if hi < lo:
         return lo
     xs = np.arange(lo, hi + 1)
     vals = np.log2((N0L - xs) / nL + EPS) + np.log2((N0R - (total - xs)) / nR + EPS)
-    return int(xs[int(np.argmax(vals))])
+    return int(xs[int(np.argmin(vals))])
 
 
 def departure_witness(aL, aR, capc, dL, dR):
@@ -451,8 +457,14 @@ def main():
                 slack_lo_flow=T_lo_flowsep - T_lo_joint,
                 slack_hi_count=T_hi_count - T_hi_joint,
                 dT_hi_sealed=T_hi_joint - T_sep_hi,
-                sign_changed=bool(((T_lo_joint > 0) != (T_sep_lo > 0)) or
-                                  ((T_hi_joint < 0) != (T_sep_hi < 0))),
+                # Sealed Layer-A interval vs the joint (exact) interval: this is the
+                # counting/capacity refinement, not the effect of coupling.
+                sign_changed_vs_sealed=bool(((T_lo_joint > 0) != (T_sep_lo > 0)) or
+                                            ((T_hi_joint < 0) != (T_sep_hi < 0))),
+                # Coupling alone: joint endpoints against the separate-gene optima.
+                sign_changed_coupling=bool(
+                    ((T_lo_joint > 0) != (T_lo_flowsep > 0)) or
+                    ((T_hi_joint < 0) != (T_hi_flowsep < 0))),
                 arrival_witness=arr_witness, departure_witness=dep_witness,
                 certified=bool((T_lo_joint > 0) or (T_hi_joint < 0))))
         df = pd.DataFrame(rows)
@@ -473,7 +485,8 @@ def main():
                   max_slack_hi_count=float(df.slack_hi_count.max()),
                   max_slack_hi_flow_same=float(df.loc[df.same_class, "slack_hi_flow"].max())
                   if df.same_class.any() else 0.0,
-                  sign_changes=int(df.sign_changed.sum()),
+                  sign_changes_vs_sealed=int(df.sign_changed_vs_sealed.sum()),
+                  sign_changes_from_coupling=int(df.sign_changed_coupling.sum()),
                   witness_fail=int((~df.arrival_witness).sum() +
                                    (~df.departure_witness).sum()))
         summary["legs"][leg["tag"]] = st
@@ -487,7 +500,8 @@ def main():
                      (allrows.departure_collision == 0)).sum()),
         n_collision_free_arrival=int((allrows.arrival_collision == 0).sum()),
         n_collision_free_departure=int((allrows.departure_collision == 0).sum()),
-        n_joint_sign_changes=int(allrows.sign_changed.sum()),
+        n_joint_sign_changes_vs_sealed=int(allrows.sign_changed_vs_sealed.sum()),
+        n_joint_sign_changes_from_coupling=int(allrows.sign_changed_coupling.sum()),
         max_arrival_collision=int(allrows.arrival_collision.max()),
         max_departure_collision=int(allrows.departure_collision.max()),
         max_slack_hi_flow=float(allrows.slack_hi_flow.max()),

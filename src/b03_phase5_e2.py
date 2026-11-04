@@ -184,11 +184,17 @@ assert ((out.T0 + 1e-9 >= out.T_lo) & (out.T0 - 1e-9 <= out.T_hi)).all()
 out["inside"] = (out["T"] >= out.T_lo - 1e-9) & (out["T"] <= out.T_hi + 1e-9)
 fin2 = fin[["pair","region","cert_pos_final","cert_neg_final"]]
 out = out.merge(fin2, on=["pair","region"], validate="1:1")
-cert_mask = out.cert_pos_final | out.cert_neg_final
+# Reported certificates are the selection-adjusted claims written by the claim layer.
+cl = pd.read_csv(f"{D}/claim_layer.csv")[["pair", "region", "claim_pos", "claim_neg"]]
+out = out.merge(cl, on=["pair", "region"], validate="1:1")
+cert_mask = out.claim_pos | out.claim_neg
+bh_mask = out.cert_pos_final | out.cert_neg_final
 cert_eval = cert_mask & out["T"].notna()
 n_in = int(out.loc[cert_eval, "inside"].sum())
 frac = n_in / int(cert_eval.sum())
-sign_ok = int((((out["T"] > 0) == out.cert_pos_final)[cert_eval]).sum())
+sign_ok = int((((out["T"] > 0) == out.claim_pos)[cert_eval]).sum())
+bh_eval = bh_mask & out["T"].notna()
+n_in_bh = int(out.loc[bh_eval, "inside"].sum())
 
 summary = dict(
     design="E2 Proseg-interval coverage",
@@ -199,9 +205,13 @@ summary = dict(
                  fraction=frac, gate=("PASS" if frac >= 0.90 else
                                       "PARTIAL" if frac >= 0.75 else "FAIL")),
     certified_rows=int(cert_mask.sum()),
+    undoubled_bh_rows=int(bh_mask.sum()),
+    undoubled_bh_inside=n_in_bh,
     sign_agreement_on_certified=f"{sign_ok}/{int(cert_eval.sum())}",
 )
-out.to_csv(f"{D}/phase5_e2_coverage.csv", index=False)
+# claim flags are summary-only; the coverage table keeps its frozen schema
+out.drop(columns=["claim_pos", "claim_neg"]).to_csv(
+    f"{D}/phase5_e2_coverage.csv", index=False)
 with open(f"{D}/phase5_e2_summary.json", "w") as f:
     json.dump(summary, f, indent=2)
 print(json.dumps(summary, indent=2), flush=True)

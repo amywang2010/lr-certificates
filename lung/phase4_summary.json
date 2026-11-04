@@ -1,18 +1,18 @@
 {
   "design": "kernel-margin computation",
   "smoke": false,
-  "n_certified": 7,
+  "n_certified": 5,
   "kernel_immune": 0,
-  "c_star_median": 20.402315950886255,
-  "c_star_min": 1.0340430602639095,
+  "c_star_median": 20.40231595088625,
+  "c_star_min": 1.0340430602639097,
   "frac_ge": {
-    "1.25": 0.8571428571428571,
-    "1.5": 0.8571428571428571,
-    "2.0": 0.8571428571428571,
-    "3.0": 0.8571428571428571
+    "1.25": 0.8,
+    "1.5": 0.8,
+    "2.0": 0.8,
+    "3.0": 0.8
   },
   "control_median_c_star": NaN,
-  "disputed_median_c_star": 20.402315950886255,
+  "disputed_median_c_star": 20.40231595088625,
   "secondary_certify_at_half": 35,
   "secondary_gained_pairs": [
     "CD163->CCR7",
@@ -34,5 +34,6 @@
     "B_signs": "PASSED",
     "C_monotonicity": "PASSED (all rows)",
     "D_bisection": "PASSED (|T(c*)| <= 1e-10)"
-  }
+  },
+  "undoubled_bh_rows": 7
 }

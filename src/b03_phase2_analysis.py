@@ -225,11 +225,17 @@ out["inside"] = (out["T"] >= out.T_lo - 1e-9) & (out["T"] <= out.T_hi + 1e-9)
 inside_eval = out.loc[out["T"].notna(), "inside"]
 n_in = int(inside_eval.sum())
 frac = n_in / n_eval
-fin2 = fin[["pair", "region", "certified_pos_matched", "certified_neg_matched"]]
+fin2 = fin[["pair", "region", "certified_pos_matched", "certified_neg_matched",
+            "claim_pos", "claim_neg"]]
 out = out.merge(fin2, on=["pair", "region"], validate="1:1")
-cert_mask = out.certified_pos_matched | out.certified_neg_matched
+# The reported certificate is the selection-adjusted claim (claim_pos/claim_neg).
+# certified_*_matched is the pre-correction BH set and is kept as a secondary count.
+cert_mask = out.claim_pos | out.claim_neg
+bh_mask = out.certified_pos_matched | out.certified_neg_matched
 cert_eval = cert_mask & out["T"].notna()
-sign_ok = int((((out["T"] > 0) == out.certified_pos_matched)[cert_eval]).sum())
+n_in_cert = int(out.loc[cert_eval, "inside"].sum())
+frac_cert = n_in_cert / int(cert_eval.sum())
+sign_ok = int((((out["T"] > 0) == out.claim_pos)[cert_eval]).sum())
 
 summary = dict(
     design="regions, cell universe, and label transfer",
@@ -243,9 +249,14 @@ summary = dict(
     primary=dict(n_inside=n_in, n_evaluable=n_eval, n_excluded=n_excl,
                  fraction=frac, gate_pass=bool(frac >= 0.90)),
     certified_rows=int(cert_mask.sum()),
-    sign_agreement_on_certified=f"{sign_ok}/{int(cert_mask.sum())}",
+    certified_inside=n_in_cert,
+    certified_fraction=frac_cert,
+    undoubled_bh_rows=int(bh_mask.sum()),
+    sign_agreement_on_certified=f"{sign_ok}/{int(cert_eval.sum())}",
 )
-out.to_csv(f"{RES}/phase2_proseg_coverage.csv", index=False)
+# claim flags are summary-only here; the coverage table keeps its frozen schema
+out.drop(columns=["claim_pos", "claim_neg"]).to_csv(
+    f"{RES}/phase2_proseg_coverage.csv", index=False)
 with open(f"{RES}/phase2_proseg_summary.json", "w") as f:
     json.dump(summary, f, indent=2)
 print(json.dumps(summary, indent=2), flush=True)

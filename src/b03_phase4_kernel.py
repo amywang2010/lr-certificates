@@ -151,12 +151,21 @@ def main():
     log(f"secondary: {len(gained)}/29 non-certified rows would certify at c=0.5")
 
     # ---------- summary ----------
-    cs = cert.c_star.to_numpy()
+    # The reported certificate set is the selection-adjusted claim layer; the
+    # pre-correction BH set (N_CERT rows, tabulated above) is kept for reference.
+    cert_all = cert.copy()  # tabulated BH superset, written to the margins table
+    cl = pd.read_csv(f"{RES}/claim_layer.csv")[["pair", "region",
+                                                "claim_pos", "claim_neg"]]
+    cert = cert.merge(cl, on=["pair", "region"], how="left", validate="1:1")
+    claim = cert.claim_pos.fillna(False) | cert.claim_neg.fillna(False)
+    cs = cert.loc[claim, "c_star"].to_numpy()
+    cert = cert.loc[claim].reset_index(drop=True)
     fin_vals = cs[np.isfinite(cs)]
     summary = dict(
         design="kernel-margin computation",
         smoke=SMOKE,
-        n_certified=N_CERT,
+        n_certified=int(claim.sum()),
+        undoubled_bh_rows=N_CERT,
         kernel_immune=int(np.isinf(cs).sum()),
         c_star_median=float(np.median(fin_vals)),
         c_star_min=float(fin_vals.min()),
@@ -174,7 +183,7 @@ def main():
                         D_bisection="PASSED (|T(c*)| <= 1e-10)"),
     )
     os.makedirs(OUT, exist_ok=True)
-    cert.to_csv(f"{OUT}/phase4_kernel_margins.csv", index=False)
+    cert_all.to_csv(f"{OUT}/phase4_kernel_margins.csv", index=False)
     with open(f"{OUT}/phase4_summary.json", "w") as fj:
         json.dump(summary, fj, indent=2)
     log(json.dumps({k: summary[k] for k in

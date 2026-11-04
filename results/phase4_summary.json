@@ -1,18 +1,18 @@
 {
   "design": "kernel-margin computation",
   "smoke": false,
-  "n_certified": 46,
+  "n_certified": 45,
   "kernel_immune": 0,
-  "c_star_median": 1.281450602483964,
+  "c_star_median": 1.281552570747437,
   "c_star_min": 1.0488650211317707,
   "frac_ge": {
-    "1.25": 0.6956521739130435,
-    "1.5": 0.2826086956521739,
-    "2.0": 0.15217391304347827,
-    "3.0": 0.15217391304347827
+    "1.25": 0.6888888888888889,
+    "1.5": 0.28888888888888886,
+    "2.0": 0.15555555555555556,
+    "3.0": 0.15555555555555556
   },
   "control_median_c_star": 1.486404891850182,
-  "disputed_median_c_star": 1.2783064209734416,
+  "disputed_median_c_star": 1.2766878202189225,
   "secondary_certify_at_half": 21,
   "secondary_gained_pairs": [
     "ACTA2->EGFR",
@@ -30,5 +30,6 @@
     "B_signs": "PASSED",
     "C_monotonicity": "PASSED (all rows)",
     "D_bisection": "PASSED (|T(c*)| <= 1e-10)"
-  }
+  },
+  "undoubled_bh_rows": 46
 }
