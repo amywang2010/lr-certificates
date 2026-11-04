@@ -170,7 +170,7 @@ def exact_positive(mov_idx, mov_cell, donor_ptr, donor_flat, target_mask,
                        shape=(n_nodes, n_nodes))
     res = maximum_flow(graph, S, T)
     nu = int(res.flow_value)
-    n_arcs = len(caps) - n_nodes
+    n_arcs = len(caps)
 
     # Witness: an integral flow must be realisable as an assignment in U, so read the
     # group -> cell flows and check both budgets and the total. A value with no witness

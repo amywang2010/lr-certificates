@@ -1,9 +1,9 @@
-"""Tested-gene share of transcript mass on the two panel-density sections (paper Section 5.4).
+"""Tested-gene share of transcript mass on the two panel-density sections.
 
-The like-for-like comparison in Section 5.4 reads the same tissue and the same ten pairs
-on a 313-plex section and on a 5,000-plex section, and attributes the collapse in
-certification to the tested genes' share of transcript mass. This script computes that
-share directly from the vendor molecule files, before any assignment is made:
+The panel-density comparison reads the same tissue and the same ten pairs on a 313-plex
+section and on a 5,000-plex section, and attributes the collapse in certification to the
+tested genes' share of transcript mass. This script computes that share from the vendor
+molecule files, before any assignment is made:
 
     share = (QV >= 20 transcripts whose feature name is one of the tested genes)
             / (QV >= 20 transcripts in the section)

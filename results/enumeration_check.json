@@ -1,0 +1,18 @@
+{
+ "disjoint": 1015,
+ "empty": 0,
+ "flow_mismatch": 0,
+ "instances": 3000,
+ "lower_attained": 2913,
+ "lower_criterion_true": 2913,
+ "lower_criterion_wrong": 0,
+ "lower_mismatch": 0,
+ "max_cells": 5,
+ "max_movable_transcripts": 5,
+ "ok": true,
+ "same_class": 1021,
+ "seed": 20261024,
+ "upper_attained": 2934,
+ "upper_criterion_true": 2934,
+ "upper_criterion_wrong": 0
+}

@@ -1,30 +1,34 @@
 cff-version: 1.2.0
 title: >-
-  Exact capacitated-flow bounds with matched permutation nulls for
-  reassignment-robust claims
+  Joint Attainability of Worst-Case Co-expression Bounds via Capacitated Flows
 message: >-
-  If you use this code or the certified-interval construction, please cite the
-  accompanying manuscript and this repository.
+  If you use this code or the interval construction, please cite the accompanying
+  paper and this repository.
 authors:
   - given-names: Amy
     family-names: Wang
-version: 1.0.5
-date-released: "2026-10-23"
+    affiliation: Massachusetts Institute of Technology
+  - given-names: Manolis
+    family-names: Kellis
+    affiliation: Massachusetts Institute of Technology
+version: 1.1.0
+date-released: "2026-11-04"
 repository-code: "https://github.com/amywang2010/lr-certificates"
 license: MIT
 abstract: >-
   Per-contrast intervals for a co-expression score in spatial transcriptomics,
   valid over a declared set of molecule-to-cell reassignments (boundary-local
-  reassignment with per-cell gain and loss capacity constraints, mask erosion
-  and dilation, and a parameterised donor radius). Each interval end is computed
-  exactly as a maximum flow on a signature-contracted cell network, with a
-  Hall/deficiency criterion for when the linear-time count is already exact and
-  a witness certificate for every solved end. A permutation null that
-  recomputes the same worst-case object under every label permutation yields
-  exact finite-B p-values, and any null that holds the assignment fixed is
-  proved dominated. A claim requires the interval to exclude zero and the
-  matched null to confirm the direction, with the direction read from the
-  interval absorbed by the Benjamini-Yekutieli factor. Evaluated on three public
+  reassignment with per-cell gain and loss capacity constraints, mask erosion and
+  dilation, and a parameterised donor radius). Each interval end is a maximum flow
+  on a signature-contracted cell network. A Hall criterion identifies when a
+  per-transcript count already attains the flow value, and the maximum deficiency
+  otherwise. A merged-network criterion decides in two further flows whether a
+  single assignment attains both per-gene optima. A permutation null that
+  recomputes the same worst-case object under every label permutation gives
+  finite-sample-valid Monte Carlo p-values. A claim requires the interval to
+  exclude zero and the matched null to confirm the direction. The selected
+  one-sided p-value is doubled before Benjamini-Yekutieli correction, so direction
+  selection is charged separately from dependence. Evaluated on three public
   Xenium sections spanning two tissues, two panel densities and two tumour types.
 keywords:
   - spatial transcriptomics

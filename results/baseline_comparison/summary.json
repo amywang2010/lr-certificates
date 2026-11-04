@@ -3,8 +3,8 @@
  "comparison1": {
   "n": 75,
   "conventional_calls_any": 73,
-  "conventional_pos_not_certified": 28,
-  "conventional_pos_same_direction_certified": 39,
+  "conventional_pos_not_certified": 29,
+  "conventional_pos_same_direction_certified": 38,
   "conventional_pos_direction_flip": 6,
   "flip_rows": [
    {
@@ -47,12 +47,12 @@
    "none": {
     "negative": 0,
     "none": 1,
-    "positive": 28
+    "positive": 29
    },
    "positive": {
     "negative": 0,
     "none": 0,
-    "positive": 37
+    "positive": 36
    }
   }
  },
@@ -60,34 +60,34 @@
   {
    "section": "breast",
    "n": 75,
-   "certified": 46,
-   "not_certified": 29,
+   "certified": 45,
+   "not_certified": 30,
    "certified_unstable": 3,
-   "certified_stable": 43,
+   "certified_stable": 42,
    "notcert_unstable": 0,
-   "notcert_stable": 29,
-   "fisher_p": 0.278919,
-   "odds_ratio": 4.7471,
-   "or_lo95": 0.2364,
-   "or_hi95": 95.3328,
+   "notcert_stable": 30,
+   "fisher_p": 0.27027,
+   "odds_ratio": 5.0235,
+   "or_lo95": 0.2502,
+   "or_hi95": 100.8467,
    "zero_cell_corrected": true,
    "source": "results/phase2_proseg_coverage.csv"
   },
   {
    "section": "lung",
    "n": 54,
-   "certified": 7,
-   "not_certified": 47,
+   "certified": 5,
+   "not_certified": 49,
    "certified_unstable": 1,
-   "certified_stable": 6,
+   "certified_stable": 4,
    "notcert_unstable": 3,
-   "notcert_stable": 44,
-   "fisher_p": 0.436002,
-   "odds_ratio": 2.4444,
-   "or_lo95": 0.2177,
-   "or_hi95": 27.4507,
+   "notcert_stable": 46,
+   "fisher_p": 0.330038,
+   "odds_ratio": 3.8333,
+   "or_lo95": 0.32,
+   "or_hi95": 45.9173,
    "zero_cell_corrected": false,
-   "source": "xenium_lung/crop/data/phase5_e2_coverage.csv"
+   "source": "lung/phase5_e2_coverage.csv"
   },
   {
    "section": "breast_s6",
@@ -103,21 +103,21 @@
    "or_lo95": null,
    "or_hi95": null,
    "zero_cell_corrected": true,
-   "source": "xenium_breast_s6/crop/data/phase7_e2_coverage.csv"
+   "source": "breast_s6/phase7_e2_coverage.csv"
   },
   {
    "section": "pooled",
    "n": 159,
-   "certified": 53,
-   "not_certified": 106,
+   "certified": 50,
+   "not_certified": 109,
    "certified_unstable": 4,
-   "certified_stable": 49,
+   "certified_stable": 46,
    "notcert_unstable": 3,
-   "notcert_stable": 103,
-   "fisher_p": 0.222987,
-   "odds_ratio": 2.8027,
-   "or_lo95": 0.6038,
-   "or_hi95": 13.0097,
+   "notcert_stable": 106,
+   "fisher_p": 0.20735,
+   "odds_ratio": 3.0725,
+   "or_lo95": 0.661,
+   "or_hi95": 14.2806,
    "zero_cell_corrected": false,
    "source": "phase2_proseg_coverage.csv + phase5_e2_coverage.csv + phase7_e2_coverage.csv"
   }

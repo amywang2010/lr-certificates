@@ -1,6 +1,6 @@
 {
- "arcs_max": 169328,
- "arcs_median": 2631.5,
+ "arcs_max": 293539,
+ "arcs_median": 7366.0,
  "cap_max_dT": 0.026668108350820674,
  "cap_rows_moved": 46,
  "cap_sign_changes": 0,
@@ -28,6 +28,6 @@
  "pos_witness_ok": 150,
  "rows_hi_changed": 75,
  "rows_lo_changed": 13,
- "secs_total": 498.443,
+ "secs_total": 539.8000000000001,
  "sign_changes": 2
 }

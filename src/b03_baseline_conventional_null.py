@@ -1,8 +1,8 @@
 """B03 conventional point-null (breast): the field's standard first pass.
 
 The conventional pipeline is described by a run of the conventional test itself. A
-null built from worst-case bounds cannot serve, since worst-case bounds trivially
-dominate point statistics (q_pos = 1.0 on every row), so the point-statistic null is
+null built from worst-case bounds cannot serve, since point statistics sit above
+worst-case bounds by construction (q_pos = 1.0 on every row), so the point-statistic null is
 computed here directly.
 
 Machinery reused verbatim from the matched null

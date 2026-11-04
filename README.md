@@ -1,218 +1,157 @@
-# Exact capacitated-flow bounds with matched permutation nulls
+# Joint Attainability of Worst-Case Co-expression Bounds via Capacitated Flows
 
-Code and SHA-256-hashed result artifacts for the study:
+Code and hashed result artifacts for the RECOMB 2027 paper of the same title
+(Amy Wang and Manolis Kellis, MIT).
 
-> **Exact capacitated-flow bounds with matched permutation nulls for reassignment-robust claims**
+The repository computes an interval for a ligand–receptor co-expression score over a
+declared set of plausible transcript-to-cell assignments, tests whether one assignment
+attains both per-gene optima of that interval, and certifies a direction with a
+permutation null that recomputes the same worst-case object under every label
+permutation.
 
-For each co-expression contrast in a spatial transcriptomics section the study computes an
-interval valid over a declared uncertainty set of molecule-to-cell assignments (boundary-local
-reassignment with per-cell capacity constraints, mask erosion and dilation, and a parameterised
-donor radius), together with a permutation null that recomputes the same worst-case object under
-every label permutation. Each interval end is a maximum flow on a cell-level network in which
-transcripts are collapsed by source cell and destination set, computed exactly by
-`src/b03_exact_end.py` and witnessed by reading the flow back into an assignment; the linear-time
-count the null layer uses is exact exactly when a Hall condition on the counted cells holds, and
-the shortfall is a maximum deficiency that the paper characterises. The paper also proves that any
-null holding the assignment fixed is dominated by the matched null, and that the
-Benjamini-Yekutieli factor absorbs the direction read from the interval. Certification has two layers:
-the interval sign, and a claim status that additionally requires the matched null with
-within-region Benjamini–Hochberg control. The
-sign refers to a declared reference level of the score, not to a biological direction. This
-repository holds the reproduction materials: the analysis code, the frozen configuration, and
-the hashed artifact behind every reported number.
+## What the code computes
 
-## What the study finds
+**Interval ends.** The score separates into a ligand term and a receptor term. Each
+upper endpoint is a maximum flow on a network whose nodes are source cells, donor-set
+signatures and counted cells. Each lower endpoint has a closed form. `src/b03_exact_end.py`
+solves the 150 breast gene-ends this way and reads every flow back into an assignment.
+With source-loss budgets inactive, a Hall condition on the counted cells decides when a
+per-transcript count already attains the flow value, and the shortfall otherwise equals
+the maximum deficiency.
 
-| Section | Dataset | Panel | Result |
-|---|---|---|---|
-| Breast (Rep1) | Xenium v1.0.1 FFPE Human Breast Cancer Rep1 (10x Genomics) | 313-plex | interval sign 39 positive / 12 negative / 24 straddling; claim status 37 positive, 9 negative, 29 without a claim, of 75 contrasts |
-| Lung (crop) | Xenium Prime 5K FFPE Human Lung Cancer (10x Genomics, expression-blind crop) | 5,001 genes | interval sign 1 positive / 32 negative / 21 straddling; 1 claim-certified positive (CDH1→EGFR) and 6 negative (ESR1↔PGR), of 54 contrasts |
-| Breast (second section) | FFPE breast cancer on the Xenium Prime 5K panel (public EBI repackage, BioStudies S-BIAD2146, expression-blind crop) | 5,000 genes | interval sign 0 positive / 17 negative / 13 straddling, 0 claims of 30 evaluable contrasts |
+**Joint attainment.** Two further flows on a merged network decide whether a single
+assignment reaches both per-gene ends. `src/b03_coupled_end.py` runs the test on all three
+sections and reports the gap when it fails.
 
-The third section is consistent with a tested-gene mass-share mechanism, which the
-intervention study then tests directly. On the same tissue and the same ten pairs, claims
-collapse from 22 of 30 rows to 0 of 30 while the intervals get narrower, with median width
-falling from 2.60 to 1.60 log2 units. The tested genes
-carry 8.08% of the 313-plex section's transcripts and 0.36% of the 5,000-plex section's, and at
-0.36% the permutation null reaches the observed bound on every row. The released computation is
-`results/tested_mass_share.json`, written by `src/b03_mass_share.py` from the vendor molecule
-files.
+**Inference.** `src/b03_matched_null.py` recomputes the interval under each
+within-region, decile-matched label permutation and writes add-one Monte Carlo p-values.
+The claim layer reads those stored values and doubles the p-value selected by the
+interval sign before Benjamini–Yekutieli correction within region
+(`src/b03_claim_layer.py`). A test carries a claim when the interval excludes zero and
+the adjusted q-value is at most 0.10.
 
-A 20-run controlled intervention study on the first section (paper Section 5.5) tests that
-mechanism by direct intervention. Injected-pair certification transitions between 1% and 4% ambient
-tested-gene mass share and is seed-replicable. The smallest injection that certifies is 5.3
-thousand transcripts on a 4%-mass substrate against 87.6 thousand on the full 13.84%-mass
-section. Per-run artifacts and the fleet summary are under `results/synthstudy/`, and
-`src/b03_synthstudy_analysis.py` recomputes every Section 5.5 number from them, including the
-dose and power curves (`results/synthstudy/dose_curve.csv`, `power_curve.csv`, `fcr_table.csv`).
+## Results in the released artifacts
 
-The conventional co-expression permutation pipeline of the CellChat/CellPhoneDB family, run on
-the same breast section, calls 71 contrasts enriched and 2 depleted above its own label null.
-The certificates confirm 39 of those calls in the same direction, leave 28 without a claim, and
-certify 6 as negative while they are conventionally enriched, all of them ESR1–PGR rows. That call is an enrichment statement rather than the sign of the score, so the
-six are not sign reversals (`results/baseline_comparison/`).
+| Section | Tests | Interval sign (+/−/0) | Claims (+) | Claims (−) |
+|---|---|---|---|---|
+| Breast Rep1, 313-plex | 75 | 39 / 12 / 24 | 36 | 9 |
+| Lung crop, 5K panel | 54 | 1 / 32 / 21 | 1 | 4 |
+| Breast, second section, 5K panel | 30 | 0 / 17 / 13 | 0 | 0 |
 
-Cross-segmentation stress testing uses Proseg as an independent probe on all three sections.
-Proseg merges and splits cells, so its assignment lies outside the declared set: the battery is
-an external calibration check, not a validation of the claims. It reports interval coverage of
-claim-certified rows (`E2`), certified-direction significance under a Proseg-side matched null
-(`E3`), and per-certificate kernel margins (`E4`). Two results are reported as failures rather
-than as support: on the breast section all six negative claims lose certified-direction
-significance under the Proseg-side null, and on the lung crop coverage is 6 of 7 (85.7%), below
-the 90% gate, with the CDH1→EGFR claim the single excursion. Regions, crop windows, gates and
-thresholds sit in the released configuration files, and the paper lists them.
+The joint-attainment test covers 157 of the 159 tests. Two lung tests have no movable
+transcript for either gene and no joint-flow instance. The lower end is attained on all
+157, the upper end on 149.
 
-**Exact interval ends.** `src/b03_exact_end.py` solves both ends of every breast interval as a
-maximum flow and witnesses each one by reading the integral flow back into an assignment:
-150 gene-ends, median 4,576 nodes and 2,632 arcs against 3.14 million movable transcripts, and
-150 of 150 witnessed with zero budget violations. The linear-time count the null layer uses is
-exact on 90 of the 150 ends; of the 60 failures, 58 violate the Hall condition on the destination
-side and 2 are source side, with a maximum shortfall of 361 transcripts. Holding the counting rule
-fixed, capacity moves 46 of the 75 rows by at most 0.027 log2 and changes no sign; the counting
-rule itself is what adds the two interval-negative rows. Artifacts: `results/exact_end.csv`,
-`results/exact_end_rows.csv`, `results/exact_end_summary.json`.
-
-## Repository map
+## Contents
 
 | Path | Content |
 |---|---|
-| `src/` | Analysis code, one script per step. The reproduction chain below lists the order |
-| `results/` | Breast-section artifacts: the 75-row matched table and its null, the B=10,000 reruns, the determinism gate, the feasibility and subcube receipts, the independent re-derivation under `sensitivity/`, the conventional-pipeline comparison under `baseline_comparison/`, the intervention study under `synthstudy/`, and the tested-gene mass share |
-| `lung/` | Lung-crop artifacts under the same schema: the 54-row table, its matched null, the feasibility, subcube and capacity receipts, and the E2/E3/E4 summaries |
-| `breast_s6/` | Second-section artifacts under the same schema: the 30-row table, its matched null at B=10,000, the feasibility, subcube and capacity receipts, the E2 coverage summary, and the corrected-rule re-derivation |
-| `figures/` | The three figures in PNG and PDF, drawn at the LNCS text width |
-| `requirements.txt` | Pinned Python environment of the release checks |
+| `src/` | Analysis scripts, one per pipeline step |
+| `results/` | Breast artifacts, exact-end tables, conventional-null comparison, high-permutation reruns, intervention study, tested-gene mass share |
+| `lung/` | Lung-crop artifacts under the same column schema |
+| `breast_s6/` | Second-section artifacts under the same column schema |
+| `figures/` | Figure 1, Figure S2 and the workflow schematic, as PDF and PNG |
+| `tests/` | Release checks that run on the shipped artifacts |
+| `requirements.txt` | Python environment |
+| `CITATION.cff` | Citation metadata |
+| `RELEASE_MANIFEST.sha256` | SHA-256 of every other file in the repository |
 | `LICENSE` | MIT |
-| `RELEASE_MANIFEST.sha256` | SHA-256 of every other file in the repository, CRLF-terminated and sorted by path. Verify with `sha256sum -c RELEASE_MANIFEST.sha256` on Linux, or `shasum -a 256 -c RELEASE_MANIFEST.sha256` where available |
 
-## Figures
+Each section directory holds a 75-, 54- or 30-row table (`scout_final_matched.csv`), its
+matched null, the claim layer (`claim_layer.csv`), feasibility and subcube receipts, and
+the cross-segmentation summaries.
 
-`python src/b03_paper_figures.py` writes all three figures into `figures/` from released
-artifacts only, asserting row counts before plotting and checking the rendered layout
-(no text leaves the canvas, no two labels collide, and each legend clears the drawn intervals by
-a printed margin) before any file is written.
+## Installation
 
-| Figure | File | Panels | Source artifacts |
-|---|---|---|---|
-| 1 | `fig1_main.pdf` | (a) interval sign and claim status for the 25 breast pairs across three regions, (b) cross-tissue certificates for the shared pairs | the 75-row matched table, and the 18-row cross-tissue table `results/paper_fig3_data.csv` |
-| S2 | `fig2_support.pdf` | (a) cross-segmentation coverage of the claim-certified rows against the gate, (b) kernel margins c* per claim-certified row | the coverage tables and summaries of the breast and lung legs, and the two kernel-margin tables (46 and 7 rows) |
-| S1 | `fig0_workflow.pdf` | the construction: both inputs enter one interval machinery | structure only, drawn by `src/b03_schematic.py` |
+```
+python -m pip install -r requirements.txt
+```
 
-The schematic script measures every label's rendered bounding box against its shape and checks
-all shape pairs for overlap, aborting instead of writing a figure that fails either check.
+The analysis is CPU-only. Proseg 3.2.0 is a separate tool, invoked on the molecule
+files for the cross-segmentation checks.
 
-## Reproduction
+## Quick start from the shipped artifacts
 
-All scripts resolve paths from the repository root, independently of the working directory.
-Breast-section scripts read the vendor bundle from `data/` and write intermediates to `data/` and
-`results/`. The lung and second-section pipelines operate on a workspace directory next to the
-repository clone, its parent by default, overridable with `B03_WORKSPACE`: the lung workspace is
-`xenium_lung/` (the vendor zip, an `extracted/` subdirectory, and a `crop/` subdirectory), and
-the second-section workspace is `xenium_breast_s6/` (the S-BIAD2146 zarr zip, `extracted/`,
-`crop/`, `chunks/`). Vendor bundles are not redistributed. Everything they produce that a
-reported number depends on is released under `results/`, `lung/` and `breast_s6/`.
+These steps need no vendor data and finish in seconds to minutes.
 
-1. Download the three public datasets listed under Data availability and place the breast bundle
-   files in `data/`, the lung bundle in `xenium_lung/`, and the second-section zarr in
-   `xenium_breast_s6/`.
-2. Breast certified bounds and matched null: `src/b03_load.py` → `src/b03_scout.py` →
-   `src/b03_matched_null.py` → `src/b03_finalize.py`. The last step writes the two tables the
-   breast results are reported from, `results/scout_final_matched.csv` (75 rows) and
-   `results/null_robust_matched_final.csv`, and records its consistency battery in
-   `finalize_checks.md`.
-3. Verification and sensitivity on the breast leg: `src/b03_coverage.py` (held-out coverage on a
-   second assignment path, and the nucleus-only sensitivity), and `src/b03_phase9_neighbor.py`
-   (the independent re-derivation of all 159 intervals under the corrected per-gene-slot rule,
-   writing `results/sensitivity/`, plus the neighbour-effect check). `src/b03_exact_end.py` then
-   solves the exact ends by max flow (`results/exact_end*.{csv,json}`), which needs only the
-   breast `data/` bundle.
-4. Cross-segmentation on the breast leg: install Proseg 3.2.0 and run
-   `proseg transcripts.parquet` on the identical molecule file, then
+```
+python src/b03_claim_layer.py      # claim columns, claim_layer.csv per section
+python tests/test_release.py       # release checks
+python -m unittest discover -s tests
+```
+
+Verify every shipped file against the manifest:
+
+```
+sha256sum -c RELEASE_MANIFEST.sha256
+```
+
+## Full reproduction
+
+Scripts resolve paths from the repository root. Breast scripts read the vendor bundle
+from `data/`. The lung and second-section pipelines read a workspace directory next to
+the clone, set with `B03_WORKSPACE` (default: the parent directory), containing
+`xenium_lung/` and `xenium_breast_s6/` with the vendor archive, an `extracted/`
+subdirectory and a `crop/` subdirectory.
+
+1. Breast intervals and matched null: `src/b03_load.py`, `src/b03_scout.py`,
+   `src/b03_certify.py`, `src/b03_matched_null.py`, `src/b03_finalize.py`.
+2. Interval verification and sensitivity: `src/b03_coverage.py`,
+   `src/b03_phase9_neighbor.py`, `src/b03_exact_end.py`. The exhaustive check of the
+   flow ends and the attainment criteria on 3,000 small instances is
+   `src/b03_enumerate_check.py`, which writes `results/enumeration_check.json`.
+3. Claim layer: `src/b03_claim_layer.py`.
+4. Cross-segmentation on breast: run Proseg 3.2.0 on the molecule file, then
    `src/b03_phase2_vendor_prep.py`, `src/b03_phase2_label_validation.py`,
-   `src/b03_phase2_analysis.py`, `src/b03_phase3_proseg_null.py`, `src/b03_phase4_kernel.py`.
-5. Lung leg: `src/b03_lung_audit.py` → `src/b03_lung_crop.py` →
-   `src/b03_lung_crop_extract.py` → `src/b03_lung_load.py` → `src/b03_lung_certify.py` →
-   `src/b03_lung_null.py` → `src/b03_lung_concordance.py` → `src/b03_phase5_vendor_prep.py` →
-   `src/b03_phase5_e2.py` → `src/b03_phase5_e3.py`. The configuration shared with the
-   second-section leg is defined in `src/b03_lung_config.py`.
-6. High-permutation reruns and the determinism gate: `src/b03_phase6_lung.py`,
-   `src/b03_phase6_breast.py`, then `src/b03_phase6_analysis.py`.
-7. Second section on the 5,000-plex panel: `src/b03_s6_extract.py` → `src/b03_s6_prep.py` →
-   `src/b03_s6_load.py` → `src/b03_s6_certify.py` → `src/b03_s6_null.py` →
-   `src/b03_s6_finalize.py` → `src/b03_s6_vendor_prep.py` → `src/b03_s6_e2.py` →
-   `src/b03_s6_tight.py`.
-8. Conventional-pipeline comparison: `src/b03_baseline_conventional_null.py` →
+   `src/b03_phase2_analysis.py`, `src/b03_phase3_proseg_null.py`,
+   `src/b03_phase4_kernel.py`.
+5. Lung crop: `src/b03_lung_audit.py`, `src/b03_lung_crop.py`,
+   `src/b03_lung_crop_extract.py`, `src/b03_lung_load.py`, `src/b03_lung_certify.py`,
+   `src/b03_lung_null.py`, `src/b03_lung_concordance.py`, `src/b03_phase5_vendor_prep.py`,
+   `src/b03_phase5_e2.py`, `src/b03_phase5_e3.py`. Shared settings are in
+   `src/b03_lung_config.py`.
+6. High-permutation reruns: `src/b03_phase6_breast.py`, `src/b03_phase6_lung.py`,
+   `src/b03_phase6_analysis.py`.
+7. Second section: `src/b03_s6_extract.py`, `src/b03_s6_prep.py`, `src/b03_s6_load.py`,
+   `src/b03_s6_certify.py`, `src/b03_s6_null.py`, `src/b03_s6_finalize.py`,
+   `src/b03_s6_vendor_prep.py`, `src/b03_s6_e2.py`, `src/b03_s6_tight.py`.
+8. Conventional-null comparison: `src/b03_baseline_conventional_null.py`,
    `src/b03_baseline_comparison.py`.
-9. Tested-gene mass share: `src/b03_mass_share.py` (needs the breast intermediates from step 2
-   and the second-section crop from step 7).
-10. Intervention study: `python src/b03_synthstudy.py --mode verify` (invariants),
-    `--mode run` for each of the 20 runs (arm, seed and measured injection are recorded in each
-    `run_manifest.json`), then `python src/b03_synthstudy_analysis.py` (writes the dose and power
-    curves and the fleet summary). Fleet wall time is about 2.5 h on the reference workstation,
-    and results are deterministic given the recorded seeds.
-11. Figures: `python src/b03_paper_figures.py`.
+9. Tested-gene mass share: `src/b03_mass_share.py`.
+10. Intervention study: `python src/b03_synthstudy.py --mode verify`, then `--mode run`
+    for each of the 20 runs, then `python src/b03_synthstudy_analysis.py`.
+11. Figures: `python src/b03_paper_figures.py` and `python src/b03_schematic.py`.
 
-The permutation nulls checkpoint every 50 permutations and resume deterministically. Expected
-runtimes on the reference workstation: certified bounds about 2 minutes, a 75-minute matched null
-at B=1,000 over 4 workers, about 12 hours at B=10,000 on the breast leg and 12 minutes on the
-second section, and under an hour per section for the cross-segmentation battery. The vendor load
-takes about 4 minutes for breast, 177 s for lung and 135 s for the second section. Proseg takes
-about 2.4 h on the full breast section, about 1.7 h on the lung crop and 2 h 07 m on the
-second-section crop, at a peak of 6.9 GB private memory on the lung crop.
+Permutation nulls checkpoint every 50 permutations and resume deterministically. On the
+reference workstation (8 cores, 15.7 GB RAM, Windows) the exact-end table takes 540 s,
+a matched null at B = 1000 takes 74 min on the breast section, and the B = 10,000 rerun
+takes about 12 h.
 
-Hardware: 8 physical cores, 15.7 GB RAM, Windows. Full-section Proseg on the lung and
-second-section datasets is memory-infeasible at this scale, so both legs use an expression-blind
-crop: 3.5 × 3.5 mm candidate windows on a 0.5 mm grid over the full section bounds, ranked by
-vendor-cell count with no access to expression data, selecting the median-density window with
-ties broken lexicographically. The frozen window records are `results/lung_crop_window.json` and
-`breast_s6/s6_crop_window.json`.
+## Data
 
-## Verification and provenance
+All three sections are public and are not redistributed here.
 
-Every number in the manuscript is backed by a hashed artifact, and the checks below are the
-receipts for the verification claims made in the paper.
-
-| Claim | Receipt |
+| Section | Source |
 |---|---|
-| The reproduced assignment matches the vendor matrix | `results/concordance.json`, `results/concordance_diagnosis.json` (per-cell exact concordance 0.9146, per-gene Pearson median 0.9912 and minimum 0.9578 over 40 audited genes), `lung/concordance.json` (0.9568, 20 audited genes bitwise exact), `breast_s6/concordance.json` (totals-level gate, r = 0.9991) |
-| Bounds are never violated | `exactness_verification.csv` in each of the three legs: 150,000 + 108,000 + 60,000 randomized feasible configurations, 0 violations |
-| The reported ends are sound supersets, not attained extremes | `results/subcube_check.json` and the two leg copies: enumeration of a subcube within the greedy extremes agrees with them; the capped formula is evaluated separately in `results/sensitivity/` |
-| Both interval code paths agree at every null startup | `results/null_path_validation.csv`: the shipped and fast paths match to the recorded tolerance |
-| The null layers agree with the observed bounds | `scout_summary_matched.json` in each leg: all rows within 1e-6 of the released bounds |
-| All 159 intervals re-derive under the corrected rule | `results/sensitivity/` (75 breast and 54 lung rows, each with a `.sha256`), `breast_s6/s6_tight_bounds_sensitivity.csv` and `s6_tight_bounds_summary.json`: 0 verdict flips, median width tightening 9.2%, 14.1% and 10.4%. `src/b03_phase9_neighbor.py` recomputes the corrected bounds on the breast and lung legs with its own aggregation path and asserts bit-exact agreement with the released tables on every row and gene, and `src/b03_s6_tight.py` writes the second-section tables |
-| The capacity rule binds where the paper says it does | `lung/capacity_check.json` (197 cells flagged) and `breast_s6/capacity_check.json` (1,350 cells flagged), with the capped formula applied inside the interval construction |
-| The higher-permutation rerun changes no verdict | `results/phase6/phase6_summary.json` and `results/phase6/determinism_gate.json`: 0 flips across 75 breast and 54 lung rows at B=10,000 |
-| Section 5.5 numbers | the 20 `results/synthstudy/*/run_manifest.json` files and the five tables written by `src/b03_synthstudy_analysis.py`, receipted by `results/synthstudy/synthstudy_analysis.sha256` |
-| The tested-gene mass share | `results/tested_mass_share.json`, written by `src/b03_mass_share.py` from the vendor molecule files |
+| Breast Rep1 | 10x Genomics Xenium FFPE Human Breast Cancer Rep1, v1.0.1 |
+| Lung crop | 10x Genomics Xenium Prime 5K FFPE Human Lung Cancer, technical note release |
+| Breast, second section | EBI zarr repackage of the STHELAR release, BioStudies S-BIAD2146 |
 
-Two conventions are visible in the released tables. First, the interval
-layer and the certified layer are different: on the breast leg 39 of 75 rows are interval-positive
-and 12 interval-negative, and the matched null then leaves 37 and 9. Second, the p-value floor at
-B permutations is 1/(B+1), which is 9.99e-4 at B=1,000 and 9.999e-5 at B=10,000. Rows at that
-floor are reported there.
+The lung and second-section analyses use expression-blind crops. Window coordinates are
+recorded in `results/lung_crop_window.json` and `breast_s6/s6_crop_window.json`.
 
-## Statistical conventions
+## Tests
 
-- Permutation p-values use the add-one convention (Phipson and Smyth 2010, North et al. 2002).
-- Benjamini–Hochberg is applied within region over the pair list. Benjamini–Yekutieli, valid
-  under arbitrary dependence, changes 1 of 159 verdicts.
-- The pseudocount is 0.5 throughout. It sets the zero of the score, since T ≥ 0 is equivalent
-  to (E_S + 0.5)(E_R + 0.5) ≥ 1, so the interval-level sensitivity to it is tabulated in the
-  appendix and the sign is never read as a biological direction. That table is recomputable
-  from the count and delta columns of the three row tables. The matched-null layer is computed
-  at 0.5 only; because every row is interval-positive at 1.0, no negative claim is attainable
-  at that reference.
-- The null recomputes the same worst-case objects as the observed statistic under each
-  permutation. Testing worst-case bounds against a null of point statistics would be trivially
-  conservative, since every permutation's worst-case minimum is at most its point value.
+`tests/test_release.py` runs without vendor data. It checks the released row tables
+against the counts reported in the paper, recomputes the claim layer from the stored
+permutation values, and checks the Benjamini–Hochberg and Benjamini–Yekutieli routines
+on fixed inputs.
 
-## Data availability
+```
+python -m unittest discover -s tests -v
+```
 
-All three datasets are public. Breast Rep1 and the lung section are 10x Genomics Xenium bundles
-(Xenium FFPE Human Breast Cancer Rep1 at v1.0.1, and Xenium Prime 5K FFPE Human Lung Cancer from
-the post-Xenium technical note). The second breast-cancer section is distributed as the EBI's
-public zarr repackage under BioStudies accession S-BIAD2146, from the STHELAR release. Its
-packaging differences from the 10x bundles, namely the zarr layout and the deprecated codeword
-categories, are handled explicitly in `src/b03_s6_extract.py` and `src/b03_s6_load.py`. The
-lung and second-section analysis regions are expression-blind crops whose boundaries are the
-window records named above.
+## Citation
+
+Cite the paper and this repository. Metadata is in `CITATION.cff`. Code is released
+under the MIT licence.

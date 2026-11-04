@@ -75,10 +75,9 @@ def legend_gap_mm(ax, leg):
     vertically. Artists that share neither are diagonally separated and cannot
     touch it.
 
-    The figure is included in the manuscript at its natural size, so a
-    millimetre here is a millimetre on the page. Non-overlap alone is not
-    enough: a legend edge a tenth of a millimetre from the end of a bar reads as
-    a collision, which is how the first version of this figure failed.
+    The figure is included at its natural size, so a millimetre here is a
+    millimetre on the page. Non-overlap alone is not enough: a legend edge a
+    tenth of a millimetre from the end of a bar reads as a collision.
     """
     fig = ax.figure
     fig.canvas.draw()
@@ -174,13 +173,17 @@ def verdict_color(pos, neg):
 
 
 # ================================================================ fig1_main
+# Claim status is the selection-charged BY layer written by b03_claim_layer.py; the
+# unadjusted BH flags are kept in the same table for the comparison the paper reports.
 fin = pd.read_csv(f"{RES}/scout_final_matched.csv")
 assert len(fin) == 75
+assert int(fin.claim_pos.sum()) == 36
+assert int(fin.claim_neg.sum()) == 9
 assert int(fin.certified_pos_matched.sum()) == 37
 assert int(fin.certified_neg_matched.sum()) == 9
 
-fin["verdict"] = np.where(fin.certified_pos_matched, "pos",
-                  np.where(fin.certified_neg_matched, "neg", "non"))
+fin["verdict"] = np.where(fin.claim_pos, "pos",
+                  np.where(fin.claim_neg, "neg", "non"))
 pair_meta = (fin.groupby("pair")
                 .agg(ctrl=("control", "first"), med=("T_lo", "median")))
 pair_meta = pair_meta.sort_values(["ctrl", "med"], ascending=[False, True])
@@ -189,12 +192,27 @@ ypos = {p: i for i, p in enumerate(pairs)}
 
 f3 = pd.read_csv(f"{RES}/paper_fig3_data.csv")
 assert len(f3) == 18
+# claim flags come from the claim-layer tables of each leg, not from the stored column
+_lu = pd.read_csv(f"{LUN}/scout_final_matched.csv")
+f3 = f3.drop(columns=["certified_pos_matched", "certified_neg_matched"])
+_parts = []
+for _tissue, _tab in (("breast", fin), ("lung", _lu)):
+    _sub = f3[f3.tissue == _tissue].merge(
+        _tab[["pair", "region", "claim_pos", "claim_neg"]],
+        on=["pair", "region"], how="left", validate="many_to_one")
+    _sub["certified_pos_matched"] = _sub.claim_pos
+    _sub["certified_neg_matched"] = _sub.claim_neg
+    _parts.append(_sub.drop(columns=["claim_pos", "claim_neg"]))
+f3 = pd.concat(_parts).sort_values(["tissue", "pair", "region"]).reset_index(drop=True)
+assert len(f3) == 18
+assert int(f3.certified_pos_matched.sum()) == 7
+assert int(f3.certified_neg_matched.sum()) == 5
 
 xlo = float(min(fin.T_lo.min(), f3.T_lo.min()))
 xhi = float(max(fin.T_hi.max(), f3.T_hi.max()))
 pad = 0.04 * (xhi - xlo)
 
-fig = plt.figure(figsize=(TEXT_W, 4.15))
+fig = plt.figure(figsize=(TEXT_W, 3.95))
 gs = GridSpec(2, 1, figure=fig, height_ratios=[2.9, 1.15], hspace=0.50,
               left=0.235, right=0.955, top=0.975, bottom=0.115)
 
@@ -306,18 +324,30 @@ s2l = json.load(open(f"{LUN}/phase5_e2_summary.json"))
 kb = pd.read_csv(f"{RES}/phase4_kernel_margins.csv")
 kl = pd.read_csv(f"{LUN}/phase4_kernel_margins.csv")
 assert len(kb) == 46 and len(kl) == 7
+# margins are tabulated over the unadjusted certificate set; restrict to the claim layer
+kb = kb.merge(fin[["pair", "region", "claim_pos", "claim_neg"]],
+              on=["pair", "region"], how="left")
+kl = kl.merge(_lu[["pair", "region", "claim_pos", "claim_neg"]],
+              on=["pair", "region"], how="left")
+kb = kb[kb.claim_pos | kb.claim_neg]
+kl = kl[kl.claim_pos | kl.claim_neg]
+assert len(kb) == 45 and len(kl) == 5
 
 # E2 coverage over the certified rows of each leg, the rows that carry a claim. The breast
 # summary stores its primary over all evaluable rows (72/75); the certified-row count is
 # 43/46 in the same coverage table, and both are asserted here.
 cb = pd.read_csv(f"{RES}/phase2_proseg_coverage.csv")
 cl = pd.read_csv(f"{LUN}/phase5_e2_coverage.csv")
-cert_b = cb.certified_pos_matched | cb.certified_neg_matched
-cert_l = cl.cert_pos_final | cl.cert_neg_final
+cb = cb.merge(fin[["pair", "region", "claim_pos", "claim_neg"]],
+              on=["pair", "region"], how="left")
+cl = cl.merge(_lu[["pair", "region", "claim_pos", "claim_neg"]],
+              on=["pair", "region"], how="left")
+cert_b = cb.claim_pos | cb.claim_neg
+cert_l = cl.claim_pos | cl.claim_neg
 n_in = [int(cb.inside[cert_b].sum()), int(cl.inside[cert_l].sum())]
 n_cert = [int(cert_b.sum()), int(cert_l.sum())]
-assert n_cert == [s2["certified_rows"], s2l["certified_rows"]] == [46, 7]
-assert n_in == [43, 6]
+assert n_cert == [45, 5]
+assert n_in == [42, 4]
 assert int(cb.inside.sum()) == 72 and len(cb) == 75 and len(cl) == 54
 
 fig, axes = plt.subplots(1, 2, figsize=(TEXT_W, 1.70))
@@ -342,7 +372,7 @@ plabel(ax, "a")
 ax = axes[1]
 rng = np.random.default_rng(20260907)
 data = [kb.c_star.to_numpy(), kl.c_star.to_numpy()]
-labels = ["Breast\n(46)", "Lung\n(7)"]
+labels = ["Breast\n(45)", "Lung\n(5)"]
 for i, d in enumerate(data):
     x = i + 1
     ax.vlines(x, np.quantile(d, 0.25), np.quantile(d, 0.75), color="#1A1A1A",

@@ -35,7 +35,14 @@ SOURCES = {
     "lung_e2": "lung/phase5_e2_coverage.csv",
     "s6_final": "breast_s6/scout_final_s6.csv",
     "s6_e2": "breast_s6/phase7_e2_coverage.csv",
+    "breast_claims": "results/claim_layer.csv",
+    "lung_claims": "lung/claim_layer.csv",
+    "s6_claims": "breast_s6/claim_layer.csv",
 }
+
+# The certificate set of record is the selection-charged claim layer, not the
+# pre-doubling flags stored in the matched-null tables.
+CLAIM_FOR = {"breast": "breast_claims", "lung": "lung_claims", "breast_s6": "s6_claims"}
 
 
 def p(name: str) -> str:
@@ -93,12 +100,15 @@ def main() -> None:
         return "none"
 
     m["conv_call"] = m.apply(conv_call, axis=1)
-    # two-layer certificates from the final CSV's verdict flags
+    # two-layer certificates from the selection-charged claim layer, which the final
+    # table already carries (written by b03_claim_layer.py); the pre-doubling flags are
+    # still present in that file and must not be used here.
+    assert len(m) == 75 and m["claim_pos"].notna().all(), "claim layer does not cover the 75 rows"
+    assert int(m["claim_pos"].astype(bool).sum()) == 36, "claim layer drifted from 36 positives"
     m["cert_call"] = "none"
-    m.loc[m["certified_pos_matched"].astype(bool), "cert_call"] = "positive"
-    m.loc[m["certified_neg_matched"].astype(bool), "cert_call"] = "negative"
-    assert not (m["certified_pos_matched"].astype(bool)
-                & m["certified_neg_matched"].astype(bool)).any()
+    m.loc[m["claim_pos"].astype(bool), "cert_call"] = "positive"
+    m.loc[m["claim_neg"].astype(bool), "cert_call"] = "negative"
+    assert not (m["claim_pos"].astype(bool) & m["claim_neg"].astype(bool)).any()
     ct1 = pd.crosstab(m["conv_call"], m["cert_call"])
     conv_pos_any = int((m["conv_call"] != "none").sum())
     conv_pos_not_cert = int(((m["conv_call"] != "none") & (m["cert_call"] == "none")).sum())
@@ -135,23 +145,15 @@ def main() -> None:
         inst_col = "inside"
         e["instable"] = ~e[inst_col].astype(bool)
         key = ["pair", "region"]
+        # the certificate set of record is the claim layer of that leg
+        merged = e.merge(
+            pd.read_csv(p(SOURCES[CLAIM_FOR[section]]))[key + ["claim_pos", "claim_neg"]],
+            on=key, how="left", validate="1:1")
+        assert merged["claim_pos"].notna().all(), f"{section}: claim layer does not cover the leg"
+        merged["certified"] = (merged["claim_pos"].astype(bool)
+                               | merged["claim_neg"].astype(bool))
         if section == "breast_s6":
-            # s6's coverage file has no verdict columns; merge from the final CSV and
-            # assert the certified set is empty (frozen rule).
-            f = pd.read_csv(p(sf))
-            merged = e.merge(f[key + ["certified_pos_matched", "certified_neg_matched"]],
-                             on=key, how="left")
-            merged["certified"] = (merged["certified_pos_matched"].astype(bool)
-                                   | merged["certified_neg_matched"].astype(bool))
             assert merged["certified"].sum() == 0, "frozen rule violated: s6 certified rows exist"
-        elif section == "breast":
-            merged = e.copy()
-            merged["certified"] = (merged["certified_pos_matched"].astype(bool)
-                                   | merged["certified_neg_matched"].astype(bool))
-        else:
-            merged = e.copy()
-            merged["certified"] = (merged["cert_pos_final"].astype(bool)
-                                   | merged["cert_neg_final"].astype(bool))
         a = int((merged["certified"] & merged["instable"]).sum())
         b = int((merged["certified"] & ~merged["instable"]).sum())
         c = int((~merged["certified"] & merged["instable"]).sum())
