@@ -1,10 +1,10 @@
-"""B03: exhaustive small-instance check of the flow ends and the attainment criteria.
+"""Exhaustive small-instance check of the flow ends and the attainment criteria.
 
 The three sections exercise the construction on real data but cannot check it against the
 definition of the uncertainty set on instances small enough to enumerate: the signature
-contraction, the shared budgets and the joint-attainment criterion. This script does that. It
+contraction. the shared budgets and the joint-attainment criterion. This script does that. It
 draws random tiny
-instances (a handful of cells, a handful of movable transcripts, two genes with possibly
+instances (a handful of cells. a handful of movable transcripts, two genes with possibly
 equal, overlapping or disjoint counted sets), enumerates every feasible assignment in the
 declared set, and compares:
 
@@ -16,7 +16,7 @@ declared set, and compares:
                              against  D_LR == D_L + D_R
 
 The assignment model is the one Definition 2 states, with nothing added: a movable transcript
-stays, drops to the extracellular compartment, or moves to any cell of its donor set; departures
+stays, drops to the extracellular compartment, or moves to any cell of its donor set, departures
 from a cell are capped by its loss budget and arrivals into a cell by its gain budget, and both
 budgets are properties of the cell, so the two genes compete for them. Counted sets are per
 gene. A transcript whose source already lies in its own counted set is excluded from the flow,
@@ -27,7 +27,7 @@ vectorised construction in b03_exact_end.py, so agreement is evidence about the 
 and not about a shared bug.
 
 Usage:  python src/b03_enumerate_check.py [n_instances]
-Writes: results/enumeration_check.json
+Writes: results/breast/enumeration_check.json
 """
 import itertools
 import json
@@ -280,7 +280,7 @@ def main():
     stats["seed"] = 20261024
     stats["max_cells"] = 5
     stats["max_movable_transcripts"] = 5
-    with open(os.path.join(ROOT, "results", "enumeration_check.json"), "w",
+    with open(os.path.join(ROOT, "results", "breast", "enumeration_check.json"), "w",
               newline="\n") as fh:
         json.dump(stats, fh, indent=1, sort_keys=True)
     print(json.dumps(stats, indent=1, sort_keys=True))

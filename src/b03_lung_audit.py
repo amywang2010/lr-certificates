@@ -1,6 +1,6 @@
-"""B03 Phase 5 (step A): dataset arrival audit against the frozen gates.
+"""Dataset arrival audit for the lung section.
 
-Runs the moment the zip lands. Zero statistics, zero assumptions:
+Run on arrival of the archive. The checks:
   1. Zip CRC integrity on all members.
   2. Panel audit: which of the 25 pairs have BOTH genes in
      gene_panel.json -> the mechanical testable-pair subset (every exclusion
@@ -8,7 +8,7 @@ Runs the moment the zip lands. Zero statistics, zero assumptions:
   3. Schema audit: file formats, parquet columns, transcript header, dumped
      as facts.
 
-Importable (main(zip_path, out_path)); executable directly with defaults.
+Importable (main(zip_path, out_path)), executable directly with defaults.
 Exit code 1 on integrity failure (zip corrupt, needed member missing).
 """
 import gzip

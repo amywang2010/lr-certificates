@@ -1,4 +1,4 @@
-"""B03 Step 1: Load raw molecules and vendor segmentation; build uncertainty-set primitives.
+"""Load raw molecules and vendor segmentation, and build the uncertainty-set primitives.
 
 Construction:
 - Polygons from a sorted vertex table (groupby), not per-cell masks.
@@ -25,7 +25,8 @@ from shapely.geometry import Polygon
 from scipy.spatial import cKDTree
 import json, os, pickle, time
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, "data")
 QV_MIN = 20.0
 BAND_UM = 3.0
 DONOR_RADIUS_UM = 2 * BAND_UM
@@ -92,7 +93,7 @@ def assign_pip(tx, polys):
 
     tree.query(points, predicate='intersects') returns (input_idx, tree_idx) pairs.
     A point 'intersects' a polygon iff contained (boundary inclusive). Points on shared
-    boundaries may match 2 polygons -> keep first (documented; affects a negligible
+    boundaries may match 2 polygons -> keep first (documented, affects a negligible
     molecule fraction, verified by the concordance gate downstream).
     """
     t0 = time.time()
@@ -234,7 +235,7 @@ def boundary_and_band(tx, polys):
     return dist.astype(np.float32), band, tree, edge_cell
 
 def donor_sets_for_band_tested(tx, band, tree, edge_cell):
-    """Donor candidate sets ONLY for band transcripts of tested genes (bounded work)."""
+    """Donor candidate sets for band transcripts of tested genes only, which bounds the work."""
     t0 = time.time()
     feat = tx.feature_name.to_numpy()
     is_tested = np.isin(feat, TESTED_GENES)
@@ -259,15 +260,16 @@ def main():
     print(f"polygon stage done ({time.time()-t0:.0f}s cumulative)", flush=True)
     owner = assign_pip(tx, polys)
     conc = verify_concordance(tx, owner, cid_map)
-    with open(f"{DATA}/concordance.json", "w") as f:
+    os.makedirs(os.path.join(ROOT, "preprocessing"), exist_ok=True)
+    with open(os.path.join(ROOT, "preprocessing", "concordance.json"), "w") as f:
         json.dump(conc, f, indent=2)
-    # DIAGNOSIS-driven gate (see concordance_diagnosis.json for evidence):
-    # order identical, per-gene Pearson ~0.99, deltas small -> benign boundary semantics.
-    # The strict per-cell equality rate is NOT the right gate for that well-understood
-    # discrepancy class; correlation + total ratio + order are.
+    # The gate follows preprocessing/concordance_diagnosis.json: cell order is
+    # identical, per-gene Pearson is near 0.99 and the per-cell deltas are small,
+    # so the disagreement comes from boundary semantics. Per-cell equality is a
+    # weak measure of that, and correlation, total ratio and order carry the check.
     gate = (conc["concordance_per_cell"] >= 0.90 and
             conc.get("total_ratio", 0) >= 0.97)
-    print(f"concordance gate (diagnosis-informed): per_cell={conc['concordance_per_cell']:.4f} "
+    print(f"concordance gate: per_cell={conc['concordance_per_cell']:.4f} "
           f"total_ratio={conc.get('total_ratio', 0):.4f} -> "
           f"{'PASS' if gate else 'FAIL, investigate'}", flush=True)
     cells_meta = pq.read_table(

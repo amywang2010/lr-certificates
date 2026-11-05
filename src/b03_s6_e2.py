@@ -1,8 +1,8 @@
-"""B03 Phase 7 (step B): E2 cross-segmentation coverage, Proseg replication on s6.
+"""Cross-segmentation coverage E2: Proseg replication on the second breast section.
 
-Faithful port of b03_phase5_e2.py (fixture-validated machinery) with:
+Port of b03_phase5_e2.py with:
   - crop paths (workspace xenium_breast_s6/crop/data, xenium_breast_s6/crop/proseg_out)
-  - 10 vendor-evaluable pairs / 30 rows; frozen TYPE_MAP/RECV_MAP (imported)
+  - 10 vendor-evaluable pairs / 30 rows, fixed TYPE_MAP/RECV_MAP (imported)
   - marker centroids from vendor_markers.npz (phase-2-space targets)
   - Endpoints: the certified-set primary endpoint is UNDEFINED at 0
     certified rows, so the replacements are (a) interval coverage on all 30
@@ -31,7 +31,7 @@ t0 = time.time()
 tested = sorted({g for p in PAIRS for g in p})
 gidx = {g: i for i, g in enumerate(tested)}
 
-# ---------- frozen vendor-side artifacts ----------
+# ---------- fixed vendor-side artifacts ----------
 vm = np.load(f"{D}/vendor_markers.npz", allow_pickle=True)
 centroids = vm["centroids"].astype(np.float64)
 type_names = [str(t) for t in vm["type_names"]]
@@ -159,7 +159,7 @@ cell_slot = regions * n_slots + np.array(
 rows = []
 n_type_absent = 0
 # The E2 universe is the 30 vendor-evaluable rows in scout_bounds.csv
-# (the 8 Myeloid-dependent pairs are vendor-side absent by the frozen class floor and are not
+# (the 8 Myeloid-dependent pairs are vendor-side absent by the fixed class floor and are not
 # part of any endpoint on this leg).
 for _, r in b.iterrows():
     Lg, Rg = r.pair.split("->")
@@ -209,8 +209,8 @@ summary = dict(
     sign_agreement_all_rows=f"{sign_agree_all}/{n_eval}",
     proseg_side_type_absent_rows=n_type_absent,
 )
-out.to_csv(f"{D}/phase7_e2_coverage.csv", index=False)
-with open(f"{D}/phase7_e2_summary.json", "w") as f:
+out.to_csv(f"{ROOT}/coverage/breast_s6_phase7_e2_coverage.csv", index=False)
+with open(f"{ROOT}/coverage/breast_s6_phase7_e2_summary.json", "w") as f:
     json.dump(summary, f, indent=2)
 print(json.dumps(summary, indent=2), flush=True)
 print("PHASE7 E2 COMPLETE", flush=True)

@@ -1,24 +1,30 @@
-"""B03: exact interval ends, by max flow on the contracted cell-level network.
+"""Exact interval ends by max flow on the contracted cell-level network.
 
-The shipped construction reports two sound upper bounds on the positive end:
+Three upper bounds on the positive end appear in the artefacts:
 
-  count  dmax_bin = #{movable g-transcripts outside C with a donor in C}      O(1) per gene
-  sum    dmax_cap = min(dmax_bin, sum_{d in C} min(pot_d, gain_cap_d))       O(|C|) per gene
+  count  dmax_bin = #{movable g-transcripts outside C with a donor in C}       O(1) per gene
+  capped dmax_cap = min(dmax_bin, sum_{d in C} min(pot_d, gain_cap_d))        O(|C|) per gene
+  reported       = the vectorized donor-slot count in results/breast/scout_bounds.csv
 
-Both ignore that a transcript that would gain also consumes its source cell's
-loss budget, and that the sum bound counts donor slots of transcripts already
-inside C.  The exact end is
+pot_d counts donor slots of gene g that point to cell d, including slots of
+transcripts already in C, so the capped bound refines the count only when the
+per-cell gain caps bite. On breast they do not, and the two agree on all 150
+gene-ends. The reported count reads donor slots through a vectorized reduction
+that can credit one transcript once for each eligible donor, so it sits above
+the count bound by at most 0.722 log2 on the 75 tests. All three ignore that a
+transcript that would gain also consumes its source cell's loss budget. The
+exact end is
 
   nu+ = max flow  source -> s (cap loss_cap_s) -> d (cap n_g(s,d)) -> sink (cap gain_cap_d)
 
-over cells rather than molecules: transcripts sharing (s, d) are interchangeable,
+over cells. Transcripts sharing (s, d) are interchangeable,
 so parallel unit arcs merge into one arc of capacity equal to their count.  The
 network therefore has O(|dC|) nodes and O(d|dC|) arcs, independent of the number
 of molecules.  The negative end has the closed form dmin = -sum_{s in C} min(a_s,
 loss_cap_s), because dropping to the extracellular compartment is always
 admissible and uncapped.
 
-Writes results/exact_end.csv and results/exact_end_summary.json.
+Writes results/breast/exact_end.csv and results/breast/exact_end_summary.json.
 
 Usage:  python src/b03_exact_end.py            (DATA from ../data)
         B03_DATA=/path/to/data python src/b03_exact_end.py
@@ -36,7 +42,7 @@ from scipy.sparse.csgraph import maximum_flow
 EPS = 0.5
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.environ.get("B03_DATA", os.path.join(ROOT, "data"))
-OUT = os.path.join(ROOT, "results")
+OUT = os.path.join(ROOT, "results", "breast")
 SEED = None  # no randomness in this check
 
 POSITIVE_CONTROLS = [("CD274", "PDCD1"), ("CXCL12", "CXCR4"), ("CCL5", "CCR7"),
@@ -79,7 +85,7 @@ def load():
     labels = np.load(os.path.join(DATA, "labels.npy"), allow_pickle=True).astype(str)
     regions = np.load(os.path.join(DATA, "regions.npy"), allow_pickle=True).astype(np.int64)
     # cells_meta.parquet is in barcode order; every per-cell array downstream is in
-    # polygon-index order, so remap exactly as b03_scout.py does before any cap is read.
+    # polygon-index order, so remap as b03_scout.py does before any cap is read.
     cm = pd.read_parquet(os.path.join(DATA, "cells_meta.parquet"),
                          columns=["cell_id", "transcript_counts"])
     cid_map = {str(k): int(v) for k, v in dm["cid_map"].items()}
@@ -152,11 +158,15 @@ def exact_positive(mov_idx, mov_cell, donor_ptr, donor_flat, target_mask,
     rows, cols, caps = [], [], []
     for c in src_cells:
         cap = int(loss_cap[c]) if c >= 0 else int(gcnt.sum())  # extracellular: uncapped
-        rows.append(S); cols.append(off_src + smap[int(c)]); caps.append(cap)
+        rows.append(S)
+        cols.append(off_src + smap[int(c)])
+        caps.append(cap)
     for gi in range(ng):
         s_ = smap[int(gsig[gi, 0])]
         n_i = int(gcnt[gi])
-        rows.append(off_src + s_); cols.append(off_grp + gi); caps.append(n_i)
+        rows.append(off_src + s_)
+        cols.append(off_grp + gi)
+        caps.append(n_i)
         for d_ in gsig[gi, 1:]:
             if d_ < 0:
                 break
@@ -164,7 +174,8 @@ def exact_positive(mov_idx, mov_cell, donor_ptr, donor_flat, target_mask,
             cols.append(off_dst + tmap[int(d_)])
             caps.append(n_i)
     for c in dests:
-        rows.append(off_dst + tmap[int(c)]); cols.append(T)
+        rows.append(off_dst + tmap[int(c)])
+        cols.append(T)
         caps.append(int(gain_cap[c]))
     graph = csr_matrix((np.array(caps, np.int64), (np.array(rows), np.array(cols))),
                        shape=(n_nodes, n_nodes))
@@ -194,8 +205,10 @@ def exact_positive(mov_idx, mov_cell, donor_ptr, donor_flat, target_mask,
         if int(out_group.sum()) != nu:
             w_ok = False
 
-    # shipped sum bound: sum over counted cells of min(donor slots, gain cap);
-    # pot counts every donor slot of this gene, including transcripts already in C
+    # capped count: sum over counted cells of min(donor slots, gain cap), clamped by
+    # the per-transcript count; pot counts every donor slot of this gene, including
+    # transcripts already in C.  On breast the cap never binds, so the clamp decides
+    # and the column equals the per-transcript count on all 150 gene-ends.
     pot_all = np.bincount(dcell_all, minlength=n_cells) if len(dcell_all) else \
         np.zeros(n_cells, np.int64)
     dmax_sum = int(np.minimum(pot_all[target_mask], gain_cap[target_mask]).sum())

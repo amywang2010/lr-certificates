@@ -1,16 +1,19 @@
-"""B03 Phase 7 step 2: coordinate transform + frozen expression-blind crop.
+"""Coordinate transform and expression-blind crop for the second breast section.
 
-Per the frozen second-section configuration (frozen):
+Configuration:
   1. Parse the registered transform scale from the zip's points/st/.zattrs
-     (expected 1/0.2125 = 4.705882352941177, the Xenium pixel size); apply to
+     (expected 1/0.2125 = 4.705882352941177, the Xenium pixel size)
+     apply to
      transcript and polygon coordinates ONCE, writing micrometer crop files.
   2. Coordinate-frame assertions BEFORE window selection: transcript extent inside
-     polygon extent; estimated section area of order tens of mm^2.
-  3. Window rule VERBATIM from b03_lung_crop.py (frozen): 3.5 mm window, 0.5 mm
-     grid, upper-median vendor-cell count, lexicographic tie-break, centroid
-     geometry ONLY (no expression access).
+     polygon extent, estimated section area of order tens of mm^2.
+  3. Window rule from b03_lung_crop.py (fixed): 3.5 mm window, 0.5 mm
+     grid, upper-median vendor-cell count, lexicographic tie-break, from
+     centroid geometry alone.
   4. Crop extraction mirroring b03_lung_crop_extract.py: transcripts filtered to
-     the window; polygons of in-window cells; measured-count envelope gate
+     the window
+     polygons of in-window cells
+     measured-count envelope gate
      (270 B/tx <= 7.0 GB) before any proseg launch.
 Outputs -> the workspace xenium_breast_s6/crop/ dir: {transcripts.parquet,cell_boundaries.parquet,
 nucleus_boundaries.parquet,cells_meta.parquet} and s6_crop_window.json,
@@ -37,7 +40,7 @@ def log(d):
 
 def registered_scale():
     """Parse and validate the transform, but do not apply it to the
-    analysis frame. The zarr stores points and shapes in MICROMETERS; the stored
+    analysis frame. The zarr stores points and shapes in MICROMETERS. the stored
     scale 1/0.2125 = 4.7059 maps um -> IMAGE PIXELS for H&E alignment. Applying it
     to the analysis frame inflated polygon area 22.1x (956 mm^2 against 43.2 mm^2 raw),
     caught by the frame assertion before any data was written. Analysis uses the
@@ -58,7 +61,7 @@ def registered_scale():
     s = scales[0]
     assert abs(s[0] - 1 / 0.2125) < 1e-9 and abs(s[1] - 1 / 0.2125) < 1e-9, \
         f"unexpected scale {s}"
-    return float(s[0])  # recorded in outputs; NOT applied
+    return float(s[0])  # recorded in the outputs, already in um
 
 def main():
     t0 = time.time()
@@ -72,13 +75,19 @@ def main():
     wkbs = cb.column("geometry").to_pylist()
     geoms = from_wkb(list(wkbs))
     n = len(geoms)
-    cx = np.empty(n); cy = np.empty(n); areas = np.empty(n); nvert = np.empty(n, dtype=np.int64)
+    cx = np.empty(n)
+    cy = np.empty(n)
+    areas = np.empty(n)
+    nvert = np.empty(n, dtype=np.int64)
     for i, g in enumerate(geoms):
         xy = np.asarray(g.exterior.coords)
         nvert[i] = len(xy)
-        cx[i] = xy[:, 0].mean(); cy[i] = xy[:, 1].mean()
+        cx[i] = xy[:, 0].mean()
+        cy[i] = xy[:, 1].mean()
         areas[i] = g.area
-    cx = cx * scale; cy = cy * scale; areas = areas * scale * scale
+    cx = cx * scale
+    cy = cy * scale
+    areas = areas * scale * scale
     xs_min = float(min(g.bounds[0] for g in geoms)) * scale
     xs_max = float(max(g.bounds[2] for g in geoms)) * scale
     ys_min = float(min(g.bounds[1] for g in geoms)) * scale
@@ -92,13 +101,17 @@ def main():
 
     # coordinate-frame assertion via transcript extent (columns only, then scale)
     tx0 = pq.ParquetFile(os.path.join(EXT, "transcripts_parts", "part.0.parquet"))
-    xmin_t = ymin_t = np.inf; xmax_t = ymax_t = -np.inf
+    xmin_t = ymin_t = np.inf
+    xmax_t = ymax_t = -np.inf
     for i in range(16):
         t = pq.read_table(os.path.join(EXT, "transcripts_parts", f"part.{i}.parquet"),
                           columns=["x", "y"])
-        x = t.column("x").to_numpy() * scale; y = t.column("y").to_numpy() * scale
-        xmin_t = min(xmin_t, float(x.min())); xmax_t = max(xmax_t, float(x.max()))
-        ymin_t = min(ymin_t, float(y.min())); ymax_t = max(ymax_t, float(y.max()))
+        x = t.column("x").to_numpy() * scale
+        y = t.column("y").to_numpy() * scale
+        xmin_t = min(xmin_t, float(x.min()))
+        xmax_t = max(xmax_t, float(x.max()))
+        ymin_t = min(ymin_t, float(y.min()))
+        ymax_t = max(ymax_t, float(y.max()))
     # Axis-orientation check (direction corrected pre-crop): cell polygons lie
     # where molecules are, not the reverse: polygons cover only tissue while the
     # capture area includes acellular space. Tolerance 5 um: catches frame errors
@@ -124,7 +137,7 @@ def main():
          "est_area_mm2": est_area_mm2, "t": time.time() - t0})
     print("coordinate-frame assertions passed", flush=True)
 
-    # frozen window rule on centroid geometry ONLY
+    # fixed window rule on centroid geometry
     cands = []
     x0 = 0.0
     while x0 + WIN <= xmax_t + GRID:
@@ -146,7 +159,7 @@ def main():
                "n_candidates": len(cands),
                "section_tx_extent": [xmin_t, xmax_t, ymin_t, ymax_t],
                "est_section_area_mm2": est_area_mm2, "scale": scale,
-               "rule": "b03_lung_crop.py verbatim (3.5mm, 0.5mm grid, upper-median, lex tie)"},
+               "rule": "shared crop rule: 3.5 mm window on a 0.5 mm grid, upper median, lexicographic tie-break"},
               open(os.path.join(RESEARCH, "xenium_breast_s6", "s6_crop_window.json"), "w"),
               indent=1)
 
@@ -184,7 +197,7 @@ def main():
         "vertex_count": nvert[idx_keep],
     })
     cells_meta.to_parquet(os.path.join(CROP, "cells_meta.parquet"), index=False)
-    # WKB crop files (verbatim geometry, scaled)
+    # WKB crop files (same geometry, scaled)
     for name in ("cell_boundaries", "nucleus_boundaries"):
         b = pq.read_table(os.path.join(EXT, "boundaries", f"{name}.parquet"))
         bidx = b.column("__index_level_0__").to_pylist()

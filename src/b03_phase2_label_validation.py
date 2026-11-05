@@ -1,12 +1,13 @@
 """Label-transfer accuracy validation (2-fold CV on vendor cells).
 
-How accurate is nearest-centroid cosine label transfer in the frozen marker space? Estimated by 2-fold CV on VENDOR
-cells, whose labels are the scout's marker-vote labels (the same source the centroids
-were built from). Reports overall + per-type accuracy and the confusion structure.
+Estimates the accuracy of nearest-centroid cosine label transfer in the fixed
+marker space by 2-fold cross-validation on vendor cells, whose labels are the
+scout's marker-vote labels and therefore the source of the centroids. Reports
+overall and per-type accuracy with the confusion structure.
 
-Uses the frozen transform constants from vendor_markers.npz (scale, marker panel,
-centroids) so the validated classifier is EXACTLY the one applied to Proseg cells.
-The h5 read repeats the layout logic of b03_phase2_vendor_prep.py (deterministic).
+The transform constants come from vendor_markers.npz (scale, marker panel,
+centroids), so the validated classifier is the one applied to Proseg cells. The
+h5 read repeats the layout logic of b03_phase2_vendor_prep.py.
 """
 
 import numpy as np
@@ -109,8 +110,8 @@ for a, b, c, n in top_conf[:8]:
     print(f"  {a} -> {b}: {c}/{n}")
 
 out = pd.DataFrame(conf, index=type_names, columns=type_names)
-out.to_csv(os.path.join(ROOT, "results", "phase2_label_transfer_cv_confusion.csv"))
-with open(os.path.join(ROOT, "results", "phase2_label_transfer_cv.json"), "w") as f:
+out.to_csv(os.path.join(ROOT, "coverage", "phase2_label_transfer_cv_confusion.csv"))
+with open(os.path.join(ROOT, "coverage", "phase2_label_transfer_cv.json"), "w") as f:
     import json
     json.dump(dict(accuracy_2fold_cv=acc, n_eval=int(eval_mask.sum()),
                    n_types=len(type_names), transform="frozen from vendor_markers.npz"),

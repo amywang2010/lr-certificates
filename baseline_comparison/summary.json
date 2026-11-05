@@ -1,5 +1,5 @@
 {
- "protocol": "conventional co-expression permutation baseline vs two-layer certificates; descriptive cross-tabs (paper Table 1)",
+ "protocol": "conventional co-expression permutation baseline against the selection-charged claims, descriptive cross-tabs (paper Table 1)",
  "comparison1": {
   "n": 75,
   "conventional_calls_any": 73,
@@ -71,7 +71,7 @@
    "or_lo95": 0.2502,
    "or_hi95": 100.8467,
    "zero_cell_corrected": true,
-   "source": "results/phase2_proseg_coverage.csv"
+   "source": "coverage/phase2_proseg_coverage.csv"
   },
   {
    "section": "lung",
@@ -87,7 +87,7 @@
    "or_lo95": 0.32,
    "or_hi95": 45.9173,
    "zero_cell_corrected": false,
-   "source": "lung/phase5_e2_coverage.csv"
+   "source": "coverage/phase5_e2_coverage.csv"
   },
   {
    "section": "breast_s6",
@@ -103,7 +103,7 @@
    "or_lo95": null,
    "or_hi95": null,
    "zero_cell_corrected": true,
-   "source": "breast_s6/phase7_e2_coverage.csv"
+   "source": "coverage/breast_s6_phase7_e2_coverage.csv"
   },
   {
    "section": "pooled",
@@ -119,7 +119,7 @@
    "or_lo95": 0.661,
    "or_hi95": 14.2806,
    "zero_cell_corrected": false,
-   "source": "phase2_proseg_coverage.csv + phase5_e2_coverage.csv + phase7_e2_coverage.csv"
+   "source": "coverage/phase2_proseg_coverage.csv + coverage/phase5_e2_coverage.csv + coverage/breast_s6_phase7_e2_coverage.csv"
   }
  ]
 }

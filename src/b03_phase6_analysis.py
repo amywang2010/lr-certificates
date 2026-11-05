@@ -1,6 +1,6 @@
-"""B03 Phase 6 analysis: b10k checkpoints -> p/q CSVs + verdict-stability check.
+"""B=10,000 checkpoint analysis: p and q tables and the verdict-stability check.
 
-Conventions (the frozen high-B configuration, identical across the runs):
+Conventions (the fixed high-B configuration, identical across the runs):
   p_pos = (1 + #{T_lo^(b) >= T_lo_obs}) / (B+1);  p_neg = (1 + #{T_hi^(b) <= T_hi_obs}) / (B+1)
   BH within region over the pair family, q <= 0.10.
   Verdict: certified_pos = T_lo_obs > 0 AND q_pos <= 0.10;
@@ -25,13 +25,13 @@ import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
-RES = os.path.join(ROOT, "results")
-LUN = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
+RES = os.path.join(ROOT, "provenance")
+LUN = os.path.join(ROOT, "results", "lung")
 B = 10000
 
 TISSUES = {
     "lung": dict(
-        out_dir=f"{LUN}/b10k",
+        out_dir=f"{RES}/b10k_lung",
         bounds_csv=f"{LUN}/scout_bounds.csv",
         sealed_csv=f"{LUN}/scout_final_lung.csv",
         p_cols=("p_pos_ref", "p_neg_ref"),
@@ -40,8 +40,8 @@ TISSUES = {
     ),
     "breast": dict(
         out_dir=f"{RES}/b10k_breast",
-        bounds_csv=f"{RES}/scout_bounds.csv",
-        sealed_csv=f"{RES}/scout_final_matched.csv",
+        bounds_csv=f"{ROOT}/results/breast/scout_bounds.csv",
+        sealed_csv=f"{ROOT}/results/breast/scout_final_matched.csv",
         p_cols=("p_pos_raw", "p_neg_raw"),
         q_cols=("q_pos", "q_neg"),
         cert_cols=("certified_pos_matched", "certified_neg_matched"),
@@ -139,8 +139,8 @@ def main():
               f"neg {s['n_cert_neg_sealed']}->{s['n_cert_neg_b10k']}, "
               f"flips={s['verdict_flips_vs_b1000']} {s['flips_pos'] + s['flips_neg']}")
 
-    os.makedirs(f"{RES}/phase6", exist_ok=True)
-    with open(f"{RES}/phase6/phase6_summary.json", "w") as fh:
+    os.makedirs(f"{RES}", exist_ok=True)
+    with open(f"{RES}/high_permutation_summary.json", "w") as fh:
         json.dump(results, fh, indent=1)
 
     if flips_total > 0:

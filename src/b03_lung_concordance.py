@@ -1,4 +1,4 @@
-"""B03 Phase 5: vendor-assignment concordance against the frozen cross-platform configuration gate.
+"""Vendor-assignment concordance for the lung section.
 
 Verifies that per-cell per-gene counts derived from transcripts.parquet (cell_id
 barcodes) match the vendor's cell_feature_matrix.h5 on a random 30-gene subset.
@@ -6,7 +6,8 @@ barcodes) match the vendor's cell_feature_matrix.h5 on a random 30-gene subset.
 XOA 3.0 schema facts (verified from the file, not assumed):
   - cell_id is a STRING BARCODE; unassigned = 'UNASSIGNED' (17.5% of rows,
     consistent with metrics fraction_transcripts_assigned = 0.8201).
-  - h5 shape is [features, cells] = [10029, 278328]; gene row i -> counts H[i, :].
+  - h5 shape is [features, cells] = [10029, 278328]
+  gene row i -> counts H[i, :].
   - h5 barcodes[] gives the column order.
 
 Memory architecture (v2): the naive single-pass to_pandas() hit ArrowMemoryError
@@ -26,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
 TX = os.path.join(WORKSPACE, "xenium_lung", "extracted", "transcripts.parquet")
 H5 = os.path.join(WORKSPACE, "xenium_lung", "extracted", "cell_feature_matrix.h5")
-OUT = os.path.join(ROOT, "results", "lung_concordance.csv")
+OUT = os.path.join(ROOT, "preprocessing", "lung_concordance.csv")
 SEED = 20260907
 N_TEST_GENES = 30
 UNASSIGNED = "UNASSIGNED"

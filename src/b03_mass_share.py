@@ -12,13 +12,13 @@ The tested genes are the union of the ligand and receptor genes of the ten pairs
 200-cell class floor leaves evaluable on the second section, imported from the shared
 configuration so the two legs cannot drift apart.
 
-Inputs (vendor molecule files, not redistributed; see the Data availability section of the
+Inputs (vendor molecule files, not redistributed, see the Data availability section of the
 README):
   - data/tx.parquet, the Rep1 molecule table written by b03_load.py (already QV >= 20)
-  - <workspace>/xenium_breast_s6/crop/transcripts.parquet, the frozen second-section crop
+  - <workspace>/xenium_breast_s6/crop/transcripts.parquet, the fixed second-section crop
     written by b03_s6_prep.py
 
-Output: results/tested_mass_share.json
+Output: results/breast/tested_mass_share.json
 """
 import json
 import os
@@ -31,7 +31,7 @@ from b03_lung_config import PAIRS  # noqa: E402  (shared, frozen pair family)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
-OUT = os.path.join(ROOT, "results")
+OUT = os.path.join(ROOT, "results", "breast")
 
 EVALUABLE_PAIRS = ["CDH1->EGFR", "CDH1->ERBB2", "ERBB2->EGFR", "ERBB2->PDCD1", "ESR1->PGR",
                    "MS4A1->CD274", "PECAM1->CTLA4", "PECAM1->KDR", "PECAM1->PDCD1",
@@ -66,7 +66,7 @@ def main():
     genes = tested_genes(EVALUABLE_PAIRS)
     assert len(genes) == 11, f"expected 11 tested genes, found {len(genes)}"
     assert set(genes) <= set(tested_genes(PAIRS)), \
-        "the evaluable pairs are not a subfamily of the frozen pair list"
+        "the evaluable pairs fall outside the frozen pair list"
 
     out = {
         "design": "tested-gene share of transcript mass on the two panel-density sections",
@@ -90,7 +90,7 @@ def main():
     with open(os.path.join(OUT, "tested_mass_share.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, indent=2, sort_keys=True)
         f.write("\n")
-    print("wrote results/tested_mass_share.json", flush=True)
+    print("wrote results/breast/tested_mass_share.json", flush=True)
 
 
 if __name__ == "__main__":

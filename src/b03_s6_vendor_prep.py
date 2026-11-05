@@ -1,11 +1,13 @@
-"""B03 Phase 7 (step A): vendor-side label-transfer targets for breast_s6.
+"""Vendor-side label-transfer targets for the second breast section.
 
 Marker space: crop is_gene vocabulary minus the 17 tested LR genes
 (the phase2 tissue-1 definition). Rationale: the phase5
-9-gene dictionary yields scale = 0 on s6, collapsing the transform; the
+9-gene dictionary yields scale = 0 on s6, collapsing the transform
+the
 phase2 design anticipated this and carries the signal assertion
 (C>0).mean() > 0.99, restored here. Transform identical to sealed legs:
-x = log1p((M/C)*scale), scale = median vendor cell marker total; centroids =
+x = log1p((M/C)*scale), scale = median vendor cell marker total
+centroids =
 mean of x over vendor cells of each surviving class (Myeloid absent
 as specified). Sparse accumulation throughout (n_cells x ~5k markers).
 Outputs the s6 crop data dir's vendor_markers.npz.

@@ -1,20 +1,21 @@
-"""B03 Phase 7 (step F): corrected-rule re-derivation of the s6 certified intervals.
+"""Re-derivation of the second breast section intervals under the corrected rule.
 
 Extends the independent re-derivation (corrected per-gene-slot rule,
-Phase 9 builder) to the third leg. Reuses the CorrectedBounds machinery by import; the
+Phase 9 builder) to the third leg. Reuses the CorrectedBounds machinery by import. the
 only behavioral difference is that the capacity-capped gain-cap formula is allowed to
-bind here (it binds on s6; the Phase 9 assert is breast/Rep1-specific, where caps never
+bind here (it binds on s6. the Phase 9 assert is breast/Rep1-specific, where caps never
 bind, released capacity_check.json), with binding recorded per row.
 
-Checks, the same four as on the first two tissues:
+Checks. the same four as on the first two tissues:
   R1. aggregate counts (nL, nR, nl_cells, nr_cells) reproduce scout_bounds.csv
       bit-exactly on every row;
   R2. loss ends (dmin) identical to sealed on every row/gene (exact by
-      construction; verified, not assumed);
+      construction
+      verified, not assumed)
   R3. corrected intervals are contained in the sealed intervals row-wise
       (superset soundness direction);
   R4. corrected interval verdicts (eps = 0.5) are a SUPERSET of the sealed
-      interval verdicts (monotonicity; verdict losses prohibited).
+      interval verdicts (monotonicity, verdict losses prohibited).
 
 Output: the s6 crop data dir's s6_tight_bounds_sensitivity.csv +
         s6_tight_bounds_summary.json
@@ -132,7 +133,8 @@ corr_pos = set(map(tuple, out.loc[out.T_lo_corr > 0, ["pair", "region"]].values.
 assert seal_neg <= corr_neg, f"negative verdict LOSS: {seal_neg - corr_neg}"
 assert seal_pos <= corr_pos, f"positive verdict LOSS: {seal_pos - corr_pos}"
 
-out.to_csv(f"{D}/s6_tight_bounds_sensitivity.csv", index=False)
+os.makedirs(f"{ROOT}/sensitivity", exist_ok=True)
+out.to_csv(f"{ROOT}/sensitivity/breast_s6_tight_bounds_sensitivity.csv", index=False)
 summary = dict(
     rows=len(out),
     loss_ends_identical=True,
@@ -147,7 +149,7 @@ summary = dict(
     median_width_corrected=float(out.width_corr.median()),
     width_tightening_pct=float(100 * (1 - out.width_corr.median() / out.width_sealed.median())),
 )
-with open(f"{D}/s6_tight_bounds_summary.json", "w") as f:
+with open(f"{ROOT}/sensitivity/breast_s6_tight_bounds_summary.json", "w") as f:
     json.dump(summary, f, indent=2)
 print(json.dumps(summary, indent=2), flush=True)
 print("S6 CORRECTED RE-DERIVATION COMPLETE", flush=True)

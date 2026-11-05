@@ -1,13 +1,16 @@
-"""B03 Phase 5: lung-crop matched robust permutation null, re-pointed.
+"""Matched permutation null for the lung crop.
 
-Drives b03_matched_null by import with the frozen tissue-2 configuration:
-  - DATA/OUT -> the workspace xenium_lung/crop/data directory (env B03_NULL_DATA/B03_NULL_OUT; env so the
-    spawned workers inherit the same module configuration)
-  - seed 20260907 -> per-perm seeds 20260907+100003+p (frozen)
-  - frozen TYPE_MAP/RECV_MAP and the 18 testable pairs (parent-side globals)
-  - B03_NULL_CAP=1: capacity-capped dmax, ONE formula with the certify step
-Label counts are verified against label_counts.json (written here from the
-b03_lung_load outputs; the null asserts an exact match before any permutation runs).
+Drives b03_matched_null by import with the lung configuration:
+  - DATA and OUT point at the crop prepared by b03_lung_load.py and
+    results/lung, passed through the environment so spawned workers inherit
+    the same module configuration
+  - seed 20260907, so permutation p uses 20260907 + 100003 + p
+  - the lung TYPE_MAP and RECV_MAP and the 18 testable pairs, set as
+    parent-side globals
+  - B03_NULL_CAP=1, which applies the capacity-capped dmax with the same
+    formula as the certify step
+Label counts are checked against label_counts.json, written by b03_lung_load.py,
+before any permutation runs.
 """
 import os, sys, json
 import numpy as np
@@ -17,7 +20,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
 os.environ["B03_NULL_SEED"] = "20260907"
 os.environ["B03_NULL_DATA"] = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
-os.environ["B03_NULL_OUT"] = os.path.join(WORKSPACE, "xenium_lung", "crop", "data")
+os.environ["B03_NULL_OUT"] = os.path.join(ROOT, "results", "lung")
 os.environ["B03_NULL_CAP"] = "1"
 os.environ["B03_NULL_B"] = "1000"
 os.environ["B03_NULL_WORKERS"] = "4"
@@ -48,7 +51,7 @@ def main():
     # label-count verification file (exact match asserted)
     labels = np.load(f"{D}/labels.npy", allow_pickle=True)
     vc = pd.Series(labels).value_counts().to_dict()
-    json.dump({k: int(v) for k, v in vc.items()}, open(f"{D}/label_counts.json", "w"))
+    json.dump({k: int(v) for k, v in vc.items()}, open(f"{os.environ['B03_NULL_OUT']}/label_counts.json", "w"))
     # parent-side configuration override (workers need only env-driven globals)
     v3.ALL_PAIRS = PAIRS
     v3.TYPE_MAP = TYPE_MAP

@@ -1,14 +1,14 @@
-"""B03: coupled interval ends for same-class pairs, and the tightness criterion.
+"""Coupled interval ends for same-class pairs, and the tightness criterion.
 
-Background.  For a pair whose sender and receiver classes differ, the two per-gene
+Background. For a pair whose sender and receiver classes differ. the two per-gene
 counts are driven by disjoint transcript sets and disjoint counted cell sets, so the
 per-gene optima are attained by *different* assignments and the separable interval
 
     T_lo = f(min N_L) + g(min N_R),   T_hi = f(max N_L) + g(max N_R)
 
-contains the attainable range without generally equalling it.  A same-class pair
+contains the attainable range without generally equalling it. A same-class pair
 (sender class = receiver class) shares one counted set C and one set of per-cell
-gains and losses, so a single assignment must serve both terms.  The separable end
+gains and losses, so a single assignment must serve both terms. The separable end
 is then only a bound, and whether it is attained depends on whether the two genes
 can take their budgets simultaneously.
 
@@ -18,9 +18,9 @@ What is computed here.
                  rho_LR  = max total inflow of both genes        (one max flow)
                  The separable upper end is attained if and only if
                  rho_LR = rho_L + rho_R: at total rho_LR the L-part is at most
-                 rho_L and the R-part at most rho_R, so both are saturated exactly
-                 when their sum is the total.  When the criterion fails no single
-                 assignment is known to attain both maxima; the module then reports
+                 rho_L and the R-part at most rho_R, so both are saturated
+                 when their sum is the total. When the criterion fails no single
+                 assignment is known to attain both maxima. the module then reports
                  the tightest value available under the two individual caps and the
                  joint total, which is still a sound interval end, together with the
                  measured distance from the separable value.
@@ -29,12 +29,12 @@ What is computed here.
                  D_LR   = sum_{s in C} min(a_L(s)+a_R(s), loss_cap_s)
                  Departures are cell-local and the extracellular compartment is
                  uncapped, so the L-first allocation attains (D_L, D_LR - D_L) and
-                 the R-first allocation attains (D_LR - D_R, D_R); every split
+                 the R-first allocation attains (D_LR - D_R, D_R). every split
                  between them is reached by transferring one unit at a time inside
-                 a cell, which is a witness, not an argument.  No flow is needed.
+                 a cell, which is a witness, not an argument. No flow is needed.
 
 Every reported value comes with a witness: the integral flow is read back and both
-budgets, both per-gene counts and every group capacity are re-checked; on the
+budgets, both per-gene counts and every group capacity are re-checked, on the
 departure side the allocation is built cell by cell and re-checked the same way.
 
 Writes, per leg, <leg>/coupled_end.csv, and the combined summary
@@ -100,14 +100,14 @@ def _lung_cfg():
 
 def legs():
     lp, lt, lr = _lung_cfg()
-    return [dict(tag="breast", data=BREAST_DATA, out=os.path.join(ROOT, "results"),
-                 rows=os.path.join(ROOT, "results", "scout_bounds.csv"),
+    return [dict(tag="breast", data=BREAST_DATA, out=os.path.join(ROOT, "results", "breast"),
+                 rows=os.path.join(ROOT, "results", "breast", "scout_bounds.csv"),
                  pairs=BREAST_PAIRS, tmap=BREAST_TYPE, rmap=BREAST_RECV),
-            dict(tag="lung", data=LUNG_DATA, out=os.path.join(ROOT, "lung"),
-                 rows=os.path.join(LUNG_DATA, "scout_bounds.csv"),
+            dict(tag="lung", data=LUNG_DATA, out=os.path.join(ROOT, "results", "lung"),
+                 rows=os.path.join(ROOT, "results", "lung", "scout_bounds.csv"),
                  pairs=lp, tmap=lt, rmap=lr),
-            dict(tag="s6", data=S6_DATA, out=os.path.join(ROOT, "breast_s6"),
-                 rows=os.path.join(S6_DATA, "scout_bounds.csv"),
+            dict(tag="s6", data=S6_DATA, out=os.path.join(ROOT, "results", "breast_s6"),
+                 rows=os.path.join(ROOT, "results", "breast_s6", "scout_bounds.csv"),
                  pairs=lp, tmap=lt, rmap=lr)]
 
 
@@ -183,7 +183,7 @@ def groups(d, gene, target, m=None):
 def build(segs, loss, gain):
     """Merged network: source -> source cell -> group -> destination cell -> sink.
 
-    segs is a list of (gene_index, signature matrix, group counts).  The gene index
+    segs is a list of (gene_index, signature matrix, group counts). The gene index
     is carried on the group node, which is what makes the two genes' shared cell
     budgets a single-commodity network: a unit of either gene consumes the same
     source loss budget and the same destination gain budget.
@@ -312,7 +312,9 @@ def departure_witness(aL, aR, capc, dL, dR):
         if can <= 0:
             continue
         take = int(min(can, need - moved))
-        outL[s] -= take; outR[s] += take; moved += take
+        outL[s] -= take
+        outR[s] += take
+        moved += take
     if moved != need:
         return False
     if int(outL.sum()) != dL or int(outR.sum()) != dR:
@@ -393,7 +395,7 @@ def main():
                 method, gap = "simultaneous", 0.0
             else:
                 # The criterion fails, so no single assignment is known to attain both
-                # per-gene maxima.  Report the tightest value any assignment can have
+                # per-gene maxima. Report the tightest value any assignment can have
                 # under the two individual caps and the joint total -- a sound upper
                 # bound on the attained maximum, hence a sound interval end -- and the
                 # distance between it and the separable value as the measured slack.
@@ -423,15 +425,15 @@ def main():
                 dep_witness = bool(departure_witness(aL, aR, capc, dL, dR))
             else:
                 # disjoint counted sets: shared loss budgets only at cells outside both,
-                # which no departure uses, so the ends separate exactly
+                # which no departure uses, so the ends separate
                 DLR = int(DL + DR)
                 coll_dep = 0
                 dL, dR = DL, DR
                 dep_witness = True
             T_lo_joint = t_log2(max(0, N0L - dL), max(0, N0R - dR), nls, nrs)
 
-            # per-transcript counts: the relaxation the paper reports, kept apart from
-            # the exact per-gene optima so that the two corrections are not conflated
+            # per-transcript counts: the O(|C|) refinement in Table S8.1b, kept apart
+            # from the exact per-gene optima so the two corrections stay separate
             cnt_bin_L = int(sl[1].sum())
             cnt_bin_R = int(sr[1].sum())
             T_hi_count = t_log2(N0L + cnt_bin_L, N0R + cnt_bin_R, nls, nrs)
@@ -457,8 +459,8 @@ def main():
                 slack_lo_flow=T_lo_flowsep - T_lo_joint,
                 slack_hi_count=T_hi_count - T_hi_joint,
                 dT_hi_sealed=T_hi_joint - T_sep_hi,
-                # Sealed Layer-A interval vs the joint (exact) interval: this is the
-                # counting/capacity refinement, not the effect of coupling.
+                # Reported interval against the joint (exact) interval, which mixes the
+                # counting and capacity refinements.
                 sign_changed_vs_sealed=bool(((T_lo_joint > 0) != (T_sep_lo > 0)) or
                                             ((T_hi_joint < 0) != (T_sep_hi < 0))),
                 # Coupling alone: joint endpoints against the separate-gene optima.

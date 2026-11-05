@@ -1,18 +1,18 @@
-"""B03 Phase 7: breast_s6 matched robust permutation null, re-pointed.
+"""Matched permutation null for the second breast section.
 
-Drives b03_matched_null by import with the frozen s6 configuration:
-  - DATA/OUT -> the workspace xenium_breast_s6/crop/data dir (env B03_NULL_DATA/B03_NULL_OUT; env so
+Drives b03_matched_null by import with the s6 configuration:
+  - DATA/OUT -> the workspace xenium_breast_s6/crop/data dir (env B03_NULL_DATA/B03_NULL_OUT, env so
     the spawned workers inherit the same module configuration)
-  - seed 20260907 -> per-perm seeds 20260907+100003+p (frozen)
-  - frozen TYPE_MAP/RECV_MAP and the 18 testable pairs (b03_lung_config as
-    shared by both legs; asserted equal to the lung driver's inline constants
-    by b03_s6_certify at certify time)
-  - B03_NULL_CAP=1: capacity-capped dmax, ONE formula with the certify step
-  - observed intervals are re-verified against scout_bounds.csv (1e-6) before any
-    permutation; type-absent pairs (Myeloid, dropped by the frozen minimum-class floor on
-    this crop) are absent from the s6 scout_bounds rows and hence from the key list.
-Label counts are verified against label_counts.json (written here from the
-b03_s6_load outputs; the null asserts an exact match before any permutation runs).
+  - seed 20260907 -> per-perm seeds 20260907+100003+p (fixed)
+  - the shared TYPE_MAP, RECV_MAP and 18-pair family from b03_lung_config, of
+    which the ten pairs without Myeloid cells give the 30 tests
+  - B03_NULL_CAP=1, which applies the capacity-capped dmax with the same
+    formula as the certify step
+  - observed intervals are re-verified against scout_bounds.csv (1e-6) before
+    any permutation. The eight pairs that lose a class to the 200-cell rule are
+    absent from those rows and so absent from the key list.
+Label counts are checked against label_counts.json, written by b03_s6_load.py,
+before any permutation runs.
 """
 import os, sys, json
 import numpy as np
@@ -23,7 +23,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
 os.environ["B03_NULL_SEED"] = "20260908"
 os.environ["B03_NULL_DATA"] = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "data")
-os.environ["B03_NULL_OUT"] = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "data")
+os.environ["B03_NULL_OUT"] = os.path.join(ROOT, "results", "breast_s6")
 os.environ["B03_NULL_CAP"] = "1"
 os.environ["B03_NULL_B"] = "10000"
 os.environ["B03_NULL_WORKERS"] = "4"
@@ -45,7 +45,7 @@ S6_D = os.environ["B03_NULL_DATA"]
 def main():
     labels = np.load(f"{S6_D}/labels.npy", allow_pickle=True)
     vc = pd.Series(labels).value_counts().to_dict()
-    json.dump({k: int(v) for k, v in vc.items()}, open(f"{S6_D}/label_counts.json", "w"))
+    json.dump({k: int(v) for k, v in vc.items()}, open(f"{os.environ['B03_NULL_OUT']}/label_counts.json", "w"))
     v3.ALL_PAIRS = PAIRS
     v3.TYPE_MAP = TYPE_MAP
     v3.RECV_MAP = RECV_MAP

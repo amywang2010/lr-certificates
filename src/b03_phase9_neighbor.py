@@ -4,42 +4,39 @@ The checks below are fixed in this script. Adjacency determinism is checked as t
 agreement on the same metric, since centroid-tree and polygon brute-force describe
 different geometries.
 
-Design (exactness-preserving):
-- Adjacency eligibility is computed ONCE from frozen vendor centroids and frozen
-  scout labels (labels.npy / regions.npy, the Phase-1 artifacts). It is a
-  function of geometry and labels only, NOT of the assignment uncertainty set,
-  so denominators (nl_adj, nr_adj) are fixed numbers and every bound operation
-  remains a restriction of the same bipartite graph the exactness proof covers.
-- The counted-set restriction is implemented by passing the eligible cell-id
-  set DIRECTLY into the corrected interval builder (see below):
+Construction:
+- Adjacency eligibility is computed once from the fixed vendor centroids and
+  the fixed scout labels (labels.npy and regions.npy). It depends on geometry
+  and labels only, not on the assignment uncertainty set, so the denominators
+  nl_adj and nr_adj are fixed and every bound operation stays a restriction of
+  the bipartite graph that the exactness proof covers.
+- The counted-set restriction passes the eligible cell-id set to the corrected
+  interval builder (see below):
   counted(sender) = {(region==rid) & (labels==S) & send_m}, counted(receiver)
   analogous. Donor sets (band geometry, kernel intervals) are untouched, so a
   band transcript on an ineligible sender legitimately contributes a +1 delta
   (it can reassign INTO an eligible cell under the uncertainty set) and a
   transcript on an eligible sender contributes its usual -1/0/+1 range.
-- Interval construction: corrected per-gene-slot rule with the
-  capacity-capped formula (the shipped null's own rule, one formula everywhere):
+- Interval construction: corrected per-gene rule with the capacity-capped
+  formula used throughout the release:
     dmin(g) = -(# band transcripts of g with source in the counted set)  [exact]
     dmax(g) = min( #{out-of-set band transcripts of g with >=1 own donor slot in
                      the counted set},  sum_{c in counted} min(pot_c(g), cap_c) )
-  On breast the capacity never binds (released capacity_check.json), so dmax is
-  the attained per-gene optimum; the formula is retained for the one-rule
-  discipline and is verified non-binding by assertion.
+  The capacity term does not bind on breast, so dmax is the attained per-gene
+  optimum. The builder asserts this for every gene and counted set.
 - artifact integrity: recomputed scout labels must equal labels.npy
-  exactly, proving the frozen artifact is the shipped scout's.
+  exactly, proving the fixed artifact is the shipped scout's.
 - re-derivation: with the all-eligible counted set,
   the corrected builder must reproduce the corrected bounds
-  (results/sensitivity/breast_tight_bounds_sensitivity.csv) BIT-EXACTLY on
-  every (dL_min, dL_max, dR_min, dR_max), and the released scout_bounds.csv
-  intervals must contain the corrected intervals row-wise (superset check , 
-  the soundness direction).
+  (sensitivity/breast_tight_bounds_sensitivity.csv) bit for bit on every
+  (dL_min, dL_max, dR_min, dR_max), and the released scout_bounds.csv intervals
+  must contain the corrected intervals row by row, the soundness direction.
 - adjacency determinism: eligibility masks recomputed by
   brute-force per-cell radius queries must equal the KD-tree masks exactly
   (explicit self-exclusion for same-type pairs).
 
-This script computes the OBSERVED side only. p-values require the matched
-worst-case permutation null under the SAME corrected
-construction (computed at execution time; the observed side ships here).
+This script computes the observed side only. The p-values use the matched
+worst-case permutation null under the same corrected construction.
 """
 import os
 import sys
@@ -53,9 +50,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
 from b03_certify import (ALL_PAIRS, POSITIVE_CONTROLS, T_bounds_from_count_intervals,
                          assign_cell_types, load_all, make_regions)
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
-OUT = os.path.join(ROOT, "results")
-SENS = f"{OUT}/sensitivity/breast_tight_bounds_sensitivity.csv"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, "data")
+OUT = os.path.join(ROOT, "results", "breast")
+SENS = os.path.join(ROOT, "sensitivity", "breast_tight_bounds_sensitivity.csv")
 
 # Frozen scout maps (module-level so main() and the re-derivation share one source, copied from
 # b03_certify.py).
@@ -74,7 +72,7 @@ RECV_MAP = {
 }
 
 D_RADIUS_UM = float(os.environ.get("B03_P9_RADIUS", "15.0"))  # frozen primary
-# Sensitivity radius (frozen: 25 um) runs as a second pass with B03_P9_RADIUS=25.0;
+# Sensitivity radius (fixed: 25 um) runs as a second pass with B03_P9_RADIUS=25.0;
 # outputs carry the radius column so downstream joining is unambiguous.
 
 
@@ -120,7 +118,7 @@ def g02_adjacency_determinism(centroids, labels, s_type, r_type, radius,
         nbrs_all = tree.query_ball_point(centroids[sample], r=radius)
         brute = np.zeros(len(sample), dtype=bool)
         for k_i, cell_i in enumerate(sample):
-            # Self is NOT a neighbor (frozen semantics: adjacency is between
+            # Self is not a neighbor, since adjacency is between
             # distinct cells; query_pairs in the tree mask excludes self). For
             # same-type pairs (e.g. PECAM1->KDR, both Endothelial) the ball
             # contains the cell itself, which must be excluded explicitly. The
@@ -274,7 +272,7 @@ def main():
                                  s_type=s_type, r_type=r_type, testable=False,
                                  nl_adj=nl_adj, nr_adj=nr_adj))
                 continue
-            # counted sets: eligible senders / receivers in this region (frozen configuration:
+            # counted sets: eligible senders / receivers in this region (fixed configuration:
             # counted set passed directly; identical to sentinel-masked labels)
             counted_S = np.flatnonzero((region_of_cell == rid) &
                                        (labels == s_type) & send_m)

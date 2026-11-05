@@ -1,9 +1,7 @@
-"""Frozen configuration for the lung crop, shared by the lung and second-breast-section legs.
+"""Configuration for the lung crop, shared by the lung and second breast section runs.
 
-Extracted verbatim from b03_lung_null.py (2026-09-08) so that the frozen Phase 5
-driver and the Phase 6 B=10,000 driver share the identical frozen pair list and
-type maps. These values are frozen and must not be edited; changes require a new
-frozen configuration.
+Taken from b03_lung_null.py so that the lung driver and the B=10,000 driver share
+the same pair list and type maps.
 """
 import os
 

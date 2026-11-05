@@ -1,15 +1,16 @@
-"""B03 Phase 5: lung-crop vendor load, PIP, concordance, band geometry, labels, regions.
+"""Vendor load, PIP assignment, concordance, band geometry, labels and regions for the lung crop.
 
 Reuses tissue-1 machinery BY IMPORT (b03_load: assign_pip, boundary_and_band,
-donor_sets_for_band_tested; b03_certify: make_regions with frozen seed 20260907).
+donor_sets_for_band_tested, b03_certify: make_regions with fixed seed 20260907).
 Lung-specific I/O:
-  - transcripts: <workspace>/xenium_lung/crop/transcripts.parquet (frozen crop window)
+  - transcripts: <workspace>/xenium_lung/crop/transcripts.parquet (fixed crop window)
   - polygons:    crop cell_boundaries.parquet (same polygon construction)
   - concordance: full-section h5 (<workspace>/xenium_lung/extracted/cell_feature_matrix.h5),
-    restricted to crop-cell barcodes; gate = diagnosis-informed (per_cell >= 0.90,
+    restricted to crop-cell barcodes
+    gate = diagnosis-informed (per_cell >= 0.90,
     total_ratio >= 0.97), same gate class as tissue 1.
-  - labels:      the frozen marker dictionary frozen marker dictionary, majority vote, tested-LR genes
-    excluded (17 tested genes of the 18 testable pairs); classes <200 cells dropped
+  - labels:      the fixed marker dictionary fixed marker dictionary, majority vote, tested-LR genes
+    excluded (17 tested genes of the 18 testable pairs), classes <200 cells dropped
     (fixed for this leg).
   - regions:     k-means k=3 on (log10(1+transcript_counts), x/1000, y/1000), seed
     20260907 (fixed for this leg).
@@ -46,7 +47,7 @@ PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
 TESTED = sorted({g for p in PAIRS for g in p})
 assert len(TESTED) == 17, TESTED
 
-# the frozen marker dictionary; tested-LR genes are removed HERE,
+# the fixed marker dictionary; tested-LR genes are removed HERE,
 # explicitly, so the exclusion discipline is mechanical (assertion below verifies
 # so the filter does not leak a marker into the vote).
 MARKERS_RAW = {
@@ -69,7 +70,8 @@ def load_transcripts():
     for i in range(f.num_row_groups):
         t = f.read_row_group(i, columns=["x_location","y_location","feature_name","qv"])
         if SMOKE and n >= 300_000: break
-        frames.append(t.to_pandas()); n += len(t)
+        frames.append(t.to_pandas())
+        n += len(t)
     tx = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
     if SMOKE: tx = tx.head(300_000)
     tx = tx[tx.qv >= 20.0].reset_index(drop=True)
@@ -84,11 +86,14 @@ def load_polygons_lung():
     cids = cb.cell_id.to_numpy()
     starts = np.flatnonzero(np.r_[True, cids[1:] != cids[:-1]])
     ends = np.r_[starts[1:], len(cids)]
-    xs_all = cb.vertex_x.to_numpy(np.float64); ys_all = cb.vertex_y.to_numpy(np.float64)
+    xs_all = cb.vertex_x.to_numpy(np.float64)
+    ys_all = cb.vertex_y.to_numpy(np.float64)
     polys, cid_map = {}, {}
     for k in range(len(starts)):
         s, e = starts[k], ends[k]
-        c = cids[s]; xs = xs_all[s:e]; ys = ys_all[s:e]
+        c = cids[s]
+        xs = xs_all[s:e]
+        ys = ys_all[s:e]
         if len(xs) < 3: continue
         p = Polygon(zip(xs, ys))
         if not (p.is_valid and p.area > 1e-6):
@@ -97,17 +102,20 @@ def load_polygons_lung():
         if p.geom_type == "MultiPolygon":
             p = max(p.geoms, key=lambda q: q.area)
         if p.area <= 1e-6: continue
-        cid_map[c] = len(polys); polys[len(polys)] = p
+        cid_map[c] = len(polys)
+        polys[len(polys)] = p
     print(f"valid crop polygons: {len(polys):,}", flush=True)
     return polys, cid_map
 
 def verify_concordance_lung(tx, owner, cid_map):
     """PIP vs full-section h5 restricted to crop barcodes, 40 random genes (same gate)."""
     with h5py.File(os.path.join(EXTRACTED, "cell_feature_matrix.h5"), "r") as f:
-        g = f["matrix"]; shape = g["shape"][:]
+        g = f["matrix"]
+        shape = g["shape"][:]
         barcodes = [b.decode() if isinstance(b,bytes) else b for b in g["barcodes"][:]]
         features = [b.decode() if isinstance(b,bytes) else b for b in g["features"]["name"][:]]
-        data = g["data"][:]; indices = g["indices"][:]; indptr = g["indptr"][:]
+        data = g["data"][:]
+        indices = g["indices"][:]; indptr = g["indptr"][:]
     assert len(barcodes) == int(shape[1]) and len(features) == int(shape[0])
     crop_barcodes = set(pq.read_table(f"{CROP}/cells.parquet", columns=["cell_id"])
                         .column("cell_id").to_pylist())
@@ -119,12 +127,14 @@ def verify_concordance_lung(tx, owner, cid_map):
     feat_arr = tx.feature_name.to_numpy()
     cols = np.repeat(np.arange(len(barcodes)), np.diff(indptr))
     rows_all = indices
-    conc_total = conc_match = 0; mism = []
+    conc_total = conc_match = 0
+    mism = []
     for gi in test_genes:
         gname = features[gi]
         sel = rows_all == gi
         if not sel.any(): continue
-        cell_rows = cols[sel]; cnts = data[sel]
+        cell_rows = cols[sel]
+        cnts = data[sel]
         m = (feat_arr == gname)
         if not m.any(): continue
         pip_counts = pd.Series(owner[m][owner[m] >= 0]).value_counts()
@@ -153,7 +163,8 @@ def label_cells(tx, n_cells):
         for g in genes:
             assert g not in TESTED, f"marker {g} is a tested LR gene, dictionary leak"
             ann_map[g] = cls
-    feat = tx.feature_name.to_numpy(); cells = tx.cell_idx.to_numpy()
+    feat = tx.feature_name.to_numpy()
+    cells = tx.cell_idx.to_numpy()
     keep = cells >= 0
     f2, c2 = feat[keep], cells[keep]
     is_marker = np.array([g in ann_map for g in f2])
@@ -194,8 +205,8 @@ def main():
         # subset while h5 counts are full. Smoke validates mechanics only; the gate
         # is evaluated in full mode.
         conc["mode"] = "smoke"
-        conc["gate"] = "SKIPPED, smoke mode; full-mode gate required"
-        print(f"smoke concordance (NOT a gate): {conc}", flush=True)
+        conc["gate"] = "SKIPPED, smoke mode, full-mode gate required"
+        print(f"smoke concordance (diagnostic): {conc}", flush=True)
     else:
         gate = conc["concordance_per_cell"] >= 0.90
         conc["mode"] = "full"
@@ -204,14 +215,14 @@ def main():
               f"total_ratio={conc['total_ratio']:.4f} "
               f"({conc['n_cells_tested']} cells) -> {'PASS' if gate else 'FAIL'}", flush=True)
         if not gate:
-            json.dump(conc, open(f"{OUTD}/concordance.json","w"), indent=1)
+            json.dump(conc, open(os.path.join(ROOT, "preprocessing", "lung_concordance.json"),"w"), indent=1)
             sys.exit(2)
     cells_meta = pq.read_table(f"{CROP}/cells.parquet").to_pandas()
     assert len(cells_meta) == len(polys) or len(cid_map) <= len(cells_meta)
     n_cells = len(cells_meta)
     tx["cell_idx"] = owner  # attach BEFORE labeling (label_cells consumes it)
     labels = label_cells(tx, n_cells)
-    # regions: frozen rule (k-means k=3, seed 20260907)
+    # regions: fixed rule (k-means k=3, seed 20260907)
     regions = make_regions(cells_meta, labels, k=3, seed=20260907)
     print(f"region sizes: {np.bincount(regions).tolist()}", flush=True)
     dist, band, tree, edge_cell = boundary_and_band(tx, polys)

@@ -20,14 +20,18 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 import b03_claim_layer as claim  # noqa: E402
 
 LEGS = {
-    "breast": (os.path.join(ROOT, "results"), ("p_pos_raw", "p_neg_raw")),
-    "lung": (os.path.join(ROOT, "lung"), ("p_pos", "p_neg")),
-    "breast_s6": (os.path.join(ROOT, "breast_s6"), ("p_pos_raw", "p_neg_raw")),
+    "breast": (os.path.join(ROOT, "results", "breast"),
+               "scout_final_matched.csv", ("p_pos_raw", "p_neg_raw")),
+    "lung": (os.path.join(ROOT, "results", "lung"),
+             "scout_final_lung.csv", ("p_pos", "p_neg")),
+    "breast_s6": (os.path.join(ROOT, "results", "breast_s6"),
+                  "scout_final_s6.csv", ("p_pos_raw", "p_neg_raw")),
 }
 
 
 def table(leg):
-    return pd.read_csv(os.path.join(LEGS[leg][0], "scout_final_matched.csv"))
+    directory, name, _ = LEGS[leg]
+    return pd.read_csv(os.path.join(directory, name))
 
 
 class TestRowTables(unittest.TestCase):
@@ -68,7 +72,7 @@ class TestRowTables(unittest.TestCase):
 
 class TestClaimLayer(unittest.TestCase):
     def test_reproduces_released_claims(self):
-        for leg, (_, (pos_col, neg_col)) in LEGS.items():
+        for leg, (_, _, (pos_col, neg_col)) in LEGS.items():
             df = table(leg)
             cl, _ = claim.claim_layer(df, pos_col, neg_col)
             self.assertTrue(
@@ -111,7 +115,7 @@ class TestClaimLayer(unittest.TestCase):
 
 class TestExactEnds(unittest.TestCase):
     def setUp(self):
-        with open(os.path.join(ROOT, "results", "exact_end_summary.json")) as fh:
+        with open(os.path.join(ROOT, "results", "breast", "exact_end_summary.json")) as fh:
             self.summary = json.load(fh)
 
     def test_gene_ends(self):
@@ -138,33 +142,33 @@ class TestPostClaimSummaries(unittest.TestCase):
             return json.load(fh)
 
     def test_breast_coverage(self):
-        s = self.load("results", "phase2_proseg_summary.json")
+        s = self.load("coverage", "phase2_proseg_summary.json")
         self.assertEqual(s["certified_rows"], 45)
         self.assertEqual(s["certified_inside"], 42)
         self.assertEqual(s["undoubled_bh_rows"], 46)
         self.assertEqual(s["sign_agreement_on_certified"], "45/45")
 
     def test_breast_proseg_null(self):
-        s = self.load("results", "phase3_summary.json")
+        s = self.load("coverage", "phase3_summary.json")
         self.assertEqual(s["certified_rows"], 45)
         self.assertEqual(s["significant_in_certified_direction"], 39)
         self.assertAlmostEqual(s["fraction"], 39 / 45)
 
     def test_margins_use_claims(self):
-        b = self.load("results", "phase4_summary.json")
+        b = self.load("margins", "phase4_summary.json")
         self.assertEqual(b["n_certified"], 45)
         self.assertEqual(b["undoubled_bh_rows"], 46)
         self.assertAlmostEqual(b["frac_ge"]["1.25"], 0.6889, places=4)
         self.assertAlmostEqual(b["frac_ge"]["2.0"], 0.1556, places=4)
         self.assertEqual(int(b["c_star_min"] * 1000), 1048)
-        lu = self.load("lung", "phase4_summary.json")
+        lu = self.load("margins", "lung_phase4_summary.json")
         self.assertEqual(lu["n_certified"], 5)
         self.assertEqual(lu["undoubled_bh_rows"], 7)
         self.assertAlmostEqual(lu["c_star_median"], 20.4, places=1)
         self.assertAlmostEqual(lu["frac_ge"]["3.0"], 0.8)
 
     def test_lung_coverage(self):
-        s = self.load("lung", "phase5_e2_summary.json")
+        s = self.load("coverage", "phase5_e2_summary.json")
         self.assertEqual(s["certified_rows"], 5)
         self.assertEqual(s["primary"]["n_inside"], 4)
         self.assertEqual(s["undoubled_bh_inside"], 6)
@@ -177,8 +181,8 @@ class TestPostClaimSummaries(unittest.TestCase):
         self.assertEqual(s["n_hi_attained"], 149)
 
     def test_capped_builders_report_sound_bounds(self):
-        for path in (("lung", "capacity_check.json"),
-                     ("breast_s6", "capacity_check.json")):
+        for path in (("results", "lung", "capacity_check.json"),
+                     ("results", "breast_s6", "capacity_check.json")):
             s = self.load(*path)
             self.assertTrue(s["capped_formula_applied"], path)
             self.assertTrue(s["sound_upper_bound"], path)
@@ -187,13 +191,13 @@ class TestPostClaimSummaries(unittest.TestCase):
 class TestAttainmentCounts(unittest.TestCase):
     def test_three_section_totals(self):
         parts = [
-            ("results", 75),
-            ("lung", 52),
-            ("breast_s6", 30),
+            (("results", "breast"), 75),
+            (("results", "lung"), 52),
+            (("results", "breast_s6"), 30),
         ]
         total = 0
         for directory, expected in parts:
-            df = pd.read_csv(os.path.join(ROOT, directory, "coupled_end.csv"))
+            df = pd.read_csv(os.path.join(ROOT, *directory, "coupled_end.csv"))
             self.assertEqual(len(df), expected, directory)
             total += len(df)
         self.assertEqual(total, 157)

@@ -1,13 +1,13 @@
-"""B03 Phase 5 (step B): E2 cross-platform coverage, Proseg replication on the crop.
+"""Cross-platform coverage E2: Proseg replication on the lung crop.
 
-Faithful port of b03_phase2_analysis.py (fixture-validated tissue-1 machinery) with:
+Port of b03_phase2_analysis.py with:
   - crop paths (workspace xenium_lung/crop/data, xenium_lung/crop/proseg_out)
-  - 18 testable pairs / 54 rows; frozen TYPE_MAP/RECV_MAP
-  - certified set from scout_final_lung.csv (cert_pos_final / cert_neg_final)
+  - 18 testable pairs / 54 rows, fixed TYPE_MAP/RECV_MAP
+  - certified set from scout_final_lung.csv (certified_pos_matched / certified_neg_matched)
 All schema assertions from tissue 1 retained (type-naming, noise-slot handling,
 gene-alignment proof, cell-id/mtx mapping, non-evaluable cap).
 
-Endpoint (frozen, E2): fraction of certified rows with T(A_proseg) inside the
+Endpoint (fixed, E2): fraction of certified rows with T(A_proseg) inside the
 certified interval. Gate >= 90% PASS, 75-90% PARTIAL, < 75% FAIL.
 Secondary: sign agreement on every certified row.
 Output: the crop data dir's phase5_e2_coverage.csv + phase5_e2_summary.json
@@ -43,7 +43,7 @@ t0 = time.time()
 tested = sorted({g for p in PAIRS for g in p})
 gidx = {g: i for i, g in enumerate(tested)}
 
-# ---------- frozen vendor-side artifacts ----------
+# ---------- fixed vendor-side artifacts ----------
 vm = np.load(f"{D}/vendor_markers.npz", allow_pickle=True)
 centroids = vm["centroids"].astype(np.float64)
 type_names = [str(t) for t in vm["type_names"]]
@@ -182,7 +182,7 @@ out = b[["pair","region","control","T0","T_lo","T_hi"]].merge(
 assert len(out) == 54
 assert ((out.T0 + 1e-9 >= out.T_lo) & (out.T0 - 1e-9 <= out.T_hi)).all()
 out["inside"] = (out["T"] >= out.T_lo - 1e-9) & (out["T"] <= out.T_hi + 1e-9)
-fin2 = fin[["pair","region","cert_pos_final","cert_neg_final"]]
+fin2 = fin[["pair","region","certified_pos_matched","certified_neg_matched"]]
 out = out.merge(fin2, on=["pair","region"], validate="1:1")
 # Reported certificates are the selection-adjusted claims written by the claim layer.
 cl = pd.read_csv(f"{D}/claim_layer.csv")[["pair", "region", "claim_pos", "claim_neg"]]
@@ -198,7 +198,7 @@ n_in_bh = int(out.loc[bh_eval, "inside"].sum())
 
 summary = dict(
     design="E2 Proseg-interval coverage",
-    n_proseg_cells=int(n_pc), n_vendor_cells=int(len(b)) ,
+    n_proseg_cells=int(n_pc), n_vendor_cells=int(len(labels)),
     cells_with_marker_signal=int(has_marker.sum()),
     noise_gene_slot=dropped_noise_gene,
     primary=dict(n_inside=n_in, n_certified_evaluable=int(cert_eval.sum()),
@@ -209,10 +209,10 @@ summary = dict(
     undoubled_bh_inside=n_in_bh,
     sign_agreement_on_certified=f"{sign_ok}/{int(cert_eval.sum())}",
 )
-# claim flags are summary-only; the coverage table keeps its frozen schema
+# claim flags are summary-only; the coverage table keeps its fixed schema
 out.drop(columns=["claim_pos", "claim_neg"]).to_csv(
-    f"{D}/phase5_e2_coverage.csv", index=False)
-with open(f"{D}/phase5_e2_summary.json", "w") as f:
+    f"{ROOT}/coverage/phase5_e2_coverage.csv", index=False)
+with open(f"{ROOT}/coverage/phase5_e2_summary.json", "w") as f:
     json.dump(summary, f, indent=2)
 print(json.dumps(summary, indent=2), flush=True)
 print("PHASE5 E2 COMPLETE", flush=True)

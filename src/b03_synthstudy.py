@@ -1,17 +1,17 @@
-"""B03 semi-synthetic certification study runner.
+"""Semi-synthetic certification study runner.
 
-Builds pseudo-sections on the real breast Rep1 molecule file. The ONLY things
-interventions touch are feature-name assignments of transcript rows; molecule
-coordinates, cell_idx, dist_boundary, in_band, per-cell totals, regions, band
-membership, donor slots, and capacities are identical to the shipped section
-in every run (donor geometry is name- and label-independent).
+Builds pseudo-sections on the real breast Rep1 molecule file. The interventions
+change feature-name assignments of transcript rows. Molecule coordinates,
+cell_idx, dist_boundary, in_band, per-cell totals, regions, band membership,
+donor slots and capacities match the shipped section in every run, because donor
+geometry does not depend on names or labels.
 
 Representation: transcript names as integer codes (codes) over a uniq name
 table. Interventions:
   (1) Arm N: seeded permutation of the 21 tested names among themselves
-      (code-remap; labels, regions, geometry, tested mass all unchanged).
+      (code-remap, labels, regions, geometry, tested mass all unchanged).
   (2) Arm M: seeded transcript-level REMOVAL of tested transcripts (a smaller
-      panel does not record transcripts; removal is implemented by masking
+      panel does not record transcripts, removal is implemented by masking
       codes to a sentinel outside every panel/marker/tested list), protecting
       tested transcripts inside anchor cells (the injection substrate), toward
       an aggregate tested mass-share target.
@@ -26,11 +26,11 @@ rebuilt positionally, stays exact.
 
 Each run executes the shipped interval engine logic (b03_scout.py conventions,
 in-process) and the shipped matched-null machinery (b03_matched_null.py
-functions, in-process; identical per-permutation seeds, blocks, tie convention,
+functions, in-process, identical per-permutation seeds, blocks, tie convention,
 BH, output schema), writing bounds/null/final tables plus a run manifest into
-results/synthstudy/<run_id>/.
+intervention/runs/<run_id>/.
 
-Usage (paths are repository-relative; run from anywhere):
+Usage (paths are repository-relative, run from anywhere):
   python src/b03_synthstudy.py --mode verify
   python src/b03_synthstudy.py --mode smoke
   python src/b03_synthstudy.py --mode run --arm N --run-id N01 --seed 910001
@@ -56,7 +56,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 SRC = Path(__file__).resolve().parent
 DATA = ROOT / "data"
-OUT = ROOT / "results"
+OUT = ROOT / "intervention"
 STUDY = OUT / "synthstudy"
 sys.path.insert(0, str(SRC))  # spawned workers must re-import the null module by name
 
@@ -179,7 +179,7 @@ def tx_class_int(labels):
 
 
 # ---------------------------------------------------------------------------
-# arms (spec S2)
+# arms
 # ---------------------------------------------------------------------------
 
 def arm_null(seed):
@@ -190,8 +190,8 @@ def arm_null(seed):
 
 
 def arm_effect(anchor_seed, f):
-    """Arm E, amended (spec S7.7): base-null permutation FIRST (tested names
-    scrambled, every pair null by construction), THEN the known-positive
+    """Arm E: base-null permutation first (tested names
+    scrambled. every pair null in the construction), THEN the known-positive
     injection. Recovery of a certified positive on KRT8->ERBB2 therefore
     measures detection of an injected effect, not recovery of a pair that
     already certifies on the real section."""
@@ -259,7 +259,7 @@ def build_pseudo_section(run):
 
 
 def remove_tested(codes, uniq, tested_codes, target_pct, seed):
-    """Uniform transcript-level thinning (spec S7.3): a seeded uniform subset of
+    """Uniform transcript-level thinning: a seeded uniform subset of
     ALL tested transcripts is removed toward the aggregate share target, with
     no anchor protection. The certified-bound construction is invariant to
     which molecules are removed (interior molecules do not move under U), and
@@ -286,7 +286,7 @@ def remove_tested(codes, uniq, tested_codes, target_pct, seed):
 
 def inject(codes, uniq, name_code, inj):
     """Known-positive: relabel same-class tested transcripts inside the anchor
-    ring (nearest-neighbour ring around seeded anchors; ring radius scales
+    ring (nearest-neighbour ring around seeded anchors, ring radius scales
     with f so injected MASS is the dose axis, f <= 1 saturates the fixed
     anchor pool, so dose must grow the ring) to the pair names, taking the
     full borrowable mass of the ring's sender/receiver cells."""
@@ -357,7 +357,7 @@ def run_intervals(codes, uniq, run_dir: Path):
     cells_meta = SYS["cells_aligned"]
     n_cells = len(cells_meta)
     cell = tx.cell_idx.to_numpy()
-    # spec S7.1c: labels are invariant across arms (tested-name closure: voting
+    # labels are invariant across arms (tested-name closure: voting
     # reads only non-tested marker transcripts); computed once per fleet and
     # asserted against the shipped file in --mode verify
     labels = SYS["labels"]
@@ -400,7 +400,7 @@ def run_intervals(codes, uniq, run_dir: Path):
     n_slots = n_types + SHIFT
     cid = region_of_cell * n_slots + np.array(
         [type_shift.get(l, 0) for l in labels], dtype=np.int16)
-    # ONE donor-class gather per run (perf: was ~300 gathers of 27.8M elements)
+    # One donor-class gather per run
     cid_donor = cid[donor_flat] if len(donor_flat) else None
 
     def gene_interval(g, target):
@@ -490,7 +490,7 @@ def run_intervals(codes, uniq, run_dir: Path):
             span = (hi - lo + 1).astype(np.int16)
             viol = 0
             CH = 100
-            # 200 configs per gene-row (spec S7.9): this check catches range-
+            # 200 configs per gene-row: this check catches range-
             # computation defects; it cannot fail for
             # a correct [lo, hi] (deltas drawn within per-transcript ranges
             # sum into the aggregate range), so 200 draws retain the full
@@ -508,13 +508,13 @@ def run_intervals(codes, uniq, run_dir: Path):
     ver.to_csv(run_dir / "exactness_verification.csv", index=False)
 
     in_tested = np.isin(codes, tested_codes)
-    # Capacity semantics: the aggregate boolean is NOT a binding test (it counts
+    # Capacity semantics: the aggregate boolean does not test binding (it counts
     # cells outside every counted set). The per-target audit on the shipped
     # section found 42/78 gain and 12/45 loss targets tightenable, 0 of 75
     # verdict changes; identical donor geometry and counted sets transfer this
-    # finding verbatim to every pseudo-section, so intervals here are certified
+    # finding to every pseudo-section, so intervals here are certified
     # supersets under the same uncapped construction as the shipped tables.
-    diag = dict(capacity_note="uncapped construction (certified supersets); "
+    diag = dict(capacity_note="uncapped construction (certified supersets), "
                               "per-target capacity audit transfers: geometry and "
                               "counted sets identical to shipped section",
                 band_tested=int(len(band_tested)),
@@ -528,7 +528,7 @@ def run_intervals(codes, uniq, run_dir: Path):
 
 # ---------------------------------------------------------------------------
 # matched null: shipped b03_matched_null semantics, single-gather fast path
-# (spec S7.1b). The fast path restructures ONLY the data movement: one gather
+# The fast path restructures only the data movement: one gather
 # of lab[donor_flat] per permutation and per-gene reduceat over the gathered
 # array (bitwise-compatible with the shipped logical_or.reduceat, including
 # its behavior on zero-donor rows). Seeds, block order, rng consumption,
@@ -545,7 +545,7 @@ _W2 = {}
 def worker_init_fast(Gmat, mov_cell, gene_slices_list, donor_flat, blocks,
                      obs_arr, cid):
     """Shipped-form state in, derived structures built worker-side once
-    (spec S7.1b: spawn payload stays small; offsets never pickled).
+    (spawn payload stays small, offsets never pickled).
     gene_slices_list entries: (gi, mv, absolute start offsets, [span_end])."""
     _W2["Gmat"] = Gmat
     _W2["mov_cell"] = mov_cell
@@ -694,7 +694,7 @@ def build_null_state(codes, uniq, labels, region_of_cell, res):
         keys.append((r.pair, region_id))
         obs_arr.append((gidx[Lg], gidx[Rg], tS, tR, nLc, nRc,
                         float(r.T_lo), float(r.T_hi)))
-    # dtype diet (spec S7.1b): donor indices int32, labels int16, the gather
+    # dtype diet: donor indices int32, labels int16, the gather
     # is bandwidth-bound, this halves/quarters its traffic; values bounded
     # (slot indices < 2^31; cid < 3*n_slots+1 << 2^15). Slice form for the
     # worker: (gi, mv, absolute start offsets, [span_end]).
@@ -727,7 +727,7 @@ def _interval_obs(Gmat, mov_cell, gene_rows, donor_flat, gi, target, lab):
 
 
 def run_null_inproc(run_dir: Path, B: int, codes, uniq):
-    """Matched null via the validated single-gather fast path (spec S7.1b).
+    """Matched null via the validated single-gather fast path.
     Semantics identical to shipped: per-perm seeds rng(NV.SEED_BASE + p), block
     order, rng consumption, tie conventions, N computation, count outputs,
     BH within region via the shipped implementation. Equivalence enforcement:
@@ -854,9 +854,9 @@ def adjudicate(run_dir: Path):
 # ---------------------------------------------------------------------------
 
 def do_validate_null(n_perms=20):
-    """Fleet gate (spec S7.1b): on the REAL section (base data, no pi), the
+    """Fleet gate: on the real section (base data, no injected signal), the
     fast path must reproduce the shipped functions BITWISE on named
-    permutations. Writes results/null_path_validation.csv."""
+    permutations. Writes intervention/null_path_validation.csv."""
     load_base()
     import b03_matched_null as NV
     labels = np.load(DATA / "labels.npy", allow_pickle=True)
@@ -909,7 +909,7 @@ def do_verify():
     tmass = int(gcount.reindex(TESTED).fillna(0).sum())
     print(f"VERIFY baseline tested-gene mass share: {100*tmass/len(feat):.2f}% "
           f"({tmass:,} of {len(feat):,})")
-    # one-time label-vote recomputation (spec S3.5, run once per fleet)
+    # one-time label-vote recomputation, run once per fleet
     codes_v, uniq_v = pd.factorize(SYS["tx"].feature_name, sort=False)
     labels_re = compute_labels(np.asarray(codes_v, dtype=np.int64),
                                np.asarray(uniq_v, dtype=object))
@@ -967,7 +967,7 @@ def do_run(run_id, arm, target_pct=None, seed=None, f=None, B=250):
 
 
 def fleet_list():
-    # spec S7.4/S7.8 final trim: E (f in {1.0, 4.0} x 3 anchors, dose-response
+    # final trim: E (f in {1.0, 4.0} x 3 anchors, dose-response
     # design) -> M (4 targets x 2 seeds) -> N (6 replicates; FCR saturated)
     runs = []
     for s in (911001, 911002, 911003):

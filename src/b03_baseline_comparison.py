@@ -1,20 +1,20 @@
-"""B03 baseline comparison: descriptive cross-tabs from the released artifacts only.
+"""Baseline comparison: descriptive cross-tabs built from the released artifacts.
 
-Implements the baseline-comparison protocol exactly:
+The two comparisons:
   Comparison 1 (breast): conventional point-estimate permutation calls
     (a point-statistic null at B=1,000, computed by
     src/b03_baseline_conventional_null.py) vs the
-    two-layer certificates at the same screen resolution (scout_final_matched.csv).
+    selection-charged claims at the same screen resolution (scout_final_matched.csv).
   Comparison 2 (all sections): certified vs not x Proseg-T inside vs outside the
-    certified interval, per section and pooled; Fisher exact p, odds ratio with
+    certified interval, per section and pooled. Fisher exact p, odds ratio with
     95% profile likelihood CI (closed-form Woolf logit CI on the OR, with zero
     cells handled by the Haldane-Anscombe 0.5 correction, recorded).
 
 Descriptive only: no verdict changes, no certified-set modification. Every output
 row names its source artifact. Writes:
-  results/baseline_comparison/comparison1_breast_conventional_vs_certified.csv
-  results/baseline_comparison/comparison2_instability_by_section.csv
-  results/baseline_comparison/summary.json
+  baseline_comparison/comparison1_breast_conventional_vs_certified.csv
+  baseline_comparison/comparison2_instability_by_section.csv
+  baseline_comparison/summary.json
 """
 from __future__ import annotations
 
@@ -25,19 +25,19 @@ import os
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "results", "baseline_comparison")
+OUT = os.path.join(ROOT, "baseline_comparison")
 
 SOURCES = {
-    "breast_final": "results/scout_final_matched.csv",
-    "breast_conventional": "results/baseline_comparison/conventional_null_breast.csv",
-    "breast_e2": "results/phase2_proseg_coverage.csv",
-    "lung_final": "lung/scout_final_lung.csv",
-    "lung_e2": "lung/phase5_e2_coverage.csv",
-    "s6_final": "breast_s6/scout_final_s6.csv",
-    "s6_e2": "breast_s6/phase7_e2_coverage.csv",
-    "breast_claims": "results/claim_layer.csv",
-    "lung_claims": "lung/claim_layer.csv",
-    "s6_claims": "breast_s6/claim_layer.csv",
+    "breast_final": "results/breast/scout_final_matched.csv",
+    "breast_conventional": "baseline_comparison/conventional_null_breast.csv",
+    "breast_e2": "coverage/phase2_proseg_coverage.csv",
+    "lung_final": "results/lung/scout_final_lung.csv",
+    "lung_e2": "coverage/phase5_e2_coverage.csv",
+    "s6_final": "results/breast_s6/scout_final_s6.csv",
+    "s6_e2": "coverage/breast_s6_phase7_e2_coverage.csv",
+    "breast_claims": "results/breast/claim_layer.csv",
+    "lung_claims": "results/lung/claim_layer.csv",
+    "s6_claims": "results/breast_s6/claim_layer.csv",
 }
 
 # The certificate set of record is the selection-charged claim layer, not the
@@ -100,7 +100,7 @@ def main() -> None:
         return "none"
 
     m["conv_call"] = m.apply(conv_call, axis=1)
-    # two-layer certificates from the selection-charged claim layer, which the final
+    # claims from the selection-charged layer, which the final
     # table already carries (written by b03_claim_layer.py); the pre-doubling flags are
     # still present in that file and must not be used here.
     assert len(m) == 75 and m["claim_pos"].notna().all(), "claim layer does not cover the 75 rows"
@@ -191,13 +191,13 @@ def main() -> None:
         "or_lo95": r4(woolf_or_ci(a, b_, c_, d_)[1]),
         "or_hi95": r4(woolf_or_ci(a, b_, c_, d_)[2]),
         "zero_cell_corrected": min(a, b_, c_, d_) == 0,
-        "source": "phase2_proseg_coverage.csv + phase5_e2_coverage.csv + phase7_e2_coverage.csv",
+        "source": SOURCES["breast_e2"] + " + " + SOURCES["lung_e2"] + " + " + SOURCES["s6_e2"],
     })
     c2 = pd.DataFrame(rows)
     c2.to_csv(os.path.join(OUT, "comparison2_instability_by_section.csv"), index=False)
 
     summary = {
-        "protocol": "conventional co-expression permutation baseline vs two-layer certificates; descriptive cross-tabs (paper Table 1)",
+        "protocol": "conventional co-expression permutation baseline against the selection-charged claims, descriptive cross-tabs (paper Table 1)",
         "comparison1": {
             "n": 75,
             "conventional_calls_any": conv_pos_any,

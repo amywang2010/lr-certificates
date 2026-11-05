@@ -1,5 +1,0 @@
-section,n,certified,not_certified,certified_unstable,certified_stable,notcert_unstable,notcert_stable,fisher_p,odds_ratio,or_lo95,or_hi95,zero_cell_corrected,source
-breast,75,45,30,3,42,0,30,0.27027,5.0235,0.2502,100.8467,True,results/phase2_proseg_coverage.csv
-lung,54,5,49,1,4,3,46,0.330038,3.8333,0.32,45.9173,False,lung/phase5_e2_coverage.csv
-breast_s6,30,0,30,0,0,0,30,1.0,,,,True,breast_s6/phase7_e2_coverage.csv
-pooled,159,50,109,4,46,3,106,0.20735,3.0725,0.661,14.2806,False,phase2_proseg_coverage.csv + phase5_e2_coverage.csv + phase7_e2_coverage.csv

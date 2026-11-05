@@ -1,29 +1,37 @@
-"""B03 Step 2 (final, vectorized): labels, regions, exact certificates, nulls, coverage.
+"""Labels, regions, certificates, nulls and coverage for the breast section.
 
-Implements the frozen design and the certified interval construction, fully vectorized.
+The design and the certified interval construction run in vectorized form.
 
 Correctness notes:
-- ALIGNMENT: tx.cell_idx uses polygon indices (PIP over cell polygons). cells.parquet rows
-  are in barcode order. All cells-metadata joins remap polygon idx -> cells.parquet row via
-  cell_id strings (verified 100% coverage in concordance diagnosis).
-- EXACT BOUNDS: T is separable in (N_L, N_R) [Proposition 1]. For each gene, the aggregate
-  region-count under U is an integer interval [N+dmin, N+dmax] [Proposition 2 interval
-  property], with per-transcript achievable delta sets computed EXACTLY:
+- Alignment: tx.cell_idx holds polygon indices from point-in-polygon over the cell
+  polygons. Rows of cells.parquet are in barcode order. Joins remap the polygon
+  index to the cells.parquet row through cell_id strings, a mapping the concordance
+  diagnosis covers completely.
+- Exact bounds: the score is separable in (N_L, N_R) (Proposition 1). For each gene,
+  the aggregate region count over U is the integer interval [N+dmin, N+dmax]
+  (Proposition 2), with per-transcript delta sets
       can_neg(i) = (source cell of i is in the counted set)   [extracellular always allowed]
       can_pos(i) = (source not in set) AND (some donor in set)
-  dmin = -sum(can_neg), dmax = +sum(can_pos). Attainability: independent per-transcript
-  adjustments => every intermediate integer is achievable (no coupling in the
-  capacity-free relaxation).
-- CAPACITY CHECK: fixed before analysis per-cell caps (+50%/-60% of a cell's total transcripts)
-  bind only if some cell could gain/lose more tested-gene transcripts than its cap. We
-  verify the worst case post hoc (max donors / max occupants per cell vs cap). If caps
-  cannot bind, the capacity-free bounds are EXACT for the full fixed before analysis U.
-- EXACTNESS VERIFICATION: (a) vectorized random feasible configs must lie in bounds;
-  (b) exhaustive enumeration on a 12-transcript subcube must match greedy extremes.
-- NULL: within-(region, transcript-count decile) label permutations, B=1000 (fixed before analysis),
-  one random ranking per block; a cumulative-sum step gives subset sums for ALL types/genes at once.
-- COVERAGE: full-band erosion (all band+tested -> extracellular) lies in bounds by
-  construction; d=2 sub-band erosion is the held-out check (fixed before analysis).
+  and dmin = -sum(can_neg). The upper endpoint accumulates donor slots in the
+  vectorized segment step, so a transcript can be credited more than once and the
+  result upper-bounds the per-transcript count. results/breast/exact_end.csv records
+  the per-transcript count and the exact flow beside the reported value, and the
+  reported value is the looser of the three on every breast test.
+  The lower endpoint is exact: the per-transcript adjustments are independent, so
+  every intermediate integer is attainable in the capacity-free relaxation.
+- Capacity check: the fixed per-cell caps (+50% and -60% of a cell's total
+  transcripts) bind only if a cell could gain or lose more tested-gene transcripts
+  than its cap. The worst case (largest gain and loss per cell against the cap) is
+  verified after the run. Where the caps cannot bind, the capacity-free bounds are
+  exact for the full declared set U.
+- Exactness verification: random feasible configurations must lie inside the bounds,
+  and exhaustive enumeration on a 12-transcript subcube must match the extremes.
+- Null: within-region, transcript-count-decile label permutations at B = 1000, one
+  random ranking per block. A cumulative-sum step gives subset sums for every type
+  and gene at once.
+- Coverage: full-band erosion (every band and tested transcript sent to the
+  extracellular compartment) lies inside the bounds by construction. Erosion at
+  depth 2 um is the held-out check.
 """
 import numpy as np
 import pandas as pd
@@ -31,8 +39,9 @@ import os, pickle, json, time, math
 from scipy.cluster.vq import kmeans2
 
 EPS = 0.5
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
-OUT = os.path.join(ROOT, "results")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, "data")
+OUT = os.path.join(ROOT, "results", "breast")
 SEED = 20260905
 B_PERM = 1000
 N_CFG_VERIFY = 1000
@@ -108,7 +117,7 @@ def main():
     print(f"[{time.time()-t0:.0f}s] labels: "
           f"{pd.Series(labels).value_counts().head(6).to_dict()}", flush=True)
 
-    # ---------- frozen regions ----------
+    # ---------- fixed regions ----------
     f_mat = np.c_[np.log10(1 + cells_meta.transcript_counts.to_numpy(float)),
                   cells_meta.x_centroid.to_numpy(float) / 1000.0,
                   cells_meta.y_centroid.to_numpy(float) / 1000.0]

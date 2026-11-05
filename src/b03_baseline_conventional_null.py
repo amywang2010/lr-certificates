@@ -1,25 +1,23 @@
-"""B03 conventional point-null (breast): the field's standard first pass.
+"""Conventional point-estimate null for the breast section.
 
-The conventional pipeline is described by a run of the conventional test itself. A
-null built from worst-case bounds cannot serve, since point statistics sit above
-worst-case bounds by construction (q_pos = 1.0 on every row), so the point-statistic null is
-computed here directly.
+The conventional test uses the point statistic as its test statistic and builds
+the null from label permutations, which is the CellPhoneDB and CellChat family of
+co-expression tests. The matched null does not serve that purpose because its
+endpoints are worst-case bounds, so the point statistic is recomputed here.
 
-Machinery reused verbatim from the matched null
-(src/b03_matched_null.py): within-(region x transcript-decile) label permutation
-blocks (same construction, same registration order), per-permutation seeds
-rng(SEED_BASE + p) with SEED_BASE = 20260905 + 100003, B = 1,000, frozen cell-count
-denominators (nl_cells, nr_cells from scout_bounds.csv), epsilon = 0.5, BH within
-region. The single difference is the tested object: the point statistic
+The permutation design matches b03_matched_null.py: within-(region x
+transcript-decile) label blocks in the same registration order, per-permutation
+seeds rng(20260905 + 100003 + p), B = 1,000, the fixed cell-count denominators
+nl_cells and nr_cells from scout_bounds.csv, epsilon = 0.5 and Benjamini-Hochberg
+within region. The tested object differs: the point statistic
     T(A) = log2(N_L/nLc + eps) + log2(N_R/nRc + eps)
-under permuted labels, tested against T(A0), the conventional co-expression
-permutation test (CellPhoneDB/CellChat-family null), no worst-case layer.
+under permuted labels, compared with T(A0).
 
-Cross-implementation check: the recomputed T(A0) must match the scout T0
-column (max |delta| < 1e-9) before any p-value is produced.
+Cross-implementation check: the recomputed T(A0) matches the scout T0 column to
+within 1e-9 before any p-value is produced.
 
-Output: results/baseline_comparison/conventional_null_breast.csv
-        (pair, region, T0, p_pos, p_neg, q_pos, q_neg, add-one p-values).
+Output: baseline_comparison/conventional_null_breast.csv (pair, region, T0,
+p_pos, p_neg, q_pos, q_neg, add-one p-values).
 """
 from __future__ import annotations
 
@@ -40,7 +38,7 @@ from b03_matched_null import TYPE_MAP, RECV_MAP  # frozen sender/receiver maps
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 RES = os.path.join(ROOT, "results")
-OUTDIR = os.path.join(RES, "baseline_comparison")
+OUTDIR = os.path.join(ROOT, "baseline_comparison")
 EPS = 0.5
 B_PERM = 1000
 SEED_BASE = 20260905 + 100003
@@ -105,7 +103,7 @@ def main() -> None:
     print(f"blocks: {len(blocks)}; sizes {min(map(len, blocks))}-{max(map(len, blocks))}",
           flush=True)
 
-    # keys: (pair, region) -> target type slots; denominators frozen from scout_bounds
+    # keys: (pair, region) -> target type slots; denominators fixed from scout_bounds
     keys = []
     for _, r in res.iterrows():
         Lg, Rg = r.pair.split("->")
@@ -125,7 +123,8 @@ def main() -> None:
         NL = N_of(lab0, gidx[Lg], tS, region_id)
         NR = N_of(lab0, gidx[Rg], tR, region_id)
         T0[k] = math.log2(NL / nLc + EPS) + math.log2(NR / nRc + EPS)
-    scout = pd.read_csv(os.path.join(RES, "scout_final_matched.csv"))
+    scout = pd.read_csv(os.path.join(ROOT, "results", "breast",
+                                      "scout_final_matched.csv"))
     mine = pd.DataFrame({"pair": [k[0] for k in keys],
                          "region": [k[1] for k in keys], "T0_mine": T0})
     mm = mine.merge(scout[["pair", "region", "T0"]], on=["pair", "region"], how="inner")

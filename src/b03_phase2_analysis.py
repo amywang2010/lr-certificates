@@ -1,6 +1,6 @@
-"""B03 Phase 2 (step B): Proseg replication analysis.
+"""Proseg replication analysis for the breast section.
 
-Endpoint (frozen, primary): fraction of the 75 (pair, region) rows with
+Primary endpoint: fraction of the 75 (pair, region) rows with
 T(A_proseg, K0) inside the scout's certified interval [T_lo, T_hi]. Gate >= 90%.
 Secondary: sign agreement on rows certified by the matched null (q <= 0.10).
 
@@ -12,12 +12,13 @@ Input schema (verified from proseg 3.2.0 source, output.rs/main.rs, not assumed)
   - genes:    parquet with column `gene`, row i = gene index i (0-based) of the mtx
               columns (written in gene-index order by write_gene_metadata).
   - cells:    parquet with columns cell (0..ncells-1), original_cell_id,
-              centroid_x, centroid_y, ...; row order = cell id order (writer
+              centroid_x, centroid_y, ...
+              row order = cell id order (writer
               enumerates 0..ncells-1), so mtx row i (1-based) = cells row i (0-based).
 
-Machinery reuse (frozen): EPS and t_log2 IMPORTED from b03_scout.py.
-Labels: frozen vendor centroids (vendor_markers.npz, identical transform, step A).
-Regions: nearest vendor centroid (frozen). Background cells (id <= 0),
+Machinery reuse (fixed): EPS and t_log2 IMPORTED from b03_scout.py.
+Labels: fixed vendor centroids (vendor_markers.npz, identical transform, step A).
+Regions: nearest vendor centroid (fixed). Background cells (id <= 0),
 if any exist, are excluded and the count is reported.
 """
 
@@ -36,13 +37,13 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 from b03_scout import ALL_PAIRS, TYPE_MAP, RECV_MAP, EPS, t_log2
 
 DATA = os.path.join(ROOT, "data")
-RES = os.path.join(ROOT, "results")
+RES = os.path.join(ROOT, "coverage")
 t0 = time.time()
 
 tested = sorted({g for p in ALL_PAIRS for g in p})
 gidx = {g: i for i, g in enumerate(tested)}
 
-# ---------- frozen vendor-side artifacts ----------
+# ---------- fixed vendor-side artifacts ----------
 vm = np.load(f"{DATA}/vendor_markers.npz", allow_pickle=True)
 centroids = vm["centroids"].astype(np.float64)
 type_names = [str(t) for t in vm["type_names"]]
@@ -53,14 +54,15 @@ regions_vendor = vm["regions_row"].astype(int)
 assert centroids.shape[0] == len(type_names) and centroids.shape[1] == len(marker_genes)
 
 # ---------- scout certified intervals ----------
-b = pd.read_csv(f"{RES}/scout_bounds.csv")
+BR = os.path.join(ROOT, "results", "breast")
+b = pd.read_csv(f"{BR}/scout_bounds.csv")
 if b["control"].dtype != bool:
     b["control"] = b["control"].astype(str).map({"True": True, "False": False})
 assert len(b) == 75
-fin = pd.read_csv(f"{RES}/scout_final_matched.csv")
+fin = pd.read_csv(f"{BR}/scout_final_matched.csv")
 
 # ---------- proseg outputs (schema per source, asserted at load) ----------
-# Note: proseg 3.2.0 writes metadata files named EXACTLY as the --output-*
+# proseg 3.2.0 writes metadata files named as the --output-*
 # arguments (cells/genes, no .parquet suffix), verified on disk (PAR1 magic).
 with gzip.open(f"{DATA}/proseg_out/counts", "rb") as f:
     Coo = mmread(f).tocoo()
@@ -254,7 +256,7 @@ summary = dict(
     undoubled_bh_rows=int(bh_mask.sum()),
     sign_agreement_on_certified=f"{sign_ok}/{int(cert_eval.sum())}",
 )
-# claim flags are summary-only here; the coverage table keeps its frozen schema
+# claim flags are summary-only here; the coverage table keeps its fixed schema
 out.drop(columns=["claim_pos", "claim_neg"]).to_csv(
     f"{RES}/phase2_proseg_coverage.csv", index=False)
 with open(f"{RES}/phase2_proseg_summary.json", "w") as f:

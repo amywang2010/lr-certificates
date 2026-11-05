@@ -1,27 +1,24 @@
-"""B03 Step 5: held-out coverage check (fixed before analysis) + nucleus sensitivity report.
+"""Held-out coverage check and nucleus sensitivity report.
 
-Design decisions:
+The coverage variant erodes every cell mask by 2 um and reassigns all transcripts
+by point-in-polygon against the eroded geometry. The uncertainty set consists of
+reassignments of the same molecules among the same cells, and the eroded-mask
+assignment preserves the cell inventory, so it is a member of the set by
+construction and gives an independent check that the intervals cover a concrete
+alternative assignment. Base polygons come from b03_load.load_polygons(), which
+fixes the polygon order used by the labels, and the assignment itself is a
+separate code path that uses no donor, band or certificate machinery.
 
-1. COVERAGE VARIANT = 2 um-eroded cell masks (frozen: "Proseg or erosion variant as
-   held-out check"). Rationale: U consists of reassignments of the SAME molecules among
-   the SAME cell inventory. The eroded-mask assignment preserves the inventory (every
-   cell persists; only its transcript set changes) and is therefore a member of U by
-   construction -- the check certifies that the certificate machinery covers a concrete,
-   independently implemented alternative assignment.
-   - Base polygons are imported from b03_load.load_polygons() (guarantees polygon-index
-     alignment with frozen labels); the ASSIGNMENT is a fresh code path: PIP of all
-     transcripts onto the eroded geometry. No donor/band/certificate machinery is used.
-   - Proseg is NOT a valid in-U variant (it merges/splits cells -> changes the cell
-     inventory), so it cannot serve this gate; it is deferred to the cross-platform
-     phase of the full campaign (requires a Rust toolchain install (one-time environment setup)).
+Proseg lies outside the set because it merges and splits cells and so changes
+the inventory. It is measured in b03_phase2_analysis.py instead.
 
-2. NUCLEUS-ONLY VARIANT = sensitivity report only (OUTSIDE U, not gated): nucleus PIP
-   removes cytoplasmic transcripts wholesale; T(A_nucleus) quantifies how much of each
-   contrast survives when cells are shrunk to nuclei. Reported alongside [T_lo, T_hi].
-   Cells without a valid nucleus are given an empty polygon (all their transcripts
-   unassigned). Fixed cell-count convention (inventory preserved) disclosed; conservative.
+The nucleus-only variant shrinks cells to their nuclei, which removes cytoplasmic
+transcripts wholesale. T(A_nucleus) records how much of each contrast survives
+that shrinkage and is reported beside [T_lo, T_hi]. Cells without a valid nucleus
+receive an empty polygon and keep their place in the inventory, which is the
+conservative choice.
 
-Coverage criterion (frozen): >= 90% of the 75 (pair, region) rows must satisfy
+Coverage criterion: at least 90% of the 75 (pair, region) rows must satisfy
 T_lo <= T(eroded) <= T_hi.
 """
 import sys
@@ -37,7 +34,7 @@ from b03_load import load_polygons  # exact same polygon construction/order as A
 
 EPS = 0.5
 DATA = os.path.join(ROOT, "data")
-OUT = os.path.join(ROOT, "results")
+OUT = os.path.join(ROOT, "coverage")
 ERODE_UM = 2.0
 NUC_FILE = f"{DATA}/Xenium_FFPE_Human_Breast_Cancer_Rep1_nucleus_boundaries.parquet"
 

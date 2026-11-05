@@ -1,15 +1,15 @@
-"""B03 paper figures, generated only from the released artifacts (hashed in the manifest).
+"""Paper figures, generated from the released artifacts.
 
 fig1_main.pdf    two panels, one column:
                    (a) breast certified intervals per (pair, region): T(A0) point plus
                        [T_lo, T_hi] bar, colored by verdict, marker shape coding region.
                    (b) cross-tissue certificates for the shared pairs and their tissue
                        analogues, with the Proseg point estimate and the excursion marked.
-fig2_support.pdf two panels, side by side:
+figS2_support.pdf two panels, side by side:
                    (a) cross-segmentation validation: fraction of certified rows inside
                        their certified interval, with the coverage gate marked.
                    (b) kernel-margin distributions c* for the sections with certified rows.
-fig0_workflow.pdf  pipeline schematic (b03_schematic.py, which carries a layout check).
+figS1_workflow.pdf  pipeline schematic (b03_schematic.py, which carries a layout check).
 
 Each figure is drawn at the LNCS text width (4.8 in) and included at \\textwidth, so no
 scaling occurs and the stated point sizes are the printed point sizes. Text is embedded
@@ -28,8 +28,10 @@ import numpy as np
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RES = os.path.join(ROOT, "results")
-LUN = os.path.join(ROOT, "lung")   # released lung artifacts
+RES = os.path.join(ROOT, "results", "breast")
+LUN = os.path.join(ROOT, "results", "lung")
+COV = os.path.join(ROOT, "coverage")
+MAR = os.path.join(ROOT, "margins")
 OUT = os.path.join(ROOT, "figures")
 os.makedirs(OUT, exist_ok=True)
 
@@ -190,10 +192,10 @@ pair_meta = pair_meta.sort_values(["ctrl", "med"], ascending=[False, True])
 pairs = list(pair_meta.index)
 ypos = {p: i for i, p in enumerate(pairs)}
 
-f3 = pd.read_csv(f"{RES}/paper_fig3_data.csv")
+f3 = pd.read_csv(f"{ROOT}/figures/data/fig1_panelb_data.csv")
 assert len(f3) == 18
 # claim flags come from the claim-layer tables of each leg, not from the stored column
-_lu = pd.read_csv(f"{LUN}/scout_final_matched.csv")
+_lu = pd.read_csv(f"{LUN}/scout_final_lung.csv")
 f3 = f3.drop(columns=["certified_pos_matched", "certified_neg_matched"])
 _parts = []
 for _tissue, _tab in (("breast", fin), ("lung", _lu)):
@@ -318,11 +320,11 @@ fig.savefig(f"{OUT}/fig1_main.png", dpi=600)
 fig.savefig(f"{OUT}/fig1_main.pdf", metadata={"CreationDate": None})
 plt.close(fig)
 
-# ================================================================ fig2_support
-s2 = json.load(open(f"{RES}/phase2_proseg_summary.json"))
-s2l = json.load(open(f"{LUN}/phase5_e2_summary.json"))
-kb = pd.read_csv(f"{RES}/phase4_kernel_margins.csv")
-kl = pd.read_csv(f"{LUN}/phase4_kernel_margins.csv")
+# ================================================================ figS2_support
+s2 = json.load(open(f"{COV}/phase2_proseg_summary.json"))
+s2l = json.load(open(f"{COV}/phase5_e2_summary.json"))
+kb = pd.read_csv(f"{MAR}/phase4_kernel_margins.csv")
+kl = pd.read_csv(f"{MAR}/lung_phase4_kernel_margins.csv")
 assert len(kb) == 46 and len(kl) == 7
 # margins are tabulated over the unadjusted certificate set; restrict to the claim layer
 kb = kb.merge(fin[["pair", "region", "claim_pos", "claim_neg"]],
@@ -336,8 +338,8 @@ assert len(kb) == 45 and len(kl) == 5
 # E2 coverage over the certified rows of each leg, the rows that carry a claim. The breast
 # summary stores its primary over all evaluable rows (72/75); the certified-row count is
 # 43/46 in the same coverage table, and both are asserted here.
-cb = pd.read_csv(f"{RES}/phase2_proseg_coverage.csv")
-cl = pd.read_csv(f"{LUN}/phase5_e2_coverage.csv")
+cb = pd.read_csv(f"{COV}/phase2_proseg_coverage.csv")
+cl = pd.read_csv(f"{COV}/phase5_e2_coverage.csv")
 cb = cb.merge(fin[["pair", "region", "claim_pos", "claim_neg"]],
               on=["pair", "region"], how="left")
 cl = cl.merge(_lu[["pair", "region", "claim_pos", "claim_neg"]],
@@ -383,7 +385,8 @@ for i, d in enumerate(data):
     ax.text(x, np.max(d) * 1.12, f"med {np.median(d):g}", ha="center", va="bottom",
             fontsize=6.2, color="#1A1A1A")
 ax.set_yscale("log")
-ax.set_xticks([1, 2]); ax.set_xticklabels(labels)
+ax.set_xticks([1, 2])
+ax.set_xticklabels(labels)
 ax.set_ylabel(r"critical kernel multiplier  $c^*$", fontsize=7.5)
 ax.axhline(1.0, color="#1A1A1A", lw=0.7, ls=(0, (1, 2)))
 ax.text(0.02, 1.08, r"$c=1$", transform=ax.get_yaxis_transform(), fontsize=6.2,
@@ -392,16 +395,16 @@ ax.set_xlim(0.55, 2.45)
 ax.set_ylim(0.85, 60)
 ax.tick_params(axis="x", length=0)
 plabel(ax, "b")
-check_layout(fig, "fig2_support")
-fig.savefig(f"{OUT}/fig2_support.png", dpi=600)
-fig.savefig(f"{OUT}/fig2_support.pdf", metadata={"CreationDate": None})
+check_layout(fig, "figS2_support")
+fig.savefig(f"{OUT}/figS2_support.png", dpi=600)
+fig.savefig(f"{OUT}/figS2_support.pdf", metadata={"CreationDate": None})
 plt.close(fig)
 
 print("figures written:", sorted(f for f in os.listdir(OUT) if f.endswith(".pdf")))
 
-# ================================================================ fig0_workflow
+# ================================================================ figS1_workflow
 # The schematic carries a layout self-check (every label measured against its shape,
-# pairwise shape-overlap check) and aborts rather than writing a broken figure.
+# pairwise shape-overlap check) and aborts before it writes a broken figure.
 import b03_schematic  # noqa: E402
 
-print("fig0 schematic:", b03_schematic.build(OUT))
+print("figS1 schematic:", b03_schematic.build(OUT))

@@ -1,27 +1,27 @@
-"""B03: the claim layer, from stored matched-null p-values to claim flags.
+"""
 
-The direction of a claim is read from the interval sign, so the one-sided
-p-value that decides it is a selected p-value: under the null either tail could
-have produced the selection, and the union bound over the two directions makes
-$2p$ the valid p-value (Pr(p <= a) <= 2a).  A tempting shortcut at this point is
-to argue that the Benjamini-Yekutieli harmonic factor H_m >= 2 absorbs that
-factor.  It does not.  BY's guarantee is stated for valid p-values, and its
-thresholds i q / (m H_m) are the BH thresholds for H_m p; the selection factor
-sits outside that structure.  Charging it explicitly gives
+The claim layer turns the stored matched-null p-values into claim flags.
+
+A claim direction follows from the interval sign, so the p-value that decides it
+is selected: under the null either tail could have produced the selection, and
+the union bound over both directions gives 2p as the valid p-value
+(Pr(p <= a) <= 2a). The Benjamini-Yekutieli harmonic factor H_m >= 2 does not
+absorb this factor, since BY requires valid p-values and its thresholds
+i q / (m H_m) are BH thresholds at H_m p. Doubling explicitly gives
 
     p_adj = min(1, 2 p_selected),      q_adj = BY(p_adj) within region,
 
-i.e. thresholds p_selected <= i q / (2 m H_m).  A row carries a claim when its
-interval excludes zero in a direction and q_adj <= 0.10 in that same direction.
+that is, thresholds p_selected <= i q / (2 m H_m). A row carries a claim when
+its interval excludes zero in a direction and q_adj <= 0.10 in that direction.
 BH on the undoubled selected p-values is reported alongside for comparability
-only; it carries no guarantee, because the sign filter is a function of the same
-data as the p-value.
+and carries no guarantee, since the sign filter is a function of the same data
+as the p-value.
 
-Inputs are the shipped matched-null tables; p-values are not recomputed here, so
-this script cannot drift from the null layer.  Two of the shipped tables store p
-to three decimals, which rounds the add-one floor 1/(B+1) to 0.000; a stored zero
-is therefore replaced by the smallest positive p in the same column, which is
-that leg's floor.  The claim set is unchanged by the substitution.
+Inputs are the shipped matched-null tables. p-values are not recomputed here, so
+the claim set follows the null layer. Two tables store p to three decimals,
+which rounds the add-one floor 1/(B+1) to 0.000, so a stored zero is replaced by
+the smallest positive p in the same column, the floor of that leg. The
+substitution leaves the claim set unchanged.
 
 Output per leg:
 
@@ -30,6 +30,7 @@ Output per leg:
                             q_bh_unadj_neg, claim_pos, claim_neg
 
 Usage:  python src/b03_claim_layer.py
+
 """
 import json
 import os
@@ -41,11 +42,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QLVL = 0.10
 
 LEGS = [
-    ("breast", os.path.join(ROOT, "results", "scout_final_matched.csv"),
+    ("breast", os.path.join(ROOT, "results", "breast", "scout_final_matched.csv"),
      "p_pos_raw", "p_neg_raw"),
-    ("lung", os.path.join(ROOT, "lung", "scout_final_matched.csv"),
+    ("lung", os.path.join(ROOT, "results", "lung", "scout_final_lung.csv"),
      "p_pos", "p_neg"),
-    ("breast_s6", os.path.join(ROOT, "breast_s6", "scout_final_matched.csv"),
+    ("breast_s6", os.path.join(ROOT, "results", "breast_s6", "scout_final_s6.csv"),
      "p_pos_raw", "p_neg_raw"),
 ]
 
@@ -105,22 +106,24 @@ def claim_layer(df, ppos, pneg):
     return out, zeros
 
 
-def attach(leg_dir, table, cl):
-    """Write the claim columns into the leg's shipped matched-null table."""
+def attach(path, table, cl):
+    """Write the claim columns into the leg's shipped result table."""
+    table = table.rename(columns={"cert_pos_final": "certified_pos_matched",
+                                  "cert_neg_final": "certified_neg_matched"})
     add = cl[["pair", "region", "p_adj", "q_adj_pos", "q_adj_neg",
               "claim_pos", "claim_neg"]].copy()
     keep = [c for c in table.columns
             if c not in ("p_adj", "q_adj_pos", "q_adj_neg", "claim_pos", "claim_neg")]
     out = table[keep].merge(add, on=["pair", "region"], how="left", validate="1:1")
     assert len(out) == len(table)
-    out.to_csv(os.path.join(leg_dir, "scout_final_matched.csv"), index=False)
+    out.to_csv(path, index=False)
     return out
 
 
 def downstream(summary):
     """Every headline number that depends on which rows carry a claim."""
     rep = {}
-    b = pd.read_csv(os.path.join(ROOT, "results", "scout_final_matched.csv"))
+    b = pd.read_csv(os.path.join(ROOT, "results", "breast", "scout_final_matched.csv"))
     cb = b.claim_pos.astype(bool) | b.claim_neg.astype(bool)
     rep["breast_rows_without_claim"] = int((~cb).sum())
     rep["breast_no_claim_straddling"] = int((~cb & ~(b.T_lo > 0) & ~(b.T_hi < 0)).sum())
@@ -133,7 +136,7 @@ def downstream(summary):
     rep["breast_claim_rows_same_class"] = int(
         cb[b.pair.isin(["PECAM1->KDR", "ESR1->PGR", "PGR->ESR1", "ERBB2->EGFR"])].sum())
 
-    conv = pd.read_csv(os.path.join(ROOT, "results", "baseline_comparison",
+    conv = pd.read_csv(os.path.join(ROOT, "baseline_comparison",
                                     "conventional_null_breast.csv"))
     conv["call"] = np.where(conv.q_pos <= 0.10, "positive",
                             np.where(conv.q_neg <= 0.10, "negative", "none"))
@@ -148,7 +151,7 @@ def downstream(summary):
     rep["breast_enriched_claim_negative"] = int(
         ((m.call == "positive") & (m.claim == "negative")).sum())
 
-    cov = pd.read_csv(os.path.join(ROOT, "results", "phase2_proseg_coverage.csv"))
+    cov = pd.read_csv(os.path.join(ROOT, "coverage", "phase2_proseg_coverage.csv"))
     cov = cov.merge(b[["pair", "region", "claim_pos", "claim_neg"]],
                     on=["pair", "region"], how="left")
     cbc = cov.claim_pos.astype(bool) | cov.claim_neg.astype(bool)
@@ -161,7 +164,7 @@ def downstream(summary):
         cov.T_lo.to_numpy(float) + cov.T_hi.to_numpy(float))
     rep["breast_sign_agreement_claim_rows"] = f"{int((sgn[cbc] > 0).sum())}/{int(cbc.sum())}"
 
-    p3 = pd.read_csv(os.path.join(ROOT, "results", "phase3_proseg_null.csv"))
+    p3 = pd.read_csv(os.path.join(ROOT, "coverage", "phase3_proseg_null.csv"))
     p3["q_pos"] = pd.to_numeric(p3["q_pos"], errors="coerce")
     p3["q_neg"] = pd.to_numeric(p3["q_neg"], errors="coerce")
     p3 = p3.merge(b[["pair", "region", "claim_pos", "claim_neg"]],
@@ -170,7 +173,7 @@ def downstream(summary):
     ok = np.where(p3.claim_pos, p3.q_pos <= 0.10, p3.q_neg <= 0.10)
     rep["breast_proseg_null_pass_claim_rows"] = f"{int(ok[p3c].sum())}/{int(p3c.sum())}"
 
-    kb = pd.read_csv(os.path.join(ROOT, "results", "phase4_kernel_margins.csv"))
+    kb = pd.read_csv(os.path.join(ROOT, "margins", "phase4_kernel_margins.csv"))
     kb = kb.merge(b[["pair", "region", "claim_pos", "claim_neg"]],
                   on=["pair", "region"], how="left")
     kbc = kb[(kb.claim_pos.astype(bool)) | (kb.claim_neg.astype(bool))]
@@ -180,25 +183,25 @@ def downstream(summary):
     rep["breast_margin_ge125"] = round(float((kbc.c_star >= 1.25).mean()), 4)
     rep["breast_margin_ge2"] = round(float((kbc.c_star >= 2.0).mean()), 4)
 
-    nc = pd.read_csv(os.path.join(ROOT, "results", "coverage_check.csv"))
+    nc = pd.read_csv(os.path.join(ROOT, "coverage", "coverage_check.csv"))
     nc = nc[nc.nucleus_outside_U.astype(bool)].merge(
         b[["pair", "region", "claim_pos", "claim_neg"]], on=["pair", "region"])
     rep["nucleus_only_rows"] = int(len(nc))
     rep["nucleus_only_claim_rows"] = int((nc.claim_pos | nc.claim_neg).sum())
 
-    lu = pd.read_csv(os.path.join(ROOT, "lung", "scout_final_matched.csv"))
+    lu = pd.read_csv(os.path.join(ROOT, "results", "lung", "scout_final_lung.csv"))
     lc = lu.claim_pos.astype(bool) | lu.claim_neg.astype(bool)
     rep["lung_claim_rows_same_class"] = int(
         lc[lu.pair.isin(["ESR1->PGR", "PGR->ESR1", "CDH1->EGFR"])].sum())
     ep = lu[lu.pair.isin(["ESR1->PGR", "PGR->ESR1"])]
     rep["lung_ESR1_PGR_max_q_adj"] = round(float(ep.q_adj_neg.max()), 4)
-    lcov = pd.read_csv(os.path.join(ROOT, "lung", "phase5_e2_coverage.csv"))
+    lcov = pd.read_csv(os.path.join(ROOT, "coverage", "phase5_e2_coverage.csv"))
     lcov = lcov.merge(lu[["pair", "region", "claim_pos", "claim_neg"]],
                       on=["pair", "region"], how="left")
     lcbc = lcov.claim_pos.astype(bool) | lcov.claim_neg.astype(bool)
     rep["lung_coverage_claim_rows"] = f"{int(lcov.inside[lcbc].sum())}/{int(lcbc.sum())}"
     rep["lung_coverage_all_rows"] = f"{int(lcov.inside.sum())}/{len(lcov)}"
-    kl = pd.read_csv(os.path.join(ROOT, "lung", "phase4_kernel_margins.csv"))
+    kl = pd.read_csv(os.path.join(ROOT, "margins", "lung_phase4_kernel_margins.csv"))
     kl = kl.merge(lu[["pair", "region", "claim_pos", "claim_neg"]],
                   on=["pair", "region"], how="left")
     klc = kl[(kl.claim_pos.astype(bool)) | (kl.claim_neg.astype(bool))]
@@ -206,7 +209,7 @@ def downstream(summary):
     rep["lung_margin_median"] = round(float(klc.c_star.median()), 3)
     rep["lung_margin_min"] = round(float(klc.c_star.min()), 3)
 
-    s = pd.read_csv(os.path.join(ROOT, "breast_s6", "scout_final_matched.csv"))
+    s = pd.read_csv(os.path.join(ROOT, "results", "breast_s6", "scout_final_s6.csv"))
     rep["s6_claim_rows"] = int((s.claim_pos.astype(bool) | s.claim_neg.astype(bool)).sum())
     return rep
 
@@ -218,7 +221,7 @@ def main():
         cl, zeros = claim_layer(df, ppos, pneg)
         leg_dir = os.path.dirname(path)
         cl.to_csv(os.path.join(leg_dir, "claim_layer.csv"), index=False)
-        attach(leg_dir, df, cl)
+        attach(path, df, cl)
         summary[name] = {
             "rows": int(len(cl)),
             "regions": int(cl.region.nunique()),
@@ -236,7 +239,7 @@ def main():
         }
         print(f"{name}: {summary[name]}")
     summary["downstream"] = downstream(summary)
-    with open(os.path.join(ROOT, "results", "claim_layer_summary.json"), "w",
+    with open(os.path.join(ROOT, "results", "breast", "claim_layer_summary.json"), "w",
               newline="\n") as fh:
         json.dump(summary, fh, indent=1, sort_keys=True)
     print(json.dumps(summary["downstream"], indent=1, sort_keys=True))

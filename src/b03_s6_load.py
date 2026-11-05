@@ -1,20 +1,21 @@
-"""B03 Phase 7: breast_s6 crop vendor load, PIP, concordance, band geometry, labels, regions.
+"""Vendor load, PIP assignment, concordance, band geometry, labels and regions for the second breast crop.
 
-Reuses certified machinery BY IMPORT (b03_load: assign_pip, boundary_and_band,
-donor_sets_for_band_tested, BAND_UM; b03_certify: make_regions, seed 20260907).
-s6-specific I/O per the frozen second-section configuration:
-  - transcripts: <workspace>/xenium_breast_s6/crop/transcripts.parquet (frozen window
-    x[7500,11000] x y[6500,10000], frozen crop rule verbatim on centroid density).
+Reuses the certified machinery by import (b03_load: assign_pip, boundary_and_band,
+donor_sets_for_band_tested, BAND_UM, b03_certify: make_regions, seed 20260907).
+s6-specific I/O per the fixed second-section configuration:
+  - transcripts: <workspace>/xenium_breast_s6/crop/transcripts.parquet (fixed window
+    x[7500,11000] x y[6500,10000], fixed crop rule applied to centroid density).
   - polygons:    crop cell_boundaries.parquet as per-cell WKB (simpler than the 10x
-    exploded format; same validity filter: area > 1e-6, buffer(0) repair, largest part).
+    exploded format, same validity filter: area > 1e-6, buffer(0) repair, largest part).
   - concordance: totals-level gate, vendor obs/transcript_counts (polygon-id
-    space, raw int64) vs our PIP over is_gene & QV>=20 transcripts; gates r >= 0.99,
+    space, raw int64) vs our PIP over is_gene & QV>=20 transcripts
+    gates r >= 0.99,
     rho >= 0.99, median |diff| <= 5, ratio in [0.90, 1.10]. The packaging ships no
     raw count matrix on the polygon-id space, so the per-gene gate form of
     tissues 1/2 is structurally unavailable here, and this gate is the
     totals-level form.
-  - labels:      frozen marker dictionary, majority vote, tested-LR genes excluded;
-    classes < 200 cells dropped (frozen minimum-class rule).
+  - labels:      fixed marker dictionary, majority vote, tested-LR genes excluded;
+    classes < 200 cells dropped (fixed minimum-class rule).
   - regions:     k-means k=3 on (log10(1+transcript_counts), x/1000, y/1000), seed
     20260907. transcript_counts joined from the zip obs (vendor per-cell total),
     asserted to match the CSR row totals exactly.
@@ -22,7 +23,8 @@ s6-specific I/O per the frozen second-section configuration:
 Outputs -> the s6 crop data dir: tx.parquet, donor_map.pkl, cells_meta.parquet,
 concordance.json, labels.npy, regions.npy  (lung-loader schema, downstream-compatible).
 Smoke mode (B03_S6_SMOKE=1): first 300k transcripts, smoke_* artifacts, all
-assertions still run; concordance recorded but not gated (structural mismatch of
+assertions still run
+concordance recorded but not gated (structural mismatch of
 row subsets, same policy as the lung loader).
 """
 import os, sys, json, pickle, time
@@ -60,7 +62,7 @@ PAIRS = [("CD274","PDCD1"),("CXCL12","CXCR4"),("PECAM1","KDR"),
 TESTED = sorted({g for p in PAIRS for g in p})
 assert len(TESTED) == 17, TESTED
 
-# frozen marker dictionary; tested-LR genes removed HERE (assertion verifies
+# fixed marker dictionary; tested-LR genes removed HERE (assertion verifies
 # so the filter does not leak a marker into the vote).
 MARKERS_RAW = {
  "Epithelial": ["EPCAM", "MUC1"],
@@ -110,7 +112,8 @@ def load_transcripts():
         t = f.read_row_group(i, columns=["x", "y", "feature_name", "qv", "is_gene"]).to_pandas()
         t = t.rename(columns={"x": "x_location", "y": "y_location"})
         if SMOKE and n >= 300_000: break
-        frames.append(t); n += len(t)
+        frames.append(t)
+        n += len(t)
     tx = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
     if SMOKE: tx = tx.head(300_000)
     tx = tx[tx.qv >= 20.0].reset_index(drop=True)
@@ -128,17 +131,21 @@ def load_polygons_s6():
     for k in range(len(geoms)):
         p = geoms[k]
         if p is None or p.is_empty:
-            n_invalid += 1; continue
+            n_invalid += 1
+            continue
         if not (p.is_valid and p.area > 1e-6):
             p = p.buffer(0)
             if p.is_empty or p.area <= 1e-6:
-                n_invalid += 1; continue
+                n_invalid += 1
+                continue
         if p.geom_type == "MultiPolygon":
             p = max(p.geoms, key=lambda q: q.area)
         if p.area <= 1e-6:
-            n_invalid += 1; continue
+            n_invalid += 1
+            continue
         cid = cells_meta.cell_id.iloc[k]
-        cid_map[cid] = len(polys); polys[len(polys)] = p
+        cid_map[cid] = len(polys)
+        polys[len(polys)] = p
     print(f"valid crop polygons: {len(polys):,} (invalid dropped: {n_invalid})", flush=True)
     return polys, cid_map, cells_meta
 
@@ -150,7 +157,7 @@ def verify_totals_s6(tx, owner, cid_map, cm):
     Gates: Pearson r >= 0.99 AND Spearman rho >= 0.99 AND median |diff| <= 5
            AND total ratio in [0.90, 1.10].
     Rationale: this packaging ships no raw count matrix on the polygon-id
-    space (table_cells.X is processed; points cell_id is a different segmentation
+    space (table_cells.X is processed, points cell_id is a different segmentation
     layer), so the per-gene gate form of tissues 1/2 is structurally unavailable.
     """
     from scipy.stats import spearmanr
@@ -180,7 +187,8 @@ def label_cells(tx, n_cells):
         for g in genes:
             assert g not in TESTED, f"marker {g} is a tested LR gene - dictionary leak"
             ann_map[g] = cls
-    feat = tx.feature_name.to_numpy(); cells = tx.cell_idx.to_numpy()
+    feat = tx.feature_name.to_numpy()
+    cells = tx.cell_idx.to_numpy()
     keep = cells >= 0
     f2, c2 = feat[keep], cells[keep]
     is_marker = np.array([g in ann_map for g in f2])
@@ -211,13 +219,13 @@ def main():
     conc = verify_totals_s6(tx, owner, cid_map, cells_meta)
     if SMOKE:
         conc["mode"] = "smoke"
-        conc["gate"] = "SKIPPED - smoke mode; full-mode gate required"
-        print(f"smoke totals-gate (NOT a gate): {conc}", flush=True)
+        conc["gate"] = "SKIPPED - smoke mode, full-mode gate required"
+        print(f"smoke totals-gate (diagnostic): {conc}", flush=True)
     else:
         print(f"totals-level concordance gate: r={conc['pearson_r']:.5f} "
               f"rho={conc['spearman_rho']:.5f} med|d|={conc['median_abs_diff']:.1f} "
               f"ratio={conc['total_ratio']:.5f} -> {conc['gate']}", flush=True)
-        json.dump(conc, open(f"{OUTD}/concordance.json", "w"), indent=1)
+        json.dump(conc, open(os.path.join(ROOT, "preprocessing", "breast_s6_concordance.json"), "w"), indent=1)
         if conc["gate"] != "PASS":
             sys.exit(2)
     # vendor per-cell totals: join from the zip obs by cell-id string, then assert
@@ -240,10 +248,9 @@ def main():
     dist, band, tree, edge_cell = boundary_and_band(tx, polys)
     tx["dist_boundary"] = dist
     tx["in_band"] = band
-    # registered mover filter: donor sets cover band transcripts of the 17
-    # tested genes ONLY. b03_load's module default is tissue-1's 25-pair superset;
-    # the lung leg was unaffected because its panel lacks every superset-only gene
-    # (verified), but s6's panel carries CCL5/CD3D. Override explicitly and assert.
+    # Donor sets cover band transcripts of the 17 tested genes only. The module
+    # default in b03_load is the 25-pair breast family, and this panel carries
+    # CCL5 and CD3D, so the gene list is overridden and checked here.
     b03_load.TESTED_GENES = list(TESTED)
     assert set(b03_load.TESTED_GENES) == set(TESTED) and len(TESTED) == 17
     band_idx, sets = donor_sets_for_band_tested(tx, band, tree, edge_cell)

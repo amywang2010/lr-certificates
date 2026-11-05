@@ -1,10 +1,10 @@
-"""B03 Phase 5 the frozen crop configuration step 2: extract the frozen crop, count transcripts, envelope gate.
+"""Crop extraction for the lung section, with transcript counts and the envelope check.
 
-Reads the frozen window from results/lung_crop_window.json. Writes:
+Reads the fixed window from preprocessing/lung_crop_window.json. Writes:
   <workspace>/xenium_lung/crop/transcripts.parquet  (rows with window <= x,y < window)
   <workspace>/xenium_lung/crop/cell_boundaries.parquet, nucleus_boundaries.parquet, cells.parquet
-  (vendor cells whose centroid is inside the window; boundaries matched by cell key)
-Envelope gate (frozen): peak = 270 B/tx x n_tx must be <= 7.0 GB else no proseg launch.
+  (vendor cells whose centroid is inside the window, boundaries matched by cell key)
+Envelope gate (fixed): peak = 270 B/tx x n_tx must be <= 7.0 GB else no proseg launch.
 """
 import json, os, sys
 import numpy as np
@@ -16,7 +16,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
 CROP = os.path.join(WORKSPACE, "xenium_lung", "crop")
 EXT = os.path.join(WORKSPACE, "xenium_lung", "extracted")
-env = json.load(open(os.path.join(ROOT, "results", "lung_crop_window.json")))
+env = json.load(open(os.path.join(ROOT, "preprocessing", "lung_crop_window.json")))
 w = env["window"]
 x0, x1, y0, y1 = w["x0"], w["x1"], w["y0"], w["y1"]
 os.makedirs(CROP, exist_ok=True)
@@ -71,4 +71,4 @@ print(f"ENVELOPE: predicted proseg peak = {peak_gb:.2f} GB (gate <= {7.0} GB) ->
       + ("LAUNCH PERMITTED" if peak_gb <= 7.0 else "LAUNCH DENIED"))
 json.dump(dict(n_transcripts=int(n_tx), n_cells=c_crop.num_rows,
                peak_gb=round(peak_gb, 2), gate=peak_gb <= 7.0, window=w),
-          open(os.path.join(ROOT, "results", "lung_crop_envelope.json"), "w"), indent=1)
+          open(os.path.join(ROOT, "preprocessing", "lung_crop_envelope.json"), "w"), indent=1)

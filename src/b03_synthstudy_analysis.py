@@ -1,10 +1,10 @@
-"""B03 synthetic-study paper-grade analysis (post-fleet, zero new compute).
+"""Analysis of the semi-synthetic study from the shipped per-run artifacts.
 
-Reads only shipped per-run artifacts (run_manifest.json, scout_final_matched.csv)
-and the shipped real-section table (results/scout_final_matched.csv).
+Reads run_manifest.json and scout_final_matched.csv
+and the shipped real-section table (results/breast/scout_final_matched.csv).
 
-Truth-model note (amends spec S4 as executed). Arm N permutes ONLY the 21
-tested feature names; class labels, geometry, donor sets, regions, and the
+Truth models. Arm N permutes only the 21
+tested feature names, class labels, geometry, donor sets, regions, and the
 null machinery are unchanged. A row (L -> R) of a pseudo-section decomposes
 by the class map:
 
@@ -12,15 +12,16 @@ by the class map:
     RECV_MAP[R] == RECV_MAP[pre(R)], where pre() is the pre-image of the name
     permutation. The row's content assignment equals the real section's, so
     its statistic is BITWISE the real-section statistic of the pre-image pair
-    (same counted sets, same donor map); if the pre-image pair is one of the
-    25 tested pairs, its matched-null p/q are bitwise the real-section values
+    (same counted sets, same donor map), if the pre-image pair is one of the
+    25 tested pairs. its matched-null p/q are bitwise the real-section values
     too (same null seeds and blocks).
-  sigma = 0 (mixed-class): the row mixes content across classes; no
+  sigma = 0 (mixed-class): the row mixes content across classes
+  no
     real-section analogue exists.
 
 Consequences:
   - Every certificate (either direction) on every arm is a sound superset
-    statement about its own pseudo-section (Propositions 1-2 logic); the
+    statement about its own pseudo-section (Propositions 1-2 logic). the
     certificates never certify anything false about the section they score.
   - Content-invariance receipt: whenever a row's sender (resp. receiver)
     slot is class-preserving, the row's sender (resp. receiver) count is
@@ -29,13 +30,13 @@ Consequences:
   - "False certification" is therefore truth-model-relative:
     * construction-truth model: 0 by soundness, witnessed by the slot-level
       content-invariance receipt;
-    * naive truth model ("every row null by construction"): the certified
+    * naive truth model ("every row null in the construction"): the certified
       rows are the false certifications, and they are exclusively sigma = 0
       mixed-class rows (inherited real spatial structure, not machinery
       errors). sigma = 1 certified rows would be inherited real-section
       certifications.
 
-Outputs (written to results/synthstudy/):
+Outputs (written to intervention/):
   slot_identity.csv  per-run slot-level content-invariance tallies (receipt)
   sigma_audit.csv   per Arm-N run x row: sigma, pre-image, verdicts, matches
   fcr_table.csv     per-run + pooled FCR under both truth models
@@ -54,13 +55,13 @@ import pandas as pd
 
 SRC = Path(__file__).resolve().parent
 ROOT = SRC.parent
-OUT = ROOT / "results"
-STUDY = OUT / "synthstudy"
+OUT = ROOT / "intervention"
+STUDY = OUT / "runs"
 
 sys.path.insert(0, str(SRC))
 import b03_synthstudy as SS  # module-level constants only; no data load
 
-REAL_FINAL = OUT / "scout_final_matched.csv"
+REAL_FINAL = ROOT / "results" / "breast" / "scout_final_matched.csv"
 N_RUNS = [f"N{i:02d}" for i in range(1, 7)]
 E_RUNS = ["E001F10", "E001F40", "E002F10", "E002F40", "E003F10", "E003F40"]
 M_RUNS = ["M0801", "M0802", "M0401", "M0402", "M0101", "M0102",
@@ -105,7 +106,7 @@ def sigma_row(L, R, pre):
     """1 if the row's declared classes are preserved by the permutation.
 
     Declared classes come from the role maps (TYPE_MAP for the sender slot,
-    RECV_MAP for the receiver slot); content classes come from the union map
+    RECV_MAP for the receiver slot), content classes come from the union map
     applied to the pre-image names."""
     return int(class_of(pre[L]) == SS.TYPE_MAP[L]
                and class_of(pre[R]) == SS.RECV_MAP[R])
@@ -115,7 +116,7 @@ def slot_identity_check(real_bounds):
     """Slot-level content-invariance receipt: for any Arm-N row whose sender
     slot is class-preserving (class_of(pre(L)) == TYPE_MAP[L]), the row's nL
     must bitwise equal the real section's sender count of pre(L) in that
-    region; likewise for class-preserving receiver slots. The real count maps
+    region, likewise for class-preserving receiver slots. The real count maps
     are pair-invariant (verified here), so this is an exact comparison.
     Returns (per-run tallies, list of mismatches)."""
     sender_counts, recv_counts = {}, {}
@@ -311,7 +312,8 @@ def main():
           int(real.certified_pos_matched.sum()), "cert-pos /",
           int(real.certified_neg_matched.sum()), "cert-neg")
 
-    tallies, bad = slot_identity_check(pd.read_csv(OUT / "scout_bounds.csv"))
+    tallies, bad = slot_identity_check(
+        pd.read_csv(ROOT / "results" / "breast" / "scout_bounds.csv"))
     tallies.to_csv(STUDY / "slot_identity.csv", index=False)
     assert not bad, f"content-invariance violations: {bad[:5]}"
     print("\nV1 slot-level content-invariance receipt (class-preserving slots,"
@@ -334,7 +336,7 @@ def main():
           f"{2 * len(s1_comp)} among those)")
     print(f"  sigma=0 rows: {(aud.sigma == 0).sum()} "
           f"(mixed-class content; no real-section analogue - the "
-          f"{len(comp) - len(s1_comp)} panel-matching rows among them are NOT "
+          f"{len(comp) - len(s1_comp)} panel-matching rows among them are not "
           f"expected to match real statistics)")
     s1c = aud[(aud.sigma == 1) & (aud.cert_pos | aud.cert_neg)]
     print(f"  sigma=1 certified rows: {len(s1c)} "

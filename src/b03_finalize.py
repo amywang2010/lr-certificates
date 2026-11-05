@@ -11,8 +11,9 @@ Runs after the matched null has written its outputs, and:
      non-zero, verdict flags equal to bound sign AND matched q, bounds ordered around
      the point estimate).
 
-Outputs: results/null_robust_matched_final.csv (the null with final p and q) and
-results/scout_final_matched.csv (the merged table). Both are released artifacts. A
+Outputs: results/breast/null_robust_matched_final.csv (the null with final p and q)
+and results/breast/scout_final_matched.csv (the merged table). Both are released.
+A
 human-readable record of the consistency battery is written to finalize_checks.md.
 """
 import os
@@ -23,9 +24,11 @@ import time
 import pandas as pd
 import numpy as np
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); OUT = os.path.join(ROOT, "results")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(ROOT, "results", "breast")
 REPORT = os.path.join(ROOT, "finalize_checks.md")
 LOG = os.path.join(ROOT, "logs", "finalize.log")
+os.makedirs(os.path.dirname(LOG), exist_ok=True)
 
 T0 = time.time()
 
@@ -125,7 +128,7 @@ def main():
     ctrl = final[final.control]
     n_ctrl_pos = int(ctrl.certified_pos_matched.sum())
     disp = final[~final.control]
-    # Gate 2, VERBATIM: "at least 1 disputed pair loses sign certification
+    # Gate 2, as specified: "at least 1 disputed pair loses sign certification
     # (0 in [T_lo, T_hi])": the parenthetical defines the event as 0 inside the
     # interval (non-identification). Report also the stricter complementary
     # evidence: disputed rows certifying the OPPOSITE/negative sign (T_hi < 0,
@@ -133,8 +136,8 @@ def main():
     n_disp_0in = int(((disp.T_lo <= 0) & (0 <= disp.T_hi)).sum())
     n_disp_neg = int((disp.certified_neg_matched).sum())
     n_disp_nonid = n_disp_0in
-    cov = json.load(open(f"{OUT}/coverage_summary.json"))
-    # PASS gate (verbatim): >=1 positive control certified
+    cov = json.load(open(os.path.join(ROOT, "coverage", "coverage_summary.json")))
+    # PASS gate, as specified: >=1 positive control certified
     # (T_lo > 0, matched q <= 0.1) AND >=1 disputed pair with 0 in [T_lo, T_hi]
     # AND coverage >= 90% AND all consistency checks.
     pass_gate = ((n_ctrl_pos >= 1) and (n_disp_0in >= 1) and
@@ -173,7 +176,7 @@ def main():
     a("## Gate arithmetic")
     a("")
     a(f"- Positive controls certified: **{n_ctrl_pos}** of 15 control (pair, region) rows")
-    a(f"- Disputed rows with 0 in [T_lo, T_hi] (gate-2 event, verbatim): "
+    a(f"- Disputed rows with 0 in [T_lo, T_hi] (gate-2 event, as specified): "
       f"**{n_disp_0in}** of {len(disp)} disputed rows")
     a(f"- Disputed rows certifying the OPPOSITE (negative) sign, T_hi < 0 and "
       f"q_neg <= 0.1 (stronger, complementary evidence): **{n_disp_neg}** "
@@ -226,10 +229,10 @@ def main():
     a("")
     a("## Limitations")
     a("")
-    a("- Certificates quantify assignment/leakage uncertainty ONLY (reassignment of "
-      "molecules among a fixed cell inventory). Segmentation schemes that change the "
-      "inventory (Proseg-style merges/splits) or labels are outside U; label-drift and "
-      "cross-platform sensitivity are handled in the cross-segmentation phases.")
+    a("- Certificates quantify assignment and leakage uncertainty, that is, "
+      "reassignment of molecules among a fixed cell inventory. Segmentation schemes "
+      "that change the inventory (Proseg-style merges and splits) or the labels lie "
+      "outside U and are measured in the cross-segmentation checks.")
     a("- Single tissue section, single technology (Xenium FFPE breast). Multi-tissue/"
       "multi-platform replication is treated in this study's other sections.")
     a("- p-values at B=1000 have resolution 1/(B+1) ~ 1e-3; pairs with p at the floor are "

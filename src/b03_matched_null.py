@@ -1,4 +1,4 @@
-"""B03 Step 4: matched robust permutation null, parallel over worker processes.
+"""Matched permutation null, parallel over worker processes.
 
 The permutation scheme is fixed: B=1000, within-region decile-matched blocks, tie
 convention Tlo >= T_lo_o - 1e-9, and the same interval machinery as the observed
@@ -13,29 +13,29 @@ bounds (cross-checked against scout_bounds at 8.9e-16).
      draw under H0.
   R3 CHECKPOINTING: results saved every 50 completed permutations (atomic tmp+rename),
      so an interruption never loses more than one chunk.
-  R4 PRE-FLIGHT DETERMINISM CHECK: perm 0 computed twice (parent + a worker); bitwise
+  R4 PRE-FLIGHT DETERMINISM CHECK: perm 0 computed twice (parent + a worker), bitwise
      equality required before the full run starts.
 
 Outputs:
   results/null_robust_matched.csv      (p_pos/p_neg as raw count/B, finalization applies
                                         the add-one convention)
-  results/scout_summary_matched.json
+  results/breast/scout_summary_matched.json
 """
 import numpy as np
 import pandas as pd
 import pickle, json, time, math, os, sys
 import multiprocessing as mp
 
-# Tissue-2 reuse: seed base, dirs, and worker count overridable by env so
-# spawned workers (which re-import this module fresh) inherit the fixed
-# tissue-2 configuration. Defaults unchanged -> tissue-1 reruns bitwise identical.
+# Seed base, directories and worker count are read from the environment so that
+# spawned workers re-importing this module inherit the same configuration. The
+# defaults reproduce the breast run bitwise.
 SEED = int(os.environ.get("B03_NULL_SEED", "20260905"))
 SEED_BASE = SEED + 100003
 
 EPS = 0.5
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.environ.get("B03_NULL_DATA", os.path.join(ROOT, "data"))
-OUT = os.environ.get("B03_NULL_OUT", os.path.join(ROOT, "results"))
+OUT = os.environ.get("B03_NULL_OUT", os.path.join(ROOT, "results", "breast"))
 B_PERM = int(os.environ.get("B03_NULL_B", "1000"))
 N_WORKERS = int(os.environ.get("B03_NULL_WORKERS", "4"))
 CKPT_EVERY = int(os.environ.get("B03_NULL_CKPT", "50"))
@@ -66,10 +66,10 @@ RECV_MAP = {
 # shared state (set once in parent, transferred to workers via initializer)
 # ---------------------------------------------------------------------------
 _W = {}
-# Capacity-cap support (tissue 2): when B03_NULL_CAP=1, gain capacities are enforced
-# with the SAME formula as the certify step: dmax = min(dmax_unc, sum_{c in target}
-# min(pot_c(g), cap_c)). pot_by_gene/cap_per_cell arrive via worker_init. Default off
-# -> tissue-1 behavior identical.
+# Capacity support: with B03_NULL_CAP=1, gain capacities are enforced with the
+# same formula as the certify step, dmax = min(dmax_unc, sum_{c in target}
+# min(pot_c(g), cap_c)). pot_by_gene and cap_per_cell arrive through worker_init.
+# The default of 0 leaves the breast run unchanged.
 CAPS = os.environ.get("B03_NULL_CAP", "0") == "1"
 
 
@@ -164,9 +164,8 @@ def main():
     # ---- alignment assertions ----
     n_cells = len(cells_meta)
     assert n_cells == len(labels) == len(region_of_cell), "length misalignment"
-    # Frozen label-count verification: against label_counts.json when present
-    # (tissue-2 reuse, written by the tissue-2 loader), else the tissue-1 scout
-    # counts (behavior identical to the original hard assertion).
+    # Label counts are checked against label_counts.json when the loader writes
+    # one, and against the breast counts from the scout run otherwise.
     lc_path = os.path.join(DATA, "label_counts.json")
     if os.path.exists(lc_path):
         expected = json.load(open(lc_path))

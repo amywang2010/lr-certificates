@@ -1,36 +1,153 @@
 # Joint Attainability of Worst-Case Co-expression Bounds via Capacitated Flows
 
-Code and hashed result artifacts for the RECOMB 2027 paper of the same title
-(Amy Wang and Manolis Kellis, MIT).
+Code and hashed result artifacts for the RECOMB 2027 paper by Amy Wang and
+Manolis Kellis (MIT). The analysis bounds a ligand–receptor co-expression score
+over a declared set of transcript-to-cell assignments, tests whether one
+assignment attains both per-gene optima, and certifies a direction with a
+permutation null that recomputes the same bound.
 
-The repository computes an interval for a ligand–receptor co-expression score over a
-declared set of plausible transcript-to-cell assignments, tests whether one assignment
-attains both per-gene optima of that interval, and certifies a direction with a
-permutation null that recomputes the same worst-case object under every label
-permutation.
+## Layout
 
-## What the code computes
+| Path | Contents |
+|---|---|
+| `src/` | One script per analysis step |
+| `preprocessing/` | Crop windows, point-in-polygon concordance, concordance diagnosis |
+| `results/breast/` | 75-test breast table, claim layer, exact-flow endpoints, joint attainment |
+| `results/lung/` | 54-test lung-crop table and joint attainment |
+| `results/breast_s6/` | 30-test second-section table and joint attainment |
+| `results/coupled_end_summary.json` | Joint-attainment counts across the three sections |
+| `coverage/` | Proseg coverage, Proseg-side null, label transfer, nucleus-only mask |
+| `margins/` | Critical multiplier `c*` for certified tests |
+| `sensitivity/` | Corrected-bound and pseudocount sensitivity tables |
+| `provenance/` | B = 10,000 stability run, determinism gate, per-run tables |
+| `intervention/` | 20-run injection study, arm tables, slot identity audit |
+| `baseline_comparison/` | Conventional point-null comparison |
+| `figures/` | Figure 1, Figures S1 and S2, and the panel B data |
+| `tests/` | Release checks that run on the shipped artifacts |
 
-**Interval ends.** The score separates into a ligand term and a receptor term. Each
-upper endpoint is a maximum flow on a network whose nodes are source cells, donor-set
-signatures and counted cells. Each lower endpoint has a closed form. `src/b03_exact_end.py`
-solves the 150 breast gene-ends this way and reads every flow back into an assignment.
-With source-loss budgets inactive, a Hall condition on the counted cells decides when a
-per-transcript count already attains the flow value, and the shortfall otherwise equals
-the maximum deficiency.
+## Reproducing the published numbers
 
-**Joint attainment.** Two further flows on a merged network decide whether a single
-assignment reaches both per-gene ends. `src/b03_coupled_end.py` runs the test on all three
-sections and reports the gap when it fails.
+Install the environment once. Every step below runs from the repository root.
 
-**Inference.** `src/b03_matched_null.py` recomputes the interval under each
-within-region, decile-matched label permutation and writes add-one Monte Carlo p-values.
-The claim layer reads those stored values and doubles the p-value selected by the
-interval sign before Benjamini–Yekutieli correction within region
-(`src/b03_claim_layer.py`). A test carries a claim when the interval excludes zero and
-the adjusted q-value is at most 0.10.
+```
+python -m pip install -r requirements.txt
+```
 
-## Results in the released artifacts
+The shipped tables support the paper without vendor data. These commands
+recompute the derived tables and check them against the stored values.
+
+```
+python src/b03_claim_layer.py        # claim columns in all three section tables
+python src/b03_eps_sensitivity.py    # Table S5
+python -m unittest discover -s tests -v
+sha256sum -c RELEASE_MANIFEST.sha256
+```
+
+The heavy pipelines need the public sections. Breast scripts read the vendor
+bundle from `data/`. The lung and second-section scripts read a workspace next
+to the clone, set by `B03_WORKSPACE` (default: the parent directory), holding
+`xenium_lung/` and `xenium_breast_s6/` with the vendor archive, an `extracted/`
+subdirectory and a `crop/` subdirectory.
+
+Intervals, matched null and claims:
+
+```
+python src/b03_load.py
+python src/b03_scout.py
+python src/b03_certify.py
+python src/b03_matched_null.py
+python src/b03_finalize.py
+python src/b03_claim_layer.py
+```
+
+Endpoints and joint attainment:
+
+```
+python src/b03_exact_end.py          # 150 breast gene-ends, 540 s
+python src/b03_coupled_end.py        # three sections, writes results/coupled_end_summary.json
+python src/b03_enumerate_check.py    # 3,000 small instances
+```
+
+Evidence beyond the declared uncertainty set:
+
+```
+python src/b03_coverage.py           # nucleus-only mask, coverage/coverage_summary.json
+python src/b03_phase2_vendor_prep.py
+python src/b03_phase2_label_validation.py
+python src/b03_phase2_analysis.py    # coverage/phase2_proseg_*
+python src/b03_phase3_proseg_null.py # coverage/phase3_*
+python src/b03_phase4_kernel.py      # margins/phase4_*
+python src/b03_phase9_neighbor.py    # sensitivity/breast_tight_bounds_sensitivity.csv
+```
+
+Lung crop and second section:
+
+```
+python src/b03_lung_audit.py
+python src/b03_lung_crop.py
+python src/b03_lung_crop_extract.py
+python src/b03_lung_load.py
+python src/b03_lung_certify.py
+python src/b03_lung_null.py
+python src/b03_s6_extract.py
+python src/b03_s6_prep.py
+python src/b03_s6_load.py
+python src/b03_s6_certify.py
+python src/b03_s6_null.py
+python src/b03_s6_finalize.py
+python src/b03_phase5_vendor_prep.py
+python src/b03_phase5_e2.py
+python src/b03_phase5_e3.py
+python src/b03_s6_vendor_prep.py
+python src/b03_s6_e2.py
+python src/b03_s6_tight.py
+```
+
+Remaining analyses:
+
+```
+python src/b03_phase6_breast.py      # B = 10,000, provenance/b10k_breast
+python src/b03_phase6_lung.py        # B = 10,000, provenance/b10k_lung
+python src/b03_phase6_analysis.py    # provenance/high_permutation_summary.json
+python src/b03_baseline_conventional_null.py
+python src/b03_baseline_comparison.py
+python src/b03_mass_share.py
+python src/b03_synthstudy.py --mode verify
+python src/b03_synthstudy_analysis.py
+python src/b03_paper_figures.py
+python src/b03_schematic.py
+```
+
+`src/b03_synthstudy.py --mode run` reproduces the 20 intervention runs, one run
+at a time, into `intervention/runs/<run_id>/`. `--mode fleet` runs the batch.
+
+## Reading a section table
+
+`results/breast/scout_final_matched.csv` holds 75 rows, one per pair and region.
+The columns record the pair and control flag, the counted transcript totals
+`nL` and `nR`, the cell denominators, the departure and arrival bounds `dL_min`,
+`dL_max`, `dR_min`, `dR_max`, the point score `T0`, the interval `T_lo`, `T_hi`
+and its width, the erosion variants, the matched-null `p_pos`, `p_neg`, `q_pos`
+and `q_neg`, the undoubled certificate flags `certified_pos_matched` and
+`certified_neg_matched`, the selection-adjusted `p_adj`, `q_adj_pos` and
+`q_adj_neg`, and the claim flags `claim_pos` and `claim_neg`.
+
+`results/lung/scout_final_lung.csv` and `results/breast_s6/scout_final_s6.csv`
+carry the same schema for 54 and 30 rows. `claim_layer.csv` in each directory
+holds the claim computation on its own, with the selected one-sided value and
+the undoubled Benjamini–Hochberg values beside the reported ones.
+
+The interval endpoints reproduce from the count columns:
+
+```
+T_lo = log2((nL + dL_min)/nl_cells + 0.5) + log2((nR + dR_min)/nr_cells + 0.5)
+T_hi = log2((nL + dL_max)/nl_cells + 0.5) + log2((nR + dR_max)/nr_cells + 0.5)
+```
+
+`src/b03_eps_sensitivity.py` applies the same expression at ε = 0.1, 0.5 and
+1.0 and writes `sensitivity/eps_sensitivity.csv`, which reproduces Table S5.
+
+## What the artifacts show
 
 | Section | Tests | Interval sign (+/−/0) | Claims (+) | Claims (−) |
 |---|---|---|---|---|
@@ -38,102 +155,28 @@ the adjusted q-value is at most 0.10.
 | Lung crop, 5K panel | 54 | 1 / 32 / 21 | 1 | 4 |
 | Breast, second section, 5K panel | 30 | 0 / 17 / 13 | 0 | 0 |
 
-The joint-attainment test covers 157 of the 159 tests. Two lung tests have no movable
-transcript for either gene and no joint-flow instance. The lower end is attained on all
-157, the upper end on 149.
+The joint-attainment test covers 157 of the 159 tests. Two lung tests have no
+movable transcript for either gene. The lower endpoint is attained on all 157,
+the upper endpoint on 149. `results/coupled_end_summary.json` gives the counts,
+the largest shared-loss collision and the largest slack.
 
-Two layers are reported: the interval layer (worst-case bounds over the declared
-assignment set) and the claim layer (interval sign plus the matched null at q ≤ 0.10).
-Against the 90% gate fixed in S2, Proseg keeps 42/45 breast claims inside their
-intervals (93.3%) but only 4/5 lung claims (80.0%), so the lung gate fails and is
-reported as such.
+The reported interval uses the donor-slot count at Layer A, the layer the matched
+null recomputes. A claim additionally requires the null to support the direction
+of the interval sign at q <= 0.10 within the region.
 
-## Contents
+Proseg keeps 42 of 45 breast claims inside their intervals (93.3%) and 4 of 5
+lung claims (80.0%). The lung fraction falls below the 90% gate fixed in S2, and
+the paper reports that outcome.
 
-| Path | Content |
-|---|---|
-| `src/` | Analysis scripts, one per pipeline step |
-| `results/` | Breast artifacts, exact-end tables, conventional-null comparison, high-permutation reruns, intervention study, tested-gene mass share |
-| `lung/` | Lung-crop artifacts under the same column schema |
-| `breast_s6/` | Second-section artifacts under the same column schema |
-| `figures/` | Figure 1, Figure S2 and the workflow schematic, as PDF and PNG |
-| `tests/` | Release checks that run on the shipped artifacts |
-| `requirements.txt` | Python environment |
-| `CITATION.cff` | Citation metadata |
-| `RELEASE_MANIFEST.sha256` | SHA-256 of every other file in the repository |
-| `LICENSE` | MIT |
+## Tests
 
-Each section directory holds a 75-, 54- or 30-row table (`scout_final_matched.csv`), its
-matched null, the claim layer (`claim_layer.csv`), feasibility and subcube receipts, and
-the cross-segmentation summaries.
-
-## Installation
+`tests/test_release.py` needs no vendor data. It checks row counts, interval
+signs, claim counts, the claim arithmetic, the exact-end summary, the joint
+counts, the coverage and margin summaries, and the artifact layout.
 
 ```
-python -m pip install -r requirements.txt
+python -m unittest discover -s tests -v
 ```
-
-The analysis is CPU-only. Proseg 3.2.0 is a separate tool, invoked on the molecule
-files for the cross-segmentation checks.
-
-## Quick start from the shipped artifacts
-
-These steps need no vendor data and finish in seconds to minutes.
-
-```
-python src/b03_claim_layer.py      # claim columns, claim_layer.csv per section
-python tests/test_release.py       # release checks
-python -m unittest discover -s tests
-```
-
-Verify every shipped file against the manifest:
-
-```
-sha256sum -c RELEASE_MANIFEST.sha256
-```
-
-## Full reproduction
-
-Scripts resolve paths from the repository root. Breast scripts read the vendor bundle
-from `data/`. The lung and second-section pipelines read a workspace directory next to
-the clone, set with `B03_WORKSPACE` (default: the parent directory), containing
-`xenium_lung/` and `xenium_breast_s6/` with the vendor archive, an `extracted/`
-subdirectory and a `crop/` subdirectory.
-
-1. Breast intervals and matched null: `src/b03_load.py`, `src/b03_scout.py`,
-   `src/b03_certify.py`, `src/b03_matched_null.py`, `src/b03_finalize.py`.
-2. Interval verification and sensitivity: `src/b03_coverage.py`,
-   exhaustive check of the flow ends and the attainment criteria on 3,000 small
-   instances is `src/b03_enumerate_check.py`, which writes
-   `results/enumeration_check.json`.
-3. Claim layer: `src/b03_claim_layer.py`. The downstream summaries are then aligned
-   with the claim set by `src/b03_finalize_summaries.py`, which reads only the shipped
-   per-row tables.
-4. Cross-segmentation on breast: run Proseg 3.2.0 on the molecule file, then
-   `src/b03_phase2_vendor_prep.py`, `src/b03_phase2_label_validation.py`,
-   `src/b03_phase2_analysis.py`, `src/b03_phase3_proseg_null.py`,
-   `src/b03_phase4_kernel.py`.
-5. Lung crop: `src/b03_lung_audit.py`, `src/b03_lung_crop.py`,
-   `src/b03_lung_crop_extract.py`, `src/b03_lung_load.py`, `src/b03_lung_certify.py`,
-   `src/b03_lung_null.py`, `src/b03_lung_concordance.py`, `src/b03_phase5_vendor_prep.py`,
-   `src/b03_phase5_e2.py`, `src/b03_phase5_e3.py`. Shared settings are in
-   `src/b03_lung_config.py`.
-6. High-permutation reruns: `src/b03_phase6_breast.py`, `src/b03_phase6_lung.py`,
-   `src/b03_phase6_analysis.py`.
-7. Second section: `src/b03_s6_extract.py`, `src/b03_s6_prep.py`, `src/b03_s6_load.py`,
-   `src/b03_s6_certify.py`, `src/b03_s6_null.py`, `src/b03_s6_finalize.py`,
-   `src/b03_s6_vendor_prep.py`, `src/b03_s6_e2.py`, `src/b03_s6_tight.py`.
-8. Conventional-null comparison: `src/b03_baseline_conventional_null.py`,
-   `src/b03_baseline_comparison.py`.
-9. Tested-gene mass share: `src/b03_mass_share.py`.
-10. Intervention study: `python src/b03_synthstudy.py --mode verify`, then `--mode run`
-    for each of the 20 runs, then `python src/b03_synthstudy_analysis.py`.
-11. Figures: `python src/b03_paper_figures.py` and `python src/b03_schematic.py`.
-
-Permutation nulls checkpoint every 50 permutations and resume deterministically. On the
-reference workstation (8 cores, 15.7 GB RAM, Windows) the exact-end table takes 540 s,
-a matched null at B = 1000 takes 74 min on the breast section, and the B = 10,000 rerun
-takes about 12 h.
 
 ## Data
 
@@ -145,21 +188,10 @@ All three sections are public and are not redistributed here.
 | Lung crop | 10x Genomics Xenium Prime 5K FFPE Human Lung Cancer, technical note release |
 | Breast, second section | EBI zarr repackage of the STHELAR release, BioStudies S-BIAD2146 |
 
-The lung and second-section analyses use expression-blind crops. Window coordinates are
-recorded in `results/lung_crop_window.json` and `breast_s6/s6_crop_window.json`.
-
-## Tests
-
-`tests/test_release.py` runs without vendor data. It checks the released row tables
-against the counts reported in the paper, recomputes the claim layer from the stored
-permutation values, and checks the Benjamini–Hochberg and Benjamini–Yekutieli routines
-on fixed inputs.
-
-```
-python -m unittest discover -s tests -v
-```
+The crops are expression-blind. Their windows are recorded in
+`preprocessing/lung_crop_window.json` and
+`preprocessing/breast_s6_crop_window.json`.
 
 ## Citation
 
-Cite the paper and this repository. Metadata is in `CITATION.cff`. Code is released
-under the MIT licence.
+Metadata is in `CITATION.cff`. Code is released under the MIT licence.

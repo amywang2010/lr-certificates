@@ -1,25 +1,24 @@
-"""B03 Phase 2 prep (step A): vendor-side, Proseg-INDEPENDENT primitives.
+"""Vendor-side primitives for the Proseg replication, independent of any Proseg output.
 
-The constants below are fixed for the phase-2 configuration and are independent of
-any Proseg output.
+The constants below are fixed for this configuration.
 Computes only artifacts that do not depend on Proseg:
 
-  1. Vendor per-type marker centroids (label-transfer targets, frozen).
+  1. Vendor per-type marker centroids (label-transfer targets, fixed).
      Marker space: panel genes EXCLUDING all 20 tested LR genes (same discipline
      as the scout labels). Transform, identical for vendor and Proseg cells:
         p = count / cell_total_panel_counts      (relative profile)
         x = log1p(p * scale),  scale = median vendor cell panel total
      Type centroid = mean of x over vendor cells of that type.
 
-  2. Region-mapping inputs (frozen): vendor cell centroids (microns)
-     plus each cell's frozen region, in cells_meta ROW space, so the analysis
+  2. Region-mapping inputs (fixed): vendor cell centroids (microns)
+     plus each cell's fixed region, in cells_meta ROW space, so the analysis
      step can build a cKDTree and assign each Proseg cell the region of its
      nearest vendor cell (geometry only, no expression).
 
-Proseg-independence argument: the ONLY inputs are the
-vendor cell-by-gene h5, the panel TSV, cells_meta.parquet, and the scout's
-frozen labels/regions/donor_map. The transcript file (and therefore anything
-Proseg produces) is never read here.
+The inputs are the vendor cell-by-gene h5, the panel TSV,
+cells_meta.parquet and the scout's fixed labels, regions and donor_map. The
+transcript file, and therefore anything Proseg produces, is never read here,
+which keeps the comparison independent of Proseg.
 """
 
 import numpy as np
@@ -42,7 +41,7 @@ tested = sorted({g for p in ALL_PAIRS for g in p})
 print(f"[{time.time()-t0:.0f}s] {len(tested)} tested genes (excluded from marker panel)",
       flush=True)
 
-# ---------- frozen scout artifacts ----------
+# ---------- fixed scout artifacts ----------
 labels_poly = np.load(f"{DATA}/labels.npy", allow_pickle=True)      # polygon-index space
 regions_poly = np.load(f"{DATA}/regions.npy")                        # polygon-index space
 with open(f"{DATA}/donor_map.pkl", "rb") as f:
@@ -117,7 +116,7 @@ else:
     raise AssertionError(f"indptr len {len(indptr)} != n_cells+1 ({n_bc+1}); "
                          f"layout not recognized")
 
-# ---------- marker panel (frozen) ----------
+# ---------- marker panel (fixed) ----------
 panel = pd.read_csv(f"{DATA}/Xenium_FFPE_Human_Breast_Cancer_Rep1_panel.tsv", sep="\t")
 panel_names = panel.Name.dropna().astype(str).tolist()
 feat_set = set(features)
@@ -143,7 +142,7 @@ assert (M.sum(axis=0) > 0).all(), "some marker genes got zero total counts (read
 print(f"[{time.time()-t0:.0f}s] marker submatrix: {M.shape}, total {int(M.sum()):,}",
       flush=True)
 
-# ---------- transform (frozen, verbatim) ----------
+# ---------- transform (fixed) ----------
 C = M.sum(axis=1).astype(np.int64)
 assert (C > 0).mean() > 0.99, "too many cells with zero panel counts"
 scale = float(np.median(C))

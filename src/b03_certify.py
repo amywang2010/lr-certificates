@@ -1,13 +1,13 @@
-"""B03 Step 2 (v2): Certificate engine.
+"""Certified interval engine for the breast section.
 
-Implements the certified interval construction exactly:
+The construction:
 - T(A) = log2((N_L/n_L + eps)) + log2((N_R/n_R + eps))  [separable]
 - Exact bounds: per-coordinate integer interval [N_min, N_max] of region-aggregate counts
   under boundary reassignment flows, computed by greedy per-transcript optimization with
   capacity constraints (Theorem 2 interval property), cross-checked by brute-force
   enumeration on small instances and random feasible sampling.
-- Regions: k-means on cell centroid coordinates, k=3 (frozen).
-- Cell-type labels: majority panel annotation per cell (marker genes), frozen.
+- Regions: k-means on cell centroid coordinates, k=3 (fixed).
+- Cell-type labels: majority panel annotation per cell (marker genes), fixed.
 - Permutation null: within-region, count-decile-matched label permutations, B=1000.
 """
 import numpy as np
@@ -16,8 +16,9 @@ import os, pickle, json, time
 from collections import defaultdict
 
 EPS = 0.5
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); DATA = os.path.join(ROOT, "data")
-OUT = os.path.join(ROOT, "results")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(ROOT, "data")
+OUT = os.path.join(ROOT, "results", "breast")
 
 # Pair family
 POSITIVE_CONTROLS = [
@@ -101,8 +102,9 @@ def interval_bounds_region(tx, dm, labels, region_of_cell, region_id, pair,
       - from outside (or extracellular) into counted set: count +1
       - within set or fully outside: 0
     Greedy per-transcript optimization: each movable transcript contributes an independent
-    delta in {its achievable deltas}; total count interval = sum of achievable delta ranges
-    (interval arithmetic; each delta range is a contiguous integer interval because
+    delta in {its achievable deltas}
+    total count interval = sum of achievable delta ranges
+    (interval arithmetic. each delta range is a contiguous integer interval because
     destinations are independent per transcript, capacities couple only repeats of the
     same cell pair, handled by counting multiplicities).
     Returns (delta_min, delta_max) for each gene.
@@ -188,7 +190,8 @@ def brute_force_check(tx, dm, labels, region_of_cell, region_id, pair, band_tx_i
         nL = nR = 0
         gL = (feat == Lg)
         gR = (feat == Rg)
-        cellsL = cell[gL].copy(); cellsR = cell[gR].copy()
+        cellsL = cell[gL].copy()
+        cellsR = cell[gR].copy()
         if assign_override:
             for ti, c in assign_override.items():
                 if feat[ti] == Lg: cellsL[np.flatnonzero(gL) == ti] = c
@@ -260,7 +263,8 @@ def main():
             dl = interval_bounds_region(tx, dm, labels, region_of_cell, region_id, pair,
                                         band_tx_ids, donor_sets,
                                         {Lg: s_type, Rg: r_type})
-            dL = dl[Lg]; dR = dl[Rg]
+            dL = dl[Lg]
+            dR = dl[Rg]
             T_lo, T_hi, extrema = T_bounds_from_count_intervals(nL, nR, dL, dR,
                                                                 nl_cells, nr_cells)
             T0 = T_bounds_from_count_intervals(nL, nR, (0, 0), (0, 0),

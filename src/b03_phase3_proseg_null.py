@@ -1,22 +1,21 @@
-"""B03 Phase 3: Proseg-side matched permutation null
-(fixed for this leg).
+"""Proseg-side matched permutation null for the breast section.
 
 Are the 46 matched-certified directional signs significant under the independent
 segmentation's own null (within-region decile-matched label permutation of Proseg
 labels)? Gate: >= 85% of certified rows significant at within-region BH q <= 0.10 in
 the certified direction.
 
-Machinery reuse (frozen):
+Machinery reuse (fixed):
   - EPS, t_log2, ALL_PAIRS, TYPE_MAP, RECV_MAP: IMPORTED from b03_scout.py.
   - bh_within_region: IMPORTED from b03_matched_null.py (identical BH code the
-    scout used; module import is side-effect-free, main is guarded).
+    scout used, module import is side-effect-free, main is guarded).
   - Label transfer + region mapping: identical algorithm to b03_phase2_analysis.py
-    (verbatim logic; correctness enforced by Assertion A below, which pins the
+    (the same logic, with correctness enforced by Assertion A below, which pins the
     reproduction to the phase-2 outputs on all 75 rows).
 
-Hard assertions (abort on failure; specified here):
+The run aborts on any of these failures:
   A. Label/region reproduction: re-derived per-(pair,region) sender/receiver cell
-     counts nL/nR must equal phase2_proseg_coverage.csv EXACTLY for all 75 rows.
+     counts nL/nR must equal phase2_proseg_coverage.csv on all 75 rows.
   B. Observed-statistic crosscheck: T_obs recomputed here equals the coverage CSV
      `T` column within 1e-9 for all 75 rows.
   C. Permutation invariance: per-region per-type cell counts preserved under
@@ -24,18 +23,23 @@ Hard assertions (abort on failure; specified here):
   D. Pre-flight determinism: perm 0 computed twice (parent + worker), bitwise
      equality required before the sweep starts.
 
-Null scheme (frozen, identical structure to the scout's matched null):
+Null scheme (fixed, identical structure to the scout's matched null):
   blocks = (region) x (decile of per-cell TOTAL foreground Proseg counts over ALL
   named genes; per-entry rint then sum, the pipeline's count convention);
-  np.quantile linspace(0,1,11), digitize on q[1:-1], clip 0..9; blocks with >=2
-  cells; labels permuted within blocks in fixed (region, decile) order;
-  B = 1000; per-perm seed default_rng(20260907 + 100003 + p).
+  np.quantile linspace(0,1,11), digitize on q[1:-1], clip 0..9
+  blocks with >=2
+  cells
+  labels permuted within blocks in fixed (region, decile) order
+  B = 1000
+  per-perm seed default_rng(20260907 + 100003 + p).
 
-p-values: raw counts reported; inference on add-one p = (count+1)/(B+1); BH
-within region applied to add-one p (documented here; the scout finalization used
+p-values: raw counts reported
+inference on add-one p = (count+1)/(B+1)
+BH
+within region applied to add-one p (documented here. the scout finalization used
 the same effective convention).
 
-Smoke mode (B03_P3_SMOKE=1): B=20, outputs to results/_phase3_dryrun/, validates
+Smoke mode (B03_P3_SMOKE=1): B=20, outputs to coverage/_phase3_dryrun/, validates
 the full path end-to-end BEFORE the real run, without touching production paths.
 """
 
@@ -58,7 +62,7 @@ from b03_scout import ALL_PAIRS, TYPE_MAP, RECV_MAP, EPS, t_log2
 from b03_matched_null import bh_within_region
 
 DATA = os.path.join(ROOT, "data")
-RES = os.path.join(ROOT, "results")
+RES = os.path.join(ROOT, "coverage")
 # Tissue-2 reuse: paths and expected row count env-overridable.
 DATA = os.environ.get("B03_P3_DATA", DATA)
 RES = os.environ.get("B03_P3_RES", RES)
@@ -128,7 +132,7 @@ def permute_and_score(p):
 
 
 def main():
-    # ---------- frozen vendor-side artifacts (identical to phase 2) ----------
+    # ---------- fixed vendor-side artifacts (identical to phase 2) ----------
     vm = np.load(f"{DATA}/vendor_markers.npz", allow_pickle=True)
     centroids = vm["centroids"].astype(np.float64)
     type_names = [str(t) for t in vm["type_names"]]
@@ -181,7 +185,7 @@ def main():
     Gm = Mall[:, [need_pos[g] for g in tested]].astype(np.int32)
     del Mall, Sub, Coo
 
-    # decile covariate: per-cell total over ALL named genes (frozen), per-entry rint
+    # decile covariate: per-cell total over ALL named genes (fixed), per-entry rint
     Csr_full = None
     with gzip.open(f"{DATA}/proseg_out/counts", "rb") as f:
         Full = mmread(f).tocoo()
@@ -192,7 +196,7 @@ def main():
     del Full
     log(f"decile covariate computed (per-cell total, median {np.median(tot):.0f})")
 
-    # ---------- label transfer (verbatim phase-2 algorithm) ----------
+    # ---------- label transfer (phase-2 algorithm) ----------
     Ctot = M.sum(axis=1).astype(np.int64)
     has_marker = Ctot > 0
     Xp = np.log1p((M / np.maximum(Ctot, 1)[:, None]) * scale).astype(np.float64)
@@ -203,7 +207,7 @@ def main():
     labels[has_marker] = np.array(type_names, dtype=object)[sim.argmax(axis=1)]
     log(f"labels reproduced: {pd.Series(labels).value_counts().head(4).to_dict()}")
 
-    # ---------- region mapping (verbatim phase-2 rule 1) ----------
+    # ---------- region mapping (phase-2 rule 1) ----------
     pc_xy = cells_p[["centroid_x", "centroid_y"]].to_numpy(np.float64)
     tree = cKDTree(vendor_xy)
     _dist, nn = tree.query(pc_xy, k=1)
@@ -321,7 +325,7 @@ def main():
 
     # The reported certificate is the selection-adjusted claim in the matched-null
     # table. The pre-correction BH set is reported separately for reference.
-    fin = pd.read_csv(f"{RES}/scout_final_matched.csv")
+    fin = pd.read_csv(os.path.join(ROOT, "results", "breast", "scout_final_matched.csv"))
     cov = cov.merge(fin[["pair", "region", "claim_pos", "claim_neg"]],
                     on=["pair", "region"], validate="1:1")
     cert_pos = cov.claim_pos.to_numpy(bool)
@@ -353,7 +357,7 @@ def main():
         fraction=frac, gate=gate,
         undoubled_bh_rows=n_bh,
         undoubled_bh_significant=n_bh_sig,
-        p_convention="add-one (count+1)/(B+1); BH within region on add-one p",
+        p_convention="add-one (count+1)/(B+1), BH within region on add-one p",
     )
     with open(f"{OUT}/phase3_summary.json", "w") as f:
         json.dump(summary, f, indent=2)

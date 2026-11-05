@@ -2,9 +2,9 @@
 outlines, orthogonal connectors, horizontal group bars over the column groups and
 side labels naming the row groups.
 
-Two failure modes are excluded by construction:
+Two failure modes are checked before drawing:
 
-  1. Every label is short enough to fit its shape. After drawing, each text
+  1. Every label is short enough to fit its shape. After drawing. each text
      object's RENDERED bounding box is measured with matplotlib's renderer and
      asserted to lie inside its shape's bounding box. Text wider than its shape is
      the failure this check catches, so no label can overflow a stadium.
@@ -226,8 +226,8 @@ def build(outdir):
     _verify(fig, ax)
 
     os.makedirs(outdir, exist_ok=True)
-    png = os.path.join(outdir, "fig0_workflow.png")
-    pdf = os.path.join(outdir, "fig0_workflow.pdf")
+    png = os.path.join(outdir, "figS1_workflow.png")
+    pdf = os.path.join(outdir, "figS1_workflow.pdf")
     fig.savefig(png, dpi=600, bbox_inches="tight", pad_inches=0.02)
     fig.savefig(pdf, bbox_inches="tight", pad_inches=0.02,
                 metadata={"CreationDate": None})

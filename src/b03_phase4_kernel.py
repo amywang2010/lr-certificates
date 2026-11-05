@@ -1,5 +1,4 @@
-"""B03 Phase 4: leakage-kernel sensitivity, certification margins
-(fixed for this leg).
+"""Leakage-kernel sensitivity and certification margins for the breast section.
 
 Model: scalar kernel multiplier c >= 1 scales the scout's geometric worst-case
 flows: effective count interval per gene
@@ -7,14 +6,15 @@ flows: effective count interval per gene
 c = 1 reproduces the scout kernel exactly (Assertion A validates this against
 scout_bounds.csv on all 75 rows).
 
-Estimand: per certified row, the critical multiplier c* at which the certificate
-loses its sign (bisection on a monotone function; exact to 1e-10). c* = inf for
+Estimand: per certified row. the critical multiplier c* at which the certificate
+loses its sign (bisection on a monotone function
+exact to 1e-10). c* = inf for
 kernel-immune rows (certificate survives every c up to the search bound, or the
 relevant flow is zero).
 
 Machinery: T_bounds_from_count_intervals IMPORTED from b03_certify.py (no
-copy-modify). Inputs: scout_bounds.csv (frozen deltas), scout_final_matched.csv
-(certified flags). Zero heavy compute; smoke mode included via B03_P4_SMOKE.
+copy-modify). Inputs: scout_bounds.csv (fixed deltas), scout_final_matched.csv
+(certified flags). Zero heavy compute, smoke mode included via B03_P4_SMOKE.
 """
 
 import json
@@ -30,7 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 from b03_certify import T_bounds_from_count_intervals
 
-RES = os.environ.get("B03_P4_RES", os.path.join(ROOT, "results"))
+RES = os.environ.get("B03_P4_RES", os.path.join(ROOT, "margins"))
 N_ROWS = int(os.environ.get("B03_P4_ROWS", "75"))
 N_CERT = int(os.environ.get("B03_P4_CERT", "46"))
 SMOKE = os.environ.get("B03_P4_SMOKE") == "1"
@@ -68,9 +68,10 @@ def bisect_root(f, lo, hi, tol):
 
 
 def main():
-    sb = pd.read_csv(f"{RES}/scout_bounds.csv")
+    BR = os.path.join(ROOT, "results", "breast")
+    sb = pd.read_csv(f"{BR}/scout_bounds.csv")
     assert len(sb) == N_ROWS
-    fin = pd.read_csv(f"{RES}/scout_final_matched.csv")
+    fin = pd.read_csv(f"{BR}/scout_final_matched.csv")
     m = sb.merge(fin[["pair", "region", "certified_pos_matched",
                       "certified_neg_matched"]], on=["pair", "region"],
                  validate="1:1")
@@ -90,10 +91,10 @@ def main():
     assert sign_ok, "Assertion B1 FAILED: interval-sign mismatch at c=1"
     # B2: matched-null certifications are a SUBSET of interval certifications
     # 37/9 matched against 39/12 interval; the 5 dropped rows fail the matched
-    # null rather than flipping sign.
+    # null without flipping sign.
     subset_ok = ((~m.certified_pos_matched | m.certified_pos).all() and
                  (~m.certified_neg_matched | m.certified_neg).all())
-    assert subset_ok, "Assertion B2 FAILED: matched flags not a subset of interval flags"
+    assert subset_ok, "Assertion B2 FAILED: matched flags outside the interval flag set"
     log(f"Assertions A+B PASSED: c=1 reproduces scout intervals (max |dT| = {da:.2e}); "
         f"interval signs match; matched set is a subset")
 

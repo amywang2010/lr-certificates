@@ -1,13 +1,14 @@
-"""B03 Phase 7 step 1: extract the analysis source from the S-BIAD2146 zarr zip.
+"""Extract the analysis source from the S-BIAD2146 zarr archive.
 
 Packaging rules:
   - members -> the workspace xenium_breast_s6/extracted/ dir, mirroring a 10x-like layout
-  - transcript parts streamed verbatim (16 parts)
-  - cell/nucleus boundaries parquet verbatim
+  - transcript parts streamed unchanged (16 parts)
+  - cell/nucleus boundaries parquet unchanged
   - table_cells CSR snapshot: data/indices/indptr + var gene names + obs cell ids
 Assertions (abort on failure):
-  - 16 transcript parts present; schema has x,y,feature_name,cell_id,qv,is_gene
-  - CSR dims from X/.zattrs == (692184, 5101); indptr length == rows+1
+  - 16 transcript parts present, schema has x,y,feature_name,cell_id,qv,is_gene
+  - CSR dims from X/.zattrs == (692184, 5101)
+  indptr length == rows+1
   - coordinate transform verification deferred to the loader (needs both extents)
 """
 import json, os, shutil, sys, time, zipfile
@@ -106,7 +107,7 @@ def main():
         cmeta = json.load(f)
     with open(os.path.join(tc, "obs_cell_id", ".zarray.json"), "w", encoding="utf-8") as f:
         json.dump(cmeta, f)
-    # obs/transcript_counts: vendor per-cell total, input to the frozen region
+    # obs/transcript_counts: vendor per-cell total, input to the fixed region
     # rule (make_regions log10(1+transcript_counts), seed 20260907).
     tcc = [n for n in names if n.startswith(f"{base}/obs/transcript_counts/") and not n.endswith((".zarray", ".zattrs"))]
     assert tcc, "obs/transcript_counts missing from zip"

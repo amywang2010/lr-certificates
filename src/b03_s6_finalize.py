@@ -1,13 +1,14 @@
-"""B03 Phase 7: s6 finalization, scout_final_s6.csv + corrected summary JSON.
+"""Finalization for the second breast section: scout_final_s6.csv and the summary JSON.
 
-Mirrors the scout finalization merge exactly:
-  - the stored p_* are acc/B; raw add-one p = (1+acc)/(B+1), round-trip asserted;
+The finalization merge follows the scout merge:
+  - the stored p_* are acc/B
+  raw add-one p = (1+acc)/(B+1), round-trip asserted
   - BH within region over the pair family, q <= 0.10;
   - certified_pos_matched = (T_lo > 0) & (q_pos <= 0.10);
     certified_neg_matched = (T_hi < 0) & (q_neg <= 0.10).
-s6 specifics: 30 rows (10 pairs x 3 regions; 8 Myeloid-dependent pairs type-absent
-after the frozen minimum-class floor dropped Myeloid, 133 cells), B = 10,000, per-perm
-seeds 20260908 + 100003 + p (frozen), capacity-capped dmax active.
+s6 specifics: 30 rows (10 pairs x 3 regions, 8 Myeloid-dependent pairs type-absent
+after the fixed minimum-class floor dropped Myeloid, 133 cells), B = 10,000, per-perm
+seeds 20260908 + 100003 + p (fixed), capacity-capped dmax active.
 """
 import json, os
 import numpy as np
@@ -16,6 +17,7 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("B03_WORKSPACE", os.path.dirname(ROOT))
 D = os.path.join(WORKSPACE, "xenium_breast_s6", "crop", "data")
+OUT = os.path.join(ROOT, "results", "breast_s6")
 B = 10000
 
 def bh(p):
@@ -45,7 +47,7 @@ def main():
         sel = nul.region == r
         nul.loc[sel, "q_pos"] = bh(nul.loc[sel, "p_pos_raw"])
         nul.loc[sel, "q_neg"] = bh(nul.loc[sel, "p_neg_raw"])
-    nul.to_csv(f"{D}/null_robust_matched_final.csv", index=False)
+    nul.to_csv(f"{OUT}/null_robust_matched_final.csv", index=False)
 
     final = res.merge(nul[["pair", "region", "p_pos_raw", "p_neg_raw", "q_pos", "q_neg",
                            "T_lo_perm_med", "T_hi_perm_med"]],
@@ -53,7 +55,7 @@ def main():
     assert len(final) == 30, f"merge produced {len(final)} rows"
     final["certified_pos_matched"] = (final.T_lo > 0) & (final.q_pos <= 0.10)
     final["certified_neg_matched"] = (final.T_hi < 0) & (final.q_neg <= 0.10)
-    final.to_csv(f"{D}/scout_final_s6.csv", index=False)
+    final.to_csv(f"{OUT}/scout_final_s6.csv", index=False)
 
     n_pos = int(final.certified_pos_matched.sum())
     n_neg = int(final.certified_neg_matched.sum())
@@ -61,7 +63,7 @@ def main():
         "method": "matched robust permutation null, within-region "
                   "decile-matched labels; per-perm seeds 20260908+100003+p "
                   "(same convention as the first section); capacity-capped dmax active "
-                  "(ONE formula with certify)",
+                  "(same formula as the certify step)",
         "B": B,
         "n_workers": 4,
         "alignment": "labels/regions polygon-index space; verified by assertion",
@@ -83,7 +85,7 @@ def main():
                    "density-matched null (p_neg_raw = 1.0), so the 17 "
                    "interval-negative rows carry an interval sign and no claim",
     }
-    with open(f"{D}/scout_summary_matched.json", "w") as f:
+    with open(f"{OUT}/scout_summary_matched.json", "w") as f:
         json.dump(summary, f, indent=1)
     print(json.dumps({k: summary[k] for k in
                       ("n_rows", "certified_pos", "certified_neg", "non_identifiable")},
